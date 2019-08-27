@@ -44,6 +44,10 @@ func main() {
 					Usage: "state of the issue for filtering",
 					Value: "all",
 				},
+				cli.BoolTFlag{
+					Name:  "attach",
+					Usage: "Attach the output to a new issue or in a comment",
+				},
 			},
 		},
 	}
