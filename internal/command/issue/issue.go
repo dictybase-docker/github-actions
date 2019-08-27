@@ -66,13 +66,17 @@ func CommentsReport(c *cli.Context) error {
 			if iss.IsPullRequest() {
 				continue
 			}
+			var closedStr string
+			if iss.GetState() == "closed" {
+				closedStr = iss.GetClosedAt().Format(layout)
+			}
 			err := writer.Write([]string{
 				strconv.Itoa(iss.GetNumber()),
 				iss.GetTitle(),
 				strconv.Itoa(iss.GetComments()),
 				iss.GetState(),
 				iss.GetCreatedAt().Format(layout),
-				iss.GetClosedAt().Format(layout),
+				closedStr,
 			})
 			if err != nil {
 				return cli.NewExitError(
