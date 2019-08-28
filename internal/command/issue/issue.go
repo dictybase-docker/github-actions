@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/dictyBase-docker/github-actions/internal/logger"
 	"github.com/google/go-github/v28/github"
 
 	"github.com/dictyBase-docker/github-actions/internal/client"
@@ -51,6 +52,7 @@ func CommentsReport(c *cli.Context) error {
 		"Issue ID", "Title", "Total Comments",
 		"Status", "Created On", "Closed On",
 	})
+	count := 0
 	for {
 		issues, resp, err := gclient.Issues.ListByRepo(
 			context.Background(),
@@ -86,6 +88,7 @@ func CommentsReport(c *cli.Context) error {
 					2,
 				)
 			}
+			count++
 		}
 		if resp.NextPage == 0 {
 			break
@@ -99,5 +102,6 @@ func CommentsReport(c *cli.Context) error {
 			2,
 		)
 	}
+	logger.GetLogger(c).Infof("wrote %d records in the report", count)
 	return nil
 }
