@@ -7,7 +7,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-func getLogger(c *cli.Context) *logrus.Entry {
+func GetLogger(c *cli.Context) *logrus.Entry {
 	log := logrus.New()
 	log.Out = os.Stderr
 	switch c.GlobalString("log-format") {
