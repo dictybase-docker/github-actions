@@ -27,10 +27,10 @@ func CommentsReport(c *cli.Context) error {
 	} else {
 		fname = fmt.Sprintf("%s-%s.csv", c.String("output"), time.Now().Format(fileLayout))
 	}
-	output, err := os.Open(fname)
+	output, err := os.Create(fname)
 	if err != nil {
 		return cli.NewExitError(
-			fmt.Sprintf("unable to open file %s %s", c.String("output"), err),
+			fmt.Sprintf("unable to create file %s %s", c.String("output"), err),
 			2,
 		)
 	}
