@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/dictyBase-docker/github-actions/internal/command/issue"
-	"github.com/dictyBase-docker/github-actions/internal/storage"
+	"github.com/dictyBase-docker/github-actions/internal/command/storage"
 	"github.com/urfave/cli"
 )
 
