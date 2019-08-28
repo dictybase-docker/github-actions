@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
-	"io"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/google/go-github/v28/github"
 
@@ -15,23 +15,25 @@ import (
 )
 
 const (
-	layout = "01/02/2006"
+	layout     = "01/02/2006"
+	fileLayout = "01-02-2006-150405"
 )
 
 func CommentsReport(c *cli.Context) error {
-	var output io.Writer
+	var fname string
 	if len(c.String("output")) > 0 {
-		wf, err := os.Create(c.String("output"))
-		if err != nil {
-			return cli.NewExitError(
-				fmt.Sprintf("unable to open file %s %s", c.String("output"), err),
-				2,
-			)
-		}
-		output = wf
+		fname = c.String("output")
 	} else {
-		output = os.Stdout
+		fname = fmt.Sprintf("%s-%s.csv", c.String("output"), time.Now().Format(fileLayout))
 	}
+	output, err := os.Open(fname)
+	if err != nil {
+		return cli.NewExitError(
+			fmt.Sprintf("unable to open file %s %s", c.String("output"), err),
+			2,
+		)
+	}
+	defer output.Close()
 	writer := csv.NewWriter(output)
 	gclient, err := client.GetGithubClient(c.GlobalString("token"))
 	if err != nil {

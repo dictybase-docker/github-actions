@@ -47,7 +47,7 @@ func main() {
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "output",
-					Usage: "report output, goes to stdout by default",
+					Usage: "file where csv format output is written, creates a timestamp based file by default",
 				},
 				cli.StringFlag{
 					Name:  "state",
