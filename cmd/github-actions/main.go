@@ -14,6 +14,16 @@ func main() {
 	app.Usage = "run github action"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
+			Name:  "log-format",
+			Usage: "format of the logging out, either of json or text.",
+			Value: "json",
+		},
+		cli.StringFlag{
+			Name:  "log-level",
+			Usage: "log level for the application",
+			Value: "error",
+		},
+		cli.StringFlag{
 			Name:   "token,t",
 			Usage:  "github personal access token",
 			EnvVar: "GITHUB_TOKEN",
