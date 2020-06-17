@@ -42,6 +42,7 @@ func main() {
 	app.Commands = []cli.Command{
 		cmd.IssueCommentCmds(),
 		cmd.StoreReportCmd(),
+		cmd.DeployStatusCmd(),
 	}
 	if err := app.Run(os.Args); err != nil {
 		log.Fatalf("error in running command %s", err)
