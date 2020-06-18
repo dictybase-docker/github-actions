@@ -16,7 +16,7 @@ func DeployStatusCmd() cli.Command {
 				Name:  "state",
 				Usage: "The state of the deployment status",
 			},
-			cli.StringFlag{
+			cli.Int64Flag{
 				Name:  "deployment_id",
 				Usage: "Deployment identifier",
 			},
