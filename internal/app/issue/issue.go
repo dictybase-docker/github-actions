@@ -60,11 +60,7 @@ func writeIssues(c *cli.Context, gclient *github.Client, writer *csv.Writer) (in
 	if err != nil {
 		return count, fmt.Errorf("error in writing file header %s", err)
 	}
-	opt := &github.IssueListByRepoOptions{
-		State:       c.String("state"),
-		Sort:        "comments",
-		ListOptions: github.ListOptions{PerPage: 30},
-	}
+	opt := issueOpts(c)
 	for {
 		issues, resp, err := gclient.Issues.ListByRepo(
 			context.Background(),
@@ -103,4 +99,12 @@ func writeIssues(c *cli.Context, gclient *github.Client, writer *csv.Writer) (in
 	}
 	writer.Flush()
 	return count, writer.Error()
+}
+
+func issueOpts(c *cli.Context) *github.IssueListByRepoOptions {
+	return &github.IssueListByRepoOptions{
+		State:       c.String("state"),
+		Sort:        "comments",
+		ListOptions: github.ListOptions{PerPage: 30},
+	}
 }
