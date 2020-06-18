@@ -25,29 +25,31 @@ cli to manage github actions
 
 
 ## Commands
-
 ```
 NAME:
    gh-action - run github action
 
 USAGE:
-   gact [global options] command [command options] [arguments...]
+   gh-action [global options] command [command options] [arguments...]
 
 VERSION:
    1.0.0
 
 COMMANDS:
      issue-comment-report, icr  reports no of comments for every issue
+     store-report, ur           save report to s3 storage
+     deploy-status, ds          create a github deployment status
      help, h                    Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
+   --log-format value            format of the log, either of json or text. (default: "json")
+   --log-level value             log level for the application (default: "error")
    --token value, -t value       github personal access token [$GITHUB_TOKEN]
    --repository value, -r value  Github repository
    --owner value                 Github repository owner (default: "dictyBase")
    --help, -h                    show help
    --version, -v                 print the version
-
-```   
+```
 
 ### Subcommands
 ```
@@ -60,4 +62,41 @@ USAGE:
 OPTIONS:
    --output value  report output, goes to stdout by default
    --state value   state of the issue for filtering (default: "all")
-```
+
+
+NAME:
+   gh-action issue-comment-report - reports no of comments for every issue
+
+USAGE:
+   gh-action issue-comment-report [command options] [arguments...]
+
+OPTIONS:
+   --output value  file where csv format output is written, creates a timestamp based file by default
+   --state value   state of the issue for filtering (default: "all")
+   
+NAME:
+   gh-action store-report - save report to s3 storage
+
+USAGE:
+   gh-action store-report [command options] [arguments...]
+
+OPTIONS:
+   --s3-server value                 S3 server endpoint (default: "minio") [$MINIO_SERVICE_HOST]
+   --s3-server-port value            S3 server port [$MINIO_SERVICE_PORT]
+   --s3-bucket value                 S3 bucket where the data will be uploaded (default: "report")
+   --access-key value, --akey value  access key for S3 server, required based on command run
+   --secret-key value, --skey value  secret key for S3 server, required based on command run
+   --input value                     input file that will be uploaded
+   --upload-path value, -p value     full upload path inside the bucket
+   
+NAME:
+   gh-action deploy-status - create a github deployment status
+
+USAGE:
+   gh-action deploy-status [command options] [arguments...]
+
+OPTIONS:
+   --state value          The state of the deployment status
+   --deployment_id value  Deployment identifier (default: 0)
+   --url value            The url that is associated with this status
+```   
