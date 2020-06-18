@@ -16,7 +16,7 @@ func main() {
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:  "log-format",
-			Usage: "format of the logging out, either of json or text.",
+			Usage: "format of the log, either of json or text.",
 			Value: "json",
 		},
 		cli.StringFlag{
