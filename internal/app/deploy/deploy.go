@@ -5,11 +5,13 @@ import (
 	"fmt"
 
 	"github.com/dictyBase-docker/github-actions/internal/client"
+	"github.com/dictyBase-docker/github-actions/internal/logger"
 	"github.com/google/go-github/v32/github"
 	"github.com/urfave/cli"
 )
 
 func DeployStatus(c *cli.Context) error {
+	logger := logger.GetLogger(c)
 	gclient, err := client.GetGithubClient(c.GlobalString("token"))
 	if err != nil {
 		return cli.NewExitError(
@@ -20,7 +22,7 @@ func DeployStatus(c *cli.Context) error {
 	state := c.String("state")
 	url := c.String("url")
 	desc := fmt.Sprintf("setting deployment status %s", c.String("state"))
-	_, _, err = gclient.Repositories.CreateDeploymentStatus(
+	ds, _, err := gclient.Repositories.CreateDeploymentStatus(
 		context.Background(),
 		c.GlobalString("owner"),
 		c.GlobalString("repository"),
@@ -36,5 +38,10 @@ func DeployStatus(c *cli.Context) error {
 			2,
 		)
 	}
+	logger.Infof(
+		"created deployment status %s with id %d",
+		ds.GetState(),
+		ds.GetID(),
+	)
 	return nil
 }
