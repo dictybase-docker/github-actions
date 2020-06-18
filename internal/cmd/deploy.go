@@ -13,16 +13,35 @@ func DeployStatusCmd() cli.Command {
 		Action:  deploy.DeployStatus,
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:  "state",
-				Usage: "The state of the deployment status",
+				Name:     "state",
+				Required: true,
+				Usage:    "The state of the deployment status",
 			},
 			cli.Int64Flag{
-				Name:  "deployment_id",
-				Usage: "Deployment identifier",
+				Name:     "deployment_id",
+				Required: true,
+				Usage:    "Deployment identifier",
 			},
 			cli.StringFlag{
-				Name:  "url",
-				Usage: "The url that is associated with this status",
+				Name:     "url",
+				Required: true,
+				Usage:    "The url that is associated with this status",
+			},
+		},
+	}
+}
+
+func ShareDeployPayloadCmd() cli.Command {
+	return cli.Command{
+		Name:    "share-deploy-payload",
+		Aliases: []string{"sdp"},
+		Usage:   "share deployment payload data in github workflow",
+		Action:  deploy.ShareDeployPayload,
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:     "payload-file,f",
+				Required: true,
+				Usage:    "Full path to the file that contain the deploy payload",
 			},
 		},
 	}
