@@ -43,6 +43,10 @@ func CommentsReport(c *cli.Context) error {
 			2,
 		)
 	}
+	writer.Write([]string{
+		"Issue ID", "Title", "Total Comments",
+		"Status", "Created On", "Closed On",
+	})
 	count, err := writeIssues(c, gclient, writer)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
@@ -57,10 +61,6 @@ func writeIssues(c *cli.Context, gclient *github.Client, writer *csv.Writer) (in
 		Sort:        "comments",
 		ListOptions: github.ListOptions{PerPage: 30},
 	}
-	writer.Write([]string{
-		"Issue ID", "Title", "Total Comments",
-		"Status", "Created On", "Closed On",
-	})
 	count := 0
 	for {
 		issues, resp, err := gclient.Issues.ListByRepo(
