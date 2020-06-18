@@ -43,10 +43,13 @@ func CommentsReport(c *cli.Context) error {
 			2,
 		)
 	}
-	writer.Write([]string{
+	err = writer.Write([]string{
 		"Issue ID", "Title", "Total Comments",
 		"Status", "Created On", "Closed On",
 	})
+	if err != nil {
+		return cli.NewExitError(err.Error(), 2)
+	}
 	count, err := writeIssues(c, gclient, writer)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
