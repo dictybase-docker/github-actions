@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/dictyBase-docker/github-actions/internal/client"
-	"github.com/google/go-github/v28/github"
+	"github.com/google/go-github/v32/github"
 	"github.com/urfave/cli"
 )
 
