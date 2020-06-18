@@ -3,7 +3,7 @@ module github.com/dictyBase-docker/github-actions
 require (
 	github.com/go-ini/ini v1.42.0 // indirect
 	github.com/golang/protobuf v1.3.1 // indirect
-	github.com/google/go-github/v28 v28.0.0
+	github.com/google/go-github/v28 v28.1.1
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/mitchellh/go-homedir v1.0.0 // indirect
