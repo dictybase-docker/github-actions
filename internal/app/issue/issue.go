@@ -43,6 +43,15 @@ func CommentsReport(c *cli.Context) error {
 			2,
 		)
 	}
+	count, err := writeIssues(c, gclient, writer)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 2)
+	}
+	logger.GetLogger(c).Infof("wrote %d records in the report", count)
+	return nil
+}
+
+func writeIssues(c *cli.Context, gclient *github.Client, writer *csv.Writer) (int, error) {
 	opt := &github.IssueListByRepoOptions{
 		State:       c.String("state"),
 		Sort:        "comments",
@@ -61,10 +70,7 @@ func CommentsReport(c *cli.Context) error {
 			opt,
 		)
 		if err != nil {
-			return cli.NewExitError(
-				fmt.Sprintf("error in fetching issues %s", err),
-				2,
-			)
+			return count, fmt.Errorf("error in fetching issues %s", err)
 		}
 		for _, iss := range issues {
 			if iss.IsPullRequest() {
@@ -83,10 +89,7 @@ func CommentsReport(c *cli.Context) error {
 				closedStr,
 			})
 			if err != nil {
-				return cli.NewExitError(
-					fmt.Sprintf("error in writing issues to csv file %s", err),
-					2,
-				)
+				return count, fmt.Errorf("error in writing issues to csv file %s", err)
 			}
 			count++
 		}
@@ -97,11 +100,7 @@ func CommentsReport(c *cli.Context) error {
 	}
 	writer.Flush()
 	if err := writer.Error(); err != nil {
-		return cli.NewExitError(
-			fmt.Sprintf("error with csv writing %s", err),
-			2,
-		)
+		return count, fmt.Errorf("error with csv writing %s", err)
 	}
-	logger.GetLogger(c).Infof("wrote %d records in the report", count)
-	return nil
+	return count, nil
 }
