@@ -19,7 +19,6 @@ RUN go build \
   -ldflags "-s -w -extldflags '-static'" \
   -installsuffix cgo \
   -tags netgo \
-  -mod vendor \
   -o /bin/app \
   cmd/github-actions/main.go
 RUN strip /bin/app \
