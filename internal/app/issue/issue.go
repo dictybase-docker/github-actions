@@ -43,13 +43,6 @@ func CommentsReport(c *cli.Context) error {
 			2,
 		)
 	}
-	err = writer.Write([]string{
-		"Issue ID", "Title", "Total Comments",
-		"Status", "Created On", "Closed On",
-	})
-	if err != nil {
-		return cli.NewExitError(err.Error(), 2)
-	}
 	count, err := writeIssues(c, gclient, writer)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
@@ -59,12 +52,19 @@ func CommentsReport(c *cli.Context) error {
 }
 
 func writeIssues(c *cli.Context, gclient *github.Client, writer *csv.Writer) (int, error) {
+	count := 0
+	err := writer.Write([]string{
+		"Issue ID", "Title", "Total Comments",
+		"Status", "Created On", "Closed On",
+	})
+	if err != nil {
+		return count, fmt.Errorf("error in writing file header %s", err)
+	}
 	opt := &github.IssueListByRepoOptions{
 		State:       c.String("state"),
 		Sort:        "comments",
 		ListOptions: github.ListOptions{PerPage: 30},
 	}
-	count := 0
 	for {
 		issues, resp, err := gclient.Issues.ListByRepo(
 			context.Background(),
@@ -102,8 +102,5 @@ func writeIssues(c *cli.Context, gclient *github.Client, writer *csv.Writer) (in
 		opt.Page = resp.NextPage
 	}
 	writer.Flush()
-	if err := writer.Error(); err != nil {
-		return count, fmt.Errorf("error with csv writing %s", err)
-	}
-	return count, nil
+	return count, writer.Error()
 }
