@@ -36,10 +36,11 @@ VERSION:
    1.0.0
 
 COMMANDS:
-     issue-comment-report, icr  reports no of comments for every issue
-     store-report, ur           save report to s3 storage
-     deploy-status, ds          create a github deployment status
-     help, h                    Shows a list of commands or help for one command
+   issue-comment-report, icr  reports no of comments for every issue
+   store-report, ur           save report to s3 storage
+   deploy-status, ds          create a github deployment status
+   share-deploy-payload, sdp  share deployment payload data in github workflow
+   help, h                    Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --log-format value            format of the log, either of json or text. (default: "json")
@@ -99,4 +100,12 @@ OPTIONS:
    --state value          The state of the deployment status
    --deployment_id value  Deployment identifier (default: 0)
    --url value            The url that is associated with this status
-```   
+NAME:
+   gh-action share-deploy-payload - share deployment payload data in github workflow
+
+USAGE:
+   gh-action share-deploy-payload [command options] [arguments...]
+
+OPTIONS:
+   --payload-file value, -f value  Full path to the file that contain the deploy payload
+```
