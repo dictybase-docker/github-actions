@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/buger/jsonparser"
+	"github.com/dictyBase-docker/github-actions/internal/logger"
 	"github.com/sethvargo/go-githubactions"
 	"github.com/urfave/cli"
 )
@@ -33,6 +34,7 @@ func ShareDeployPayload(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("error in reading content from file %s", err)
 	}
+	log := logger.GetLogger(c)
 	a := githubactions.New()
 	for _, k := range okey {
 		keys := getKeys(k)
@@ -40,7 +42,9 @@ func ShareDeployPayload(c *cli.Context) error {
 		if err != nil {
 			return fmt.Errorf("error in reading payload value %s", err)
 		}
+		log.Debugf("add value %s for key %s", val, keys[0])
 		a.SetOutput(keys[0], val)
 	}
+	log.Info("added all keys to the output")
 	return nil
 }
