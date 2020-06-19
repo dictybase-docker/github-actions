@@ -43,6 +43,7 @@ func main() {
 		cmd.IssueCommentCmds(),
 		cmd.StoreReportCmd(),
 		cmd.DeployStatusCmd(),
+		cmd.ShareDeployPayloadCmd(),
 	}
 	if err := app.Run(os.Args); err != nil {
 		log.Fatalf("error in running command %s", err)
