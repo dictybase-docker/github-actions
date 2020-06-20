@@ -9,6 +9,8 @@ jobs:
     steps:
       - name: check out code
         uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: run linter
         uses: reviewdog/action-golangci-lint@v1
         with:
