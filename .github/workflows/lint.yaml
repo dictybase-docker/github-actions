@@ -14,3 +14,13 @@ jobs:
         with:
           github_token: ${{ secrets.github_token }}
           golangci_lint_flags: "-c .golangci.yml"
+      - name: image build and push
+        if: ${{ success() }}
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD  }}
+          repository: dictybase/github-actions
+          add_git_labels: true
+          tag_with_sha: true
+          dockerfile: build/package/Dockerfile
