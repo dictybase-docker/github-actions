@@ -47,7 +47,7 @@ func (h *Helm) InstallChart(args *ChartParams) error {
 		"image.tag=",
 		args.ImageTag,
 		args.ChartPath,
-	)
+	) //nolint:gosec
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("error %s in installing helm chart %s", err, cmd.String())
 	}
@@ -65,7 +65,7 @@ func (h *Helm) UpgradeChart(args *ChartParams) error {
 		"image.tag=",
 		args.ImageTag,
 		args.ChartPath,
-	)
+	) // nolint:gosec
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("error %s in upgrading helm chart %s", err, cmd.String())
 	}
