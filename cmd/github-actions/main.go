@@ -45,6 +45,7 @@ func main() {
 		cmd.DeployStatusCmd(),
 		cmd.ShareDeployPayloadCmd(),
 		cmd.GetK8sClusterCredentialsCmd(),
+		cmd.GenerateMkdownCmd(),
 	}
 	if err := app.Run(os.Args); err != nil {
 		log.Fatalf("error in running command %s", err)
