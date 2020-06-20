@@ -44,6 +44,7 @@ func main() {
 		cmd.StoreReportCmd(),
 		cmd.DeployStatusCmd(),
 		cmd.ShareDeployPayloadCmd(),
+		cmd.GetK8sClusterCredentialsCmd(),
 	}
 	if err := app.Run(os.Args); err != nil {
 		log.Fatalf("error in running command %s", err)
