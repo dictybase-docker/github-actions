@@ -13,7 +13,8 @@ type Gcloud struct {
 func NewGcloud() (*Gcloud, error) {
 	path, err := exec.LookPath("gcloud")
 	if err != nil {
-		return &Gcloud{}, fmt.Errorf("gcloud command not found %s", err)
+		return &Gcloud{},
+			fmt.Errorf("gcloud command not found %s %s", err, os.Getenv("PATH"))
 	}
 	return &Gcloud{Cmd: path}, nil
 }
