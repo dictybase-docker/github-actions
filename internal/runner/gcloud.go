@@ -26,6 +26,7 @@ func NewGcloudWithPath(path string) (*Gcloud, error) {
 }
 
 func (g *Gcloud) GetClusterCredentials(project, zone, cluster string) error {
+	//nolint:gosec
 	cmd := exec.Command(
 		g.Cmd,
 		"containers",
@@ -36,7 +37,7 @@ func (g *Gcloud) GetClusterCredentials(project, zone, cluster string) error {
 		zone,
 		"--project",
 		project,
-	) //nolint:gosec
+	)
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("error %s in running command %s", err, cmd.String())
 	}
