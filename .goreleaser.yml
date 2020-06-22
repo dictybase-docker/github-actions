@@ -24,3 +24,7 @@ archives:
     amd64: x86_64
 snapshot:
   name_template: "SNAPSHOT-{{ .ShortCommit }}"
+release:
+  github:
+    owner: dictybase-docker
+    name: github-actions
