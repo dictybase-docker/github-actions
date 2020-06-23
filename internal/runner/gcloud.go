@@ -30,7 +30,7 @@ func (g *Gcloud) GetClusterCredentials(project, zone, cluster string) error {
 	//nolint:gosec
 	cmd := exec.Command(
 		g.Cmd,
-		"containers",
+		"container",
 		"clusters",
 		"get-credentials",
 		cluster,
