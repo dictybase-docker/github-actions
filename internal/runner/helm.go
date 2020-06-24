@@ -45,8 +45,7 @@ func (h *Helm) InstallChart(args *ChartParams) error {
 		"--namespace",
 		args.Namespace,
 		"--set",
-		"image.tag=",
-		args.ImageTag,
+		fmt.Sprintf("image.tag=%s", args.ImageTag),
 		args.ChartPath,
 	)
 	if err := cmd.Run(); err != nil {
