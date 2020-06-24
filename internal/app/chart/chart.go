@@ -1,0 +1,39 @@
+package chart
+
+import (
+	"github.com/dictyBase-docker/github-actions/internal/runner"
+	"github.com/urfave/cli"
+)
+
+func DeployChart(c *cli.Context) error {
+	helm, err := runner.NewHelm()
+	if err != nil {
+		return cli.NewExitError(err.Error(), 2)
+	}
+	if err := helm.IsConnected(); err != nil {
+		return cli.NewExitError(err.Error(), 2)
+	}
+	ok, err := helm.IsChartDeployed(c.String("name"))
+	if err := helm.IsConnected(); err != nil {
+		return cli.NewExitError(err.Error(), 2)
+	}
+	return installOrUpgrade(c, helm, ok)
+}
+
+func installOrUpgrade(c *cli.Context, helm *runner.Helm, ok bool) error {
+	p := &runner.ChartParams{
+		Name:      c.String("name"),
+		Namespace: c.String("namespace"),
+		ImageTag:  c.String("image-tag"),
+		ChartPath: c.String("path"),
+	}
+	if ok {
+		if err := helm.UpgradeChart(p); err != nil {
+			return cli.NewExitError(err.Error(), 2)
+		}
+	}
+	if err := helm.InstallChart(p); err != nil {
+		return cli.NewExitError(err.Error(), 2)
+	}
+	return nil
+}

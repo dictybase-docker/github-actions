@@ -74,12 +74,12 @@ func (h *Helm) UpgradeChart(args *ChartParams) error {
 	return nil
 }
 
-func (h *Helm) IsChartDeployed(chart string) (bool, error) {
+func (h *Helm) IsChartDeployed(name string) (bool, error) {
 	//nolint:gosec
 	cmd := exec.Command(
 		h.Cmd,
 		"ls",
-		fmt.Sprintf("^%s$", chart),
+		fmt.Sprintf("^%s$", name),
 		"--short",
 	)
 	output, err := cmd.Output()
@@ -88,7 +88,7 @@ func (h *Helm) IsChartDeployed(chart string) (bool, error) {
 			fmt.Errorf("error %s in running command %s", err, cmd.String())
 	}
 	trimmed := bytes.TrimSpace(output)
-	if chart == string(trimmed) {
+	if name == string(trimmed) {
 		return true, nil
 	}
 	return false, nil
