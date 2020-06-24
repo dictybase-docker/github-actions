@@ -64,7 +64,6 @@ func (h *Helm) UpgradeChart(args *ChartParams) error {
 		args.Namespace,
 		"--set",
 		fmt.Sprintf("image.tag=%s", args.ImageTag),
-		args.ImageTag,
 		args.ChartPath,
 	)
 	if err := cmd.Run(); err != nil {
