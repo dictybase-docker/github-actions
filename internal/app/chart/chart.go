@@ -13,9 +13,6 @@ func DeployChart(c *cli.Context) error {
 	if err := helm.IsConnected(); err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
-	if err := helm.IsConnected(); err != nil {
-		return cli.NewExitError(err.Error(), 2)
-	}
 	return installOrUpgrade(c, helm)
 }
 
@@ -34,9 +31,10 @@ func installOrUpgrade(c *cli.Context, helm *runner.Helm) error {
 		if err := helm.UpgradeChart(p); err != nil {
 			return cli.NewExitError(err.Error(), 2)
 		}
-	}
-	if err := helm.InstallChart(p); err != nil {
-		return cli.NewExitError(err.Error(), 2)
+	} else {
+		if err := helm.InstallChart(p); err != nil {
+			return cli.NewExitError(err.Error(), 2)
+		}
 	}
 	return nil
 }
