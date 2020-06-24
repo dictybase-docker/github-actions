@@ -3,6 +3,7 @@ package deploy
 import (
 	"fmt"
 	"io/ioutil"
+	"strconv"
 	"strings"
 
 	"github.com/buger/jsonparser"
@@ -12,7 +13,6 @@ import (
 )
 
 var okey []string = []string{
-	"id",
 	"url",
 	"payload.cluster",
 	"payload.zone",
@@ -45,6 +45,11 @@ func ShareDeployPayload(c *cli.Context) error {
 		log.Debugf("add value %s for key %s", val, keys[0])
 		a.SetOutput(keys[0], val)
 	}
+	ival, err := jsonparser.GetInt(b, "id")
+	if err != nil {
+		return fmt.Errorf("error in reading payload value %s", err)
+	}
+	a.SetOutput("id", strconv.Itoa(int(ival)))
 	log.Info("added all keys to the output")
 	return nil
 }
