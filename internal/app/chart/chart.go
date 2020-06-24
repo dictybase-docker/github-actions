@@ -13,14 +13,17 @@ func DeployChart(c *cli.Context) error {
 	if err := helm.IsConnected(); err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
-	ok, err := helm.IsChartDeployed(c.String("name"))
 	if err := helm.IsConnected(); err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
-	return installOrUpgrade(c, helm, ok)
+	return installOrUpgrade(c, helm)
 }
 
-func installOrUpgrade(c *cli.Context, helm *runner.Helm, ok bool) error {
+func installOrUpgrade(c *cli.Context, helm *runner.Helm) error {
+	ok, err := helm.IsChartDeployed(c.String("name"))
+	if err != nil {
+		return cli.NewExitError(err.Error(), 2)
+	}
 	p := &runner.ChartParams{
 		Name:      c.String("name"),
 		Namespace: c.String("namespace"),
