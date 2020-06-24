@@ -101,6 +101,18 @@ get kubernetes cluster credentials using gcloud
 
 generate markdown documentation
 
+## deploy-chart, dc
+
+deploy helm chart
+
+**--image-tag**="": Docker image tag
+
+**--name**="": Name of the chart
+
+**--namespace**="": Kubernetes namespace
+
+**--path**="": Relative chart path from the root of the repo
+
 ## help, h
 
 Shows a list of commands or help for one command
