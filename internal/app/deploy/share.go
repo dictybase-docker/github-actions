@@ -1,59 +1,62 @@
 package deploy
 
 import (
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
-	"strings"
 
-	"github.com/buger/jsonparser"
 	"github.com/dictyBase-docker/github-actions/internal/logger"
+	"github.com/google/go-github/github"
 	"github.com/sethvargo/go-githubactions"
 	"github.com/urfave/cli"
 )
 
-var okey []string = []string{
-	"url",
-	"payload.cluster",
-	"payload.zone",
-	"payload.chart",
-	"payload.namespace",
-	"payload.image_tag",
-	"payload.path",
+type Payload struct {
+	Cluster   string `json:"cluster"`
+	Zone      string `json:"zone"`
+	Chart     string `json:"chart"`
+	Path      string `json:"path"`
+	Namespace string `json:"namespace"`
+	ImageTag  string `json:"image_tag"`
 }
 
-func getKeys(s string) []string {
-	if strings.HasPrefix(s, "payload") {
-		return strings.Split(s, ".")
+func GetPayload(data []byte) (*Payload, error) {
+	var s string
+	p := new(Payload)
+	if err := json.Unmarshal(data, &s); err != nil {
+		return p, fmt.Errorf("error in decoding json data to string %s", err)
 	}
-	return []string{s}
+	if err := json.Unmarshal([]byte(s), p); err != nil {
+		return p, fmt.Errorf("error in decoding string to structure %s", err)
+	}
+	return p, nil
 }
 
 func ShareDeployPayload(c *cli.Context) error {
-	b, err := ioutil.ReadFile(c.String("payload-file"))
+	r, err := os.Open(c.String("payload-file"))
 	if err != nil {
 		return fmt.Errorf("error in reading content from file %s", err)
 	}
-	log := logger.GetLogger(c)
-	a := githubactions.New()
-	for _, k := range okey {
-		keys := getKeys(k)
-		val, err := jsonparser.GetString(b, keys...)
-		if err != nil {
-			return fmt.Errorf(
-				"error %s in reading payload value for %s",
-				err,
-				strings.Join(keys, " -> "),
-			)
-		}
-		log.Debugf("add value %s for key %s", val, keys[0])
-		a.SetOutput(keys[0], val)
+	defer r.Close()
+	d := &github.Deployment{}
+	if err := json.NewDecoder(r).Decode(d); err != nil {
+		return fmt.Errorf("error in decoding json %s", err)
 	}
-	ival, err := jsonparser.GetInt(b, "id")
+	p, err := GetPayload(d.Payload)
 	if err != nil {
-		return fmt.Errorf("error in reading payload value %s", err)
+		return err
 	}
-	a.SetOutput("id", strconv.Itoa(int(ival)))
+	a := githubactions.New()
+	log := logger.GetLogger(c)
+	a.SetOutput("id", strconv.Itoa(int(d.GetID())))
+	a.SetOutput("url", d.GetURL())
+	a.SetOutput("cluster", p.Cluster)
+	a.SetOutput("zone", p.Zone)
+	a.SetOutput("chart", p.Chart)
+	a.SetOutput("namespace", p.Namespace)
+	a.SetOutput("image_tag", p.ImageTag)
+	a.SetOutput("path", p.Path)
 	log.Info("added all keys to the output")
 	return nil
 }
