@@ -18,13 +18,13 @@ var okey []string = []string{
 	"payload.zone",
 	"payload.chart",
 	"payload.namespace",
-	"image_tag",
-	"path",
+	"payload.image_tag",
+	"payload.path",
 }
 
 func getKeys(s string) []string {
 	if strings.HasPrefix(s, "payload") {
-		return strings.Split(s, ":")
+		return strings.Split(s, ".")
 	}
 	return []string{s}
 }
@@ -40,7 +40,11 @@ func ShareDeployPayload(c *cli.Context) error {
 		keys := getKeys(k)
 		val, err := jsonparser.GetString(b, keys...)
 		if err != nil {
-			return fmt.Errorf("error in reading payload value %s", err)
+			return fmt.Errorf(
+				"error %s in reading payload value for %s",
+				err,
+				strings.Join(keys, " -> "),
+			)
 		}
 		log.Debugf("add value %s for key %s", val, keys[0])
 		a.SetOutput(keys[0], val)
