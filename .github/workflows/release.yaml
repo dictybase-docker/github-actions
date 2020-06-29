@@ -1,4 +1,4 @@
-name: Lint golang code 
+name: Release binary
 on: 
   push:
     tags:
@@ -22,4 +22,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           version: v0.138.0
-          args: release --snapshot
+          args: release
