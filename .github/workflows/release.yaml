@@ -1,0 +1,25 @@
+name: Lint golang code 
+on: 
+  push:
+    tags:
+      - '*'
+jobs:
+  binary:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: check out code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: setup golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.13.2
+      - name: generate and publish binary 
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: goreleaser/goreleaser-action@v2
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          version: v0.138.0
+          args: release --snapshot
