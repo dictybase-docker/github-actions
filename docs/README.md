@@ -113,6 +113,18 @@ deploy helm chart
 
 **--path**="": Relative chart path from the root of the repo
 
+## push-file-committed, pfc
+
+outputs list of file committed in a git push
+
+**--output, -o**="": Name of output file, defaults to stdout
+
+**--payload-file, -f**="": Full path to the file that contain the push payload
+
+**--skip-deleted, --sd**: skip deleted files in the commit
+
+**--skip-file-suffix, --sfs**="": file with the given suffix will not be reported
+
 ## help, h
 
 Shows a list of commands or help for one command
