@@ -10,7 +10,7 @@ func PushFileCommited() cli.Command {
 		Name:    "push-file-committed",
 		Usage:   "outputs list of file committed in a git push",
 		Aliases: []string{"pfc"},
-		Action:  push.FileCommitted,
+		Action:  push.PushFileCommited,
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:     "payload-file,f",
