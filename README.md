@@ -7,10 +7,10 @@
 
 cli to manage github actions 
 
-## [Commands](docs/README.md)
+# [Cli documentation](docs/README.md)
+
 
 # Active Developers
-
 <a href="https://sourcerer.io/cybersiddhu"><img src="https://sourcerer.io/assets/avatar/cybersiddhu" height="80px" alt="Sourcerer"></a>
 <a href="https://sourcerer.io/wildlifehexagon"><img src="https://sourcerer.io/assets/avatar/wildlifehexagon" height="80px" alt="Sourcerer"></a>
 
