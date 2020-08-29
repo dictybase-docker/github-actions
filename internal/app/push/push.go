@@ -3,7 +3,6 @@ package push
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 
@@ -19,33 +18,28 @@ func PushFileCommited(c *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
+	defer in.Close()
+	defer out.Close()
 	pe := &github.PushEvent{}
 	if err := json.NewDecoder(in).Decode(pe); err != nil {
-		return fmt.Errorf("error in decoding json %s", err)
+		return cli.NewExitError(
+			fmt.Sprintf("error in decoding json %s", err),
+			2,
+		)
 	}
-	files := committedFiles(c, pe)
-	if len(files) == 0 {
-		logger.Warn("no committed file found matching the criteria")
-		return nil
-	}
-	if len(c.String("skip-file-suffix")) > 0 {
-		files = prefixFilter(c, files)
-		if len(files) == 0 {
-			logger.Warnf(
-				"no committed file found after filtering though skip-file-suffix",
-				c.String("skip-file-suffix"),
-			)
-			return nil
-		}
+	files, msg, ok := screenFiles(c, pe)
+	if !ok {
+		logger.Warn(msg)
+		return cli.NewExitError(msg, 2)
 	}
 	logger.Infof("%d files has changed in the push", len(files))
-	fmt.Fprintf(out, strings.Join(files, "\n"))
+	fmt.Fprint(out, strings.Join(files, "\n"))
 	return nil
 }
 
-func inputOutput(c *cli.Context) (io.Reader, io.Writer, error) {
-	var in io.Reader
-	var out io.Writer
+func inputOutput(c *cli.Context) (*os.File, *os.File, error) {
+	var in *os.File
+	var out *os.File
 	r, err := os.Open(c.String("payload-file"))
 	if err != nil {
 		return in, out, fmt.Errorf("error in reading content from file %s", err)
@@ -72,6 +66,27 @@ func prefixFilter(c *cli.Context, sl []string) []string {
 		a = append(a, v)
 	}
 	return a
+}
+
+func screenFiles(c *cli.Context, event *github.PushEvent) ([]string, string, bool) {
+	files := committedFiles(c, event)
+	if len(files) == 0 {
+		return files,
+			"no committed file found matching the criteria",
+			false
+	}
+	if len(c.String("skip-file-suffix")) > 0 {
+		files = prefixFilter(c, files)
+		if len(files) == 0 {
+			return files,
+				fmt.Sprintf(
+					"no committed file found after filtering though skip-file-suffix %s",
+					c.String("skip-file-suffix"),
+				),
+				false
+		}
+	}
+	return files, "", true
 }
 
 func committedFiles(c *cli.Context, event *github.PushEvent) []string {
