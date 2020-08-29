@@ -15,15 +15,12 @@ import (
 
 func PushFileCommited(c *cli.Context) error {
 	logger := logger.GetLogger(c)
-	r, err := os.Open(c.String("payload-file"))
+	in, out, err := inputOutput(c)
 	if err != nil {
-		return cli.NewExitError(
-			fmt.Sprintf("error in reading content from file %s", err),
-			2,
-		)
+		return cli.NewExitError(err.Error(), 2)
 	}
 	pe := &github.PushEvent{}
-	if err := json.NewDecoder(r).Decode(pe); err != nil {
+	if err := json.NewDecoder(in).Decode(pe); err != nil {
 		return fmt.Errorf("error in decoding json %s", err)
 	}
 	files := committedFiles(c, pe)
@@ -41,22 +38,29 @@ func PushFileCommited(c *cli.Context) error {
 			return nil
 		}
 	}
+	logger.Infof("%d files has changed in the push", len(files))
+	fmt.Fprintf(out, strings.Join(files, "\n"))
+	return nil
+}
+
+func inputOutput(c *cli.Context) (io.Reader, io.Writer, error) {
+	var in io.Reader
 	var out io.Writer
+	r, err := os.Open(c.String("payload-file"))
+	if err != nil {
+		return in, out, fmt.Errorf("error in reading content from file %s", err)
+	}
+	in = r
 	if len(c.String("output")) > 0 {
 		w, err := os.Create(c.String("output"))
 		if err != nil {
-			return cli.NewExitError(
-				fmt.Sprintf("error in creating file %s %s", c.String("output"), err),
-				2,
-			)
+			return in, out, fmt.Errorf("error in creating file %s %s", c.String("output"), err)
 		}
 		out = w
 	} else {
 		out = os.Stdout
 	}
-	logger.Infof("%d files has changed in the push", len(files))
-	fmt.Fprintf(out, strings.Join(files, "\n"))
-	return nil
+	return in, out, nil
 }
 
 func prefixFilter(c *cli.Context, sl []string) []string {
