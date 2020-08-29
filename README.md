@@ -5,7 +5,7 @@
 [![Funding](https://badgen.net/badge/NIGMS/Rex%20L%20Chisholm,dictyBase-docker/yellow?list=|)](https://projectreporter.nih.gov/project_info_description.cfm?aid=9476993)
 [![Funding](https://badgen.net/badge/NIGMS/Rex%20L%20Chisholm,DSC/yellow?list=|)](https://projectreporter.nih.gov/project_info_description.cfm?aid=9438930)   
 
-cli to manage github actions 
+cli to manage dictyBase github actions 
 
 # [Cli documentation](docs/README.md)
 
@@ -27,4 +27,3 @@ cli to manage github actions
 ![Tags](https://badgen.net/github/tags/dictyBase-docker/github-actions/?color=cyan)   
 ![GitHub repo size](https://img.shields.io/github/repo-size/dictyBase-docker/github-actions?style=plastic)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/dictyBase-docker/github-actions?style=plastic)
-[![Lines of Code](https://badgen.net/codeclimate/loc/dictyBase-docker/github-actions)](https://codeclimate.com/github/dictyBase-docker/github-actions/code)   
