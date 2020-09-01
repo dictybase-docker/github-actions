@@ -48,6 +48,7 @@ func main() {
 		cmd.GenerateMkdownCmd(),
 		cmd.DeployChartCmd(),
 		cmd.PushFileCommited(),
+		cmd.BatchMultiRepo(),
 	}
 	if err := app.Run(os.Args); err != nil {
 		log.Fatalf("error in running command %s", err)
