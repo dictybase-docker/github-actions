@@ -18,7 +18,6 @@ type repo struct {
 }
 
 func BatchMultiRepo(c *cli.Context) error {
-	log := logger.GetLogger(c)
 	gclient, err := client.GetGithubClient(c.GlobalString("token"))
 	if err != nil {
 		return cli.NewExitError(
@@ -31,22 +30,18 @@ func BatchMultiRepo(c *cli.Context) error {
 		return cli.NewExitError(err.Error(), 2)
 	}
 	path := fmt.Sprintf(
-		"%s/%s",
-		c.String("repository-path"),
+		"%s/%s", c.String("repository-path"),
 		filepath.Base(c.String("input-file")),
 	)
 	msg := github.String(
-		fmt.Sprintf(
-			"adding %s file",
+		fmt.Sprintf("adding %s file",
 			filepath.Base(c.String("input-file")),
 		),
 	)
 	for _, r := range parseOwnerRepo(string(rl)) {
 		_, _, err := gclient.Repositories.CreateFile(
 			context.Background(),
-			r.owner,
-			r.name,
-			path,
+			r.owner, r.name, path,
 			&github.RepositoryContentFileOptions{
 				Message: msg,
 				Content: wc,
@@ -55,18 +50,14 @@ func BatchMultiRepo(c *cli.Context) error {
 		)
 		if err != nil {
 			return cli.NewExitError(
-				fmt.Sprintf(
-					"error in adding file %s to repository %s %s",
-					path,
-					fmt.Sprintf("%s/%s", r.owner, r.name),
-					err,
+				fmt.Sprintf("error in adding file %s to repository %s %s",
+					path, fmt.Sprintf("%s/%s", r.owner, r.name), err,
 				),
 				2,
 			)
 		}
-		log.Debugf(
-			"uploaded file %s to repository %s",
-			path,
+		logger.GetLogger(c).Debugf(
+			"uploaded file %s to repository %s", path,
 			fmt.Sprintf("%s/%s", r.owner, r.name),
 		)
 	}
