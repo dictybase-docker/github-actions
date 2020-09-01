@@ -26,27 +26,9 @@ func AddBatchFile(c *cli.Context) error {
 			2,
 		)
 	}
-	rl, err := ioutil.ReadFile(c.String("repository-list"))
+	rl, wc, err := readFiles(c)
 	if err != nil {
-		return cli.NewExitError(
-			fmt.Sprintf(
-				"error in opening repository list %s %s",
-				c.String("repository-list"),
-				err,
-			),
-			2,
-		)
-	}
-	wc, err := ioutil.ReadFile(c.String("workflow-file"))
-	if err != nil {
-		return cli.NewExitError(
-			fmt.Sprintf(
-				"error in opening workflow file %s %s",
-				c.String("workflow-file"),
-				err,
-			),
-			2,
-		)
+		return cli.NewExitError(err.Error(), 2)
 	}
 	path := fmt.Sprintf(
 		"%s/%s",
@@ -89,6 +71,27 @@ func AddBatchFile(c *cli.Context) error {
 		)
 	}
 	return nil
+}
+
+func readFiles(c *cli.Context) ([]byte, []byte, error) {
+	var b []byte
+	rl, err := ioutil.ReadFile(c.String("repository-list"))
+	if err != nil {
+		return rl, b, fmt.Errorf(
+			"error in opening repository list %s %s",
+			c.String("repository-list"),
+			err,
+		)
+	}
+	wc, err := ioutil.ReadFile(c.String("workflow-file"))
+	if err != nil {
+		return rl, wc, fmt.Errorf(
+			"error in opening workflow file %s %s",
+			c.String("workflow-file"),
+			err,
+		)
+	}
+	return rl, wc, nil
 }
 
 func parseOwerRepo(str string) []*repo {
