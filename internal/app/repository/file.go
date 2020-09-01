@@ -17,7 +17,7 @@ type repo struct {
 	name, owner string
 }
 
-func AddBatchFile(c *cli.Context) error {
+func BatchMultiRepo(c *cli.Context) error {
 	log := logger.GetLogger(c)
 	gclient, err := client.GetGithubClient(c.GlobalString("token"))
 	if err != nil {
@@ -37,11 +37,11 @@ func AddBatchFile(c *cli.Context) error {
 	)
 	msg := github.String(
 		fmt.Sprintf(
-			"adding %s workflow file",
-			filepath.Base(c.String("workflow-file")),
+			"adding %s file",
+			filepath.Base(c.String("input-file")),
 		),
 	)
-	for _, r := range parseOwerRepo(string(rl)) {
+	for _, r := range parseOwnerRepo(string(rl)) {
 		_, _, err := gclient.Repositories.CreateFile(
 			context.Background(),
 			r.owner,
@@ -83,18 +83,18 @@ func readFiles(c *cli.Context) ([]byte, []byte, error) {
 			err,
 		)
 	}
-	wc, err := ioutil.ReadFile(c.String("workflow-file"))
+	wc, err := ioutil.ReadFile(c.String("input-file"))
 	if err != nil {
 		return rl, wc, fmt.Errorf(
-			"error in opening workflow file %s %s",
-			c.String("workflow-file"),
+			"error in opening input file %s %s",
+			c.String("input-file"),
 			err,
 		)
 	}
 	return rl, wc, nil
 }
 
-func parseOwerRepo(str string) []*repo {
+func parseOwnerRepo(str string) []*repo {
 	var r []*repo
 	for _, f := range strings.Split(str, "\n") {
 		v := strings.Split(f, "/")
