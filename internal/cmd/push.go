@@ -18,8 +18,8 @@ func PushFileCommited() cli.Command {
 				Usage:    "Full path to the file that contain the push payload",
 			},
 			cli.StringFlag{
-				Name:  "skip-file-suffix,sfs",
-				Usage: "file with the given suffix will not be reported",
+				Name:  "include-file-suffix,ifs",
+				Usage: "file with the given suffix will only be reported",
 			},
 			cli.BoolTFlag{
 				Name:  "skip-deleted,sd",
