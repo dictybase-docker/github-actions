@@ -24,7 +24,7 @@ func BatchMultiRepo() cli.Command {
 			},
 			cli.StringFlag{
 				Name:  "branch,b",
-				Usage: "repository branch(should exist before commiting)",
+				Usage: "repository branch(should exist before committing)",
 				Value: "develop",
 			},
 			cli.StringFlag{
