@@ -125,6 +125,18 @@ outputs list of file committed in a git push
 
 **--skip-file-suffix, --sfs**="": file with the given suffix will not be reported
 
+## batch-multi-repo, bmr
+
+Commit a file to multiple repositories
+
+**--branch, -b**="": repository branch(should exist before committing) (default: develop)
+
+**--input-file, -i**="": file that will be committed to repository
+
+**--repository-list, -l**="": file with list of repositories name, one repository in every line
+
+**--repository-path, --rp**="": relative path(from root) in the repository for the input file
+
 ## help, h
 
 Shows a list of commands or help for one command
