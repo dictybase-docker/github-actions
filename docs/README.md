@@ -117,13 +117,13 @@ deploy helm chart
 
 outputs list of file committed in a git push
 
+**--include-file-suffix, --ifs**="": file with the given suffix will only be reported
+
 **--output, -o**="": Name of output file, defaults to stdout
 
 **--payload-file, -f**="": Full path to the file that contain the push payload
 
 **--skip-deleted, --sd**: skip deleted files in the commit
-
-**--skip-file-suffix, --sfs**="": file with the given suffix will not be reported
 
 ## batch-multi-repo, bmr
 

@@ -57,13 +57,13 @@ func inputOutput(c *cli.Context) (*os.File, *os.File, error) {
 	return in, out, nil
 }
 
-func prefixFilter(c *cli.Context, sl []string) []string {
+func suffixFilter(c *cli.Context, sl []string) []string {
 	var a []string
 	for _, v := range sl {
-		if strings.HasSuffix(v, c.String("skip-file-suffix")) {
+		if strings.HasSuffix(v, c.String("include-file-suffix")) {
+			a = append(a, v)
 			continue
 		}
-		a = append(a, v)
 	}
 	return a
 }
@@ -75,13 +75,13 @@ func screenFiles(c *cli.Context, event *github.PushEvent) ([]string, string, boo
 			"no committed file found matching the criteria",
 			false
 	}
-	if len(c.String("skip-file-suffix")) > 0 {
-		files = prefixFilter(c, files)
+	if len(c.String("include-file-suffix")) > 0 {
+		files = suffixFilter(c, files)
 		if len(files) == 0 {
 			return files,
 				fmt.Sprintf(
-					"no committed file found after filtering though skip-file-suffix %s",
-					c.String("skip-file-suffix"),
+					"no committed file found after filtering though include-file-suffix %s",
+					c.String("include-file-suffix"),
 				),
 				false
 		}
