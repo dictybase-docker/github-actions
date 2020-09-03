@@ -97,7 +97,10 @@ func screenFiles(c *cli.Context, event *github.CommitsComparison) ([]string, err
 		files = suffixFilter(c, files)
 		if len(files) == 0 {
 			return files,
-				fmt.Errorf("no committed file found after filtering though include-file-suffix %s")
+				fmt.Errorf(
+					"no committed file found after filtering though include-file-suffix %s",
+					c.String("include-file-suffix"),
+				)
 		}
 	}
 	return files, nil
