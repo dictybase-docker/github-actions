@@ -10,26 +10,16 @@ jobs:
   test:
     runs-on: ubuntu-20.04
     steps:
-      - name: set up golang
-        uses: actions/setup-go@v1
-        with:
-          go-version: 1.13.15
       - name: check out code
         uses: actions/checkout@v2
+      - name: set up golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.13.15
       - name: unit test
         run: go test -covermode=atomic -coverprofile=profile.cov -v ./...
       - name: upload coverage to codecov
-        uses: codecov/codecov-action@v1.0.2
+        uses: codecov/codecov-action@v1
         with:
           file: ./profile.cov
           token: ${{ secrets.CODECOV_TOKEN }}
-      - name: image build and push
-        uses: docker/build-push-action@v1
-        with:
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_PASSWORD  }}
-          repository: dictybase/github-actions
-          add_git_labels: true
-          tag_with_sha: true
-          tags: develop
-          dockerfile: build/package/Dockerfile
