@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/google/go-github/github"
@@ -69,7 +70,7 @@ func suffixFilter(c *cli.Context, sl []string) []string {
 }
 
 func screenFiles(c *cli.Context, event *github.PushEvent) ([]string, string, bool) {
-	files := committedFiles(c, event)
+	files := committedFiles(event, c.BoolT("skip-deleted"))
 	if len(files) == 0 {
 		return files,
 			"no committed file found matching the criteria",
@@ -89,14 +90,15 @@ func screenFiles(c *cli.Context, event *github.PushEvent) ([]string, string, boo
 	return files, "", true
 }
 
-func committedFiles(c *cli.Context, event *github.PushEvent) []string {
+func committedFiles(event *github.CommitsComparison, skipDeleted bool) []string {
 	var files []string
-	for _, commit := range event.Commits {
-		files = append(files, commit.Added...)
-		files = append(files, commit.Modified...)
-		if !c.BoolT("skip-deleted") {
-			files = append(files, commit.Removed...)
+	for _, f := range event.Files {
+		if skipDeleted {
+			if f.GetStatus() == "deleted" {
+				continue
+			}
 		}
+		files = append(files, path.Base(f.GetFilename()))
 	}
 	return UniqueString(files)
 }
