@@ -1,39 +1,34 @@
 package push
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"strings"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v32/github"
 
+	"github.com/dictyBase-docker/github-actions/internal/client"
 	"github.com/dictyBase-docker/github-actions/internal/logger"
 	"github.com/urfave/cli"
 )
 
 func PushFileCommited(c *cli.Context) error {
-	logger := logger.GetLogger(c)
 	in, out, err := inputOutput(c)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
 	defer in.Close()
 	defer out.Close()
-	pe := &github.PushEvent{}
-	if err := json.NewDecoder(in).Decode(pe); err != nil {
-		return cli.NewExitError(
-			fmt.Sprintf("error in decoding json %s", err),
-			2,
-		)
+	files, err := changedFiles(c, in)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 2)
 	}
-	files, msg, ok := screenFiles(c, pe)
-	if !ok {
-		logger.Warn(msg)
-		return cli.NewExitError(msg, 2)
-	}
-	logger.Infof("%d files has changed in the push", len(files))
+	logger.GetLogger(c).Infof("%d files has changed in the push", len(files))
 	fmt.Fprint(out, strings.Join(files, "\n"))
 	return nil
 }
@@ -58,6 +53,29 @@ func inputOutput(c *cli.Context) (*os.File, *os.File, error) {
 	return in, out, nil
 }
 
+func changedFiles(c *cli.Context, in io.Reader) ([]string, error) {
+	var files []string
+	pe := &github.PushEvent{}
+	if err := json.NewDecoder(in).Decode(pe); err != nil {
+		return files, fmt.Errorf("error in decoding json %s", err)
+	}
+	gclient, err := client.GetGithubClient(c.GlobalString("token"))
+	if err != nil {
+		return files, fmt.Errorf("error in getting github client %s", err)
+	}
+	comc, _, err := gclient.Repositories.CompareCommits(
+		context.Background(),
+		pe.GetRepo().GetOwner().GetLogin(),
+		pe.GetRepo().GetName(),
+		pe.GetBefore(),
+		pe.GetAfter(),
+	)
+	if err != nil {
+		return files, fmt.Errorf("error in comparing commits %s", err)
+	}
+	return screenFiles(c, comc)
+}
+
 func suffixFilter(c *cli.Context, sl []string) []string {
 	var a []string
 	for _, v := range sl {
@@ -69,25 +87,20 @@ func suffixFilter(c *cli.Context, sl []string) []string {
 	return a
 }
 
-func screenFiles(c *cli.Context, event *github.PushEvent) ([]string, string, bool) {
+func screenFiles(c *cli.Context, event *github.CommitsComparison) ([]string, error) {
 	files := committedFiles(event, c.BoolT("skip-deleted"))
 	if len(files) == 0 {
 		return files,
-			"no committed file found matching the criteria",
-			false
+			errors.New("no committed file found matching the criteria")
 	}
 	if len(c.String("include-file-suffix")) > 0 {
 		files = suffixFilter(c, files)
 		if len(files) == 0 {
 			return files,
-				fmt.Sprintf(
-					"no committed file found after filtering though include-file-suffix %s",
-					c.String("include-file-suffix"),
-				),
-				false
+				fmt.Errorf("no committed file found after filtering though include-file-suffix %s")
 		}
 	}
-	return files, "", true
+	return files, nil
 }
 
 func committedFiles(event *github.CommitsComparison, skipDeleted bool) []string {
