@@ -49,6 +49,7 @@ func main() {
 		cmd.DeployChartCmd(),
 		cmd.PushFileCommited(),
 		cmd.BatchMultiRepo(),
+		cmd.ShareChatOpsPayload(),
 	}
 	if err := app.Run(os.Args); err != nil {
 		log.Fatalf("error in running command %s", err)
