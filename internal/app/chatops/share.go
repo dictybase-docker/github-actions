@@ -421,7 +421,7 @@ func ShareChatOpsPayload(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		a.SetOutput("cluster", p.Args.Named.Cluster)
+		a.SetOutput("cluster", c.String("cluster"))
 		a.SetOutput("ref", u.Ref)
 		a.SetOutput("image_tag", u.ImageTag)
 	}

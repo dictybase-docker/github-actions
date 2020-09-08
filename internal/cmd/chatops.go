@@ -17,6 +17,11 @@ func ShareChatOpsPayload() cli.Command {
 				Required: true,
 				Usage:    "Full path to the file that contains the chatops payload",
 			},
+			cli.StringFlag{
+				Name:     "cluster,c",
+				Required: true,
+				Usage:    "k8s cluster to deploy to",
+			},
 		},
 	}
 }
