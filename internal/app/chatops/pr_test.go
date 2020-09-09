@@ -12,6 +12,7 @@ func TestConvertToOutput(t *testing.T) {
 	// test output when given a commit ID
 	i := &Input{
 		Commit:        "c675a18e9c395e59960ddbd0ab0a023d962749d6",
+		SHA:           "a19fc461a48ff70230c4d440da1f35db075e33e2",
 		PullRequestID: "3",
 	}
 	o := convertToOutput(i)
