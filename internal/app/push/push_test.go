@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 
@@ -46,5 +47,13 @@ func TestCommitedFiles(t *testing.T) {
 	)
 	files := committedFiles(cc, false)
 	assert.Len(files, 11, "should have committed 11 unique files")
-	assert.Contains(files, "navbar.json", "should have navbar.json file")
+	assert.Contains(toFileNames(files), "navbar.json", "should have navbar.json file")
+}
+
+func toFileNames(s []string) []string {
+	var a []string
+	for _, f := range s {
+		a = append(a, path.Base(f))
+	}
+	return a
 }
