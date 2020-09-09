@@ -22,14 +22,12 @@ type Output struct {
 func PullRequestDeploy(c *cli.Context) error {
 	i := &Input{
 		Commit:        c.String("commit"),
-		SHA:           c.String("sha"),
+		SHA:           c.String("head-sha"),
 		PullRequestID: c.String("pr-id"),
 	}
 	a := githubactions.New()
 	log := logger.GetLogger(c)
-
 	o := convertToOutput(i)
-
 	a.SetOutput("cluster", c.String("cluster"))
 	a.SetOutput("ref", o.Ref)
 	a.SetOutput("image_tag", o.ImageTag)
