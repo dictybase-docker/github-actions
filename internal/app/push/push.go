@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/google/go-github/v32/github"
@@ -115,20 +116,20 @@ func committedFiles(event *github.CommitsComparison, skipDeleted bool) []string 
 		}
 		files = append(files, f.GetFilename())
 	}
-	return UniqueString(files)
+	return uniqueFiles(files)
 }
 
-// UniqueString remove duplicates from string slice
-func UniqueString(sl []string) []string {
+func uniqueFiles(sl []string) []string {
 	if len(sl) == 1 {
 		return sl
 	}
 	m := make(map[string]int)
 	var a []string
 	for _, v := range sl {
-		if _, ok := m[v]; !ok {
+		n := path.Base(v)
+		if _, ok := m[n]; !ok {
 			a = append(a, v)
-			m[v] = 1
+			m[n] = 1
 		}
 	}
 	return a
