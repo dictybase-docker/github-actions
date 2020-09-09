@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func pushTestData() (*github.CommitsComparison, error) {
+func testDataForGitPush() (*github.CommitsComparison, error) {
 	cc := &github.CommitsComparison{}
 	dir, err := os.Getwd()
 	if err != nil {
@@ -35,7 +35,7 @@ func pushTestData() (*github.CommitsComparison, error) {
 
 func TestCommitedFiles(t *testing.T) {
 	assert := require.New(t)
-	cc, err := pushTestData()
+	cc, err := testDataForGitPush()
 	assert.NoError(err, "should not receive any error for parsing push event data")
 	assert.Equal(cc.GetStatus(), "ahead", "should match the status")
 	assert.Equal(cc.GetAheadBy(), 31, "should match ahead by value")
