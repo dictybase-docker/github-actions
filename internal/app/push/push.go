@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"strings"
 
 	"github.com/google/go-github/v32/github"
@@ -114,7 +113,7 @@ func committedFiles(event *github.CommitsComparison, skipDeleted bool) []string 
 				continue
 			}
 		}
-		files = append(files, path.Base(f.GetFilename()))
+		files = append(files, f.GetFilename())
 	}
 	return UniqueString(files)
 }
