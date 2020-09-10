@@ -43,10 +43,15 @@ type Payload struct {
 	Event WorkflowDispatchEvent `json:"event"`
 }
 
+type Output struct {
+	ImageTag string
+	Ref      string
+}
+
 func GetWorkflowInputs(data []byte) (*Inputs, error) {
 	o := new(Inputs)
 	if err := json.Unmarshal(data, &o); err != nil {
-		return o, fmt.Errorf("error in decoding json data to string %s", err)
+		return o, fmt.Errorf("error in decoding json data to struct %s", err)
 	}
 	return o, nil
 }
@@ -67,22 +72,32 @@ func ParseDeployCommand(c *cli.Context) error {
 	}
 	a := githubactions.New()
 	log := logger.GetLogger(c)
-	if strings.Contains(p.URL, "pull") && p.Commit != "" {
-		tag := fmt.Sprintf("pr-%s-%s", p.IssueNumber, p.Commit[0:7])
-		a.SetOutput("image_tag", tag)
-		a.SetOutput("ref", p.Commit)
-	}
-	if strings.Contains(p.URL, "pull") && p.Commit == "" {
-		ref, err := getHeadCommitFromPR(p.RepositoryName, p.RepositoryOwner, p.IssueNumber)
+	if strings.Contains(p.URL, "pull") {
+		o, err := parsePR(p)
 		if err != nil {
 			return err
 		}
-		tag := fmt.Sprintf("pr-%s-%s", p.IssueNumber, ref[0:7])
-		a.SetOutput("ref", ref)
-		a.SetOutput("image_tag", tag)
+		a.SetOutput("image_tag", o.ImageTag)
+		a.SetOutput("ref", o.Ref)
 	}
 	log.Info("added all keys to the output")
 	return nil
+}
+
+func parsePR(p *Inputs) (*Output, error) {
+	o := &Output{}
+	if p.Commit == "" {
+		ref, err := getHeadCommitFromPR(p.RepositoryName, p.RepositoryOwner, p.IssueNumber)
+		if err != nil {
+			return o, err
+		}
+		o.ImageTag = fmt.Sprintf("pr-%s-%s", p.IssueNumber, ref[0:7])
+		o.Ref = ref
+		return o, nil
+	}
+	o.ImageTag = fmt.Sprintf("pr-%s-%s", p.IssueNumber, p.Commit[0:7])
+	o.Ref = p.Commit
+	return o, nil
 }
 
 func getHeadCommitFromPR(name, owner, id string) (string, error) {
@@ -93,7 +108,7 @@ func getHeadCommitFromPR(name, owner, id string) (string, error) {
 	}
 	pr, _, err := client.PullRequests.Get(context.Background(), owner, name, num)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error getting pull request info %s", err)
 	}
 	return *pr.Head.SHA, nil
 }
