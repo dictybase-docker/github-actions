@@ -1,7 +1,3 @@
-% gh-action(8) 
-
-% 
-
 # NAME
 
 gh-action - run github action
@@ -41,7 +37,6 @@ gh-action [GLOBAL OPTIONS] command [COMMAND OPTIONS] [ARGUMENTS...]
 **--token, -t**="": github personal access token
 
 **--version, -v**: print the version
-
 
 # COMMANDS
 
@@ -137,7 +132,13 @@ Commit a file to multiple repositories
 
 **--repository-path, --rp**="": relative path(from root) in the repository for the input file
 
+## parse-chatops-deploy, pcd
+
+parses chatops deploy command and extracts ref and image tag values
+
+**--payload-file, -f**="": Full path to the file that contain the push payload
+
 ## help, h
 
 Shows a list of commands or help for one command
- <nil>
+<nil>
