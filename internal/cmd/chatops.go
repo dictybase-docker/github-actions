@@ -5,29 +5,17 @@ import (
 	"github.com/urfave/cli"
 )
 
-func ChatOpsPullRequestDeploy() cli.Command {
+func ParseChatOpsDeploy() cli.Command {
 	return cli.Command{
-		Name:    "chatops-pr-deploy",
-		Aliases: []string{"cpd"},
-		Usage:   "extracts necessary values from chatops deploy commands in pull requests",
-		Action:  chatops.PullRequestDeploy,
+		Name:    "parse-chatops-deploy",
+		Aliases: []string{"pcd"},
+		Usage:   "extracts necessary values from chatops deploy commands and converts to expected outputs",
+		Action:  chatops.ParseDeployCommand,
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:     "cluster",
+				Name:     "payload-file,f",
 				Required: true,
-				Usage:    "k8s cluster to deploy to",
-			},
-			cli.StringFlag{
-				Name:  "commit",
-				Usage: "commit id to deploy",
-			},
-			cli.StringFlag{
-				Name:  "pr-id",
-				Usage: "id (number) of given pull request",
-			},
-			cli.StringFlag{
-				Name:  "head-sha",
-				Usage: "head commit id of the pull request",
+				Usage:    "Path to JSON payload",
 			},
 		},
 	}
