@@ -9,7 +9,7 @@ func ParseChatOpsDeploy() cli.Command {
 	return cli.Command{
 		Name:    "parse-chatops-deploy",
 		Aliases: []string{"pcd"},
-		Usage:   "extracts necessary values from chatops deploy commands and converts to expected outputs",
+		Usage:   "parses chatops deploy command and extracts ref and image tag values",
 		Action:  chatops.ParseDeployCommand,
 		Flags: []cli.Flag{
 			cli.StringFlag{
