@@ -76,6 +76,13 @@ func ParseDeployCommand(c *cli.Context) error {
 		}
 		a.SetOutput("image_tag", o.ImageTag)
 		a.SetOutput("ref", o.Ref)
+	} else {
+		o, err := parseIssue(p)
+		if err != nil {
+			return err
+		}
+		a.SetOutput("image_tag", o.ImageTag)
+		a.SetOutput("ref", o.Ref)
 	}
 	log.Info("added all keys to the output")
 	return nil
@@ -108,4 +115,33 @@ func getHeadCommitFromPR(name, owner, id string) (string, error) {
 		return "", fmt.Errorf("error getting pull request info %s", err)
 	}
 	return *pr.Head.SHA, nil
+}
+
+func parseIssue(p *Inputs) (*Output, error) {
+	o := &Output{}
+	if p.Branch != "" {
+		ref, err := getHeadCommitFromBranch(p.RepositoryName, p.RepositoryOwner, p.Branch)
+		if err != nil {
+			return o, err
+		}
+		cb := strings.ReplaceAll(p.Branch, "/", "")
+		o.ImageTag = fmt.Sprintf("%s-%s", cb, ref[0:7])
+		o.Ref = ref
+		return o, nil
+	}
+	if p.Commit != "" {
+		o.ImageTag = p.Commit[0:7]
+		o.Ref = p.Commit
+		return o, nil
+	}
+	return o, nil
+}
+
+func getHeadCommitFromBranch(name, owner, branch string) (string, error) {
+	client := github.NewClient(nil)
+	b, _, err := client.Repositories.GetBranch(context.Background(), owner, name, branch)
+	if err != nil {
+		return "", fmt.Errorf("error getting pull request info %s", err)
+	}
+	return *b.Commit.SHA, nil
 }
