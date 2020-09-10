@@ -40,10 +40,6 @@ type WorkflowDispatchEvent struct {
 	Sender *github.User         `json:"sender,omitempty"`
 }
 
-type Payload struct {
-	Event WorkflowDispatchEvent `json:"event"`
-}
-
 type Output struct {
 	ImageTag string
 	Ref      string
@@ -51,11 +47,11 @@ type Output struct {
 
 func getWorkflowInputsFromJSON(r io.Reader) (*Inputs, error) {
 	i := &Inputs{}
-	p := &Payload{}
-	if err := json.NewDecoder(r).Decode(p); err != nil {
+	w := &WorkflowDispatchEvent{}
+	if err := json.NewDecoder(r).Decode(w); err != nil {
 		return i, fmt.Errorf("error in decoding json %s", err)
 	}
-	if err := json.Unmarshal(p.Event.Inputs, &i); err != nil {
+	if err := json.Unmarshal(w.Inputs, &i); err != nil {
 		return i, fmt.Errorf("error in decoding json data to struct %s", err)
 	}
 	return i, nil
