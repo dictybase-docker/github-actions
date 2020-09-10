@@ -32,7 +32,7 @@ func TestGetWorkflowInputsFromJSON(t *testing.T) {
 	i, err := getWorkflowInputsFromJSON(file)
 	assert.NoError(err, "should not receive error from extracting workflow inputs")
 	assert.Equal(i.Cluster, "erickube", "should match cluster")
-	assert.Equal(i.URL, "https://github.com/dictybase-playground/github-actions-experiments/pull/18#issuecomment-690378067", "should match html-url")
+	assert.Equal(i.URL, "https://github.com/dictybase-playground/github-actions-experiments/pull/18#issuecomment-690700284", "should match html-url")
 	assert.Equal(i.IssueNumber, "18", "should match issue number")
 	assert.Equal(i.RepositoryName, "github-actions-experiments", "should match repository name")
 	assert.Equal(i.RepositoryOwner, "dictybase-playground", "should match repository owner")
