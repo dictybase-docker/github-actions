@@ -69,23 +69,31 @@ func ParseDeployCommand(c *cli.Context) error {
 	}
 	a := githubactions.New()
 	log := logger.GetLogger(c)
+	o, err := parseWorkflowInputs(p)
+	if err != nil {
+		return fmt.Errorf("error in parsing workflow inputs %s", err)
+	}
+	a.SetOutput("image-tag", o.ImageTag)
+	a.SetOutput("ref", o.Ref)
+	log.Info("added all keys to the output")
+	return nil
+}
+
+func parseWorkflowInputs(p *Inputs) (*Output, error) {
+	ou := &Output{}
 	if strings.Contains(p.URL, "pull") {
 		o, err := parsePR(p)
 		if err != nil {
-			return err
+			return ou, err
 		}
-		a.SetOutput("image_tag", o.ImageTag)
-		a.SetOutput("ref", o.Ref)
+		return o, nil
 	} else {
 		o, err := parseIssue(p)
 		if err != nil {
-			return err
+			return ou, err
 		}
-		a.SetOutput("image_tag", o.ImageTag)
-		a.SetOutput("ref", o.Ref)
+		return o, nil
 	}
-	log.Info("added all keys to the output")
-	return nil
 }
 
 func parsePR(p *Inputs) (*Output, error) {
