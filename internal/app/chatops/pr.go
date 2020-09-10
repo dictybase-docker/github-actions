@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -48,7 +49,7 @@ type Output struct {
 	Ref      string
 }
 
-func getWorkflowInputsFromJSON(r *os.File) (*Inputs, error) {
+func getWorkflowInputsFromJSON(r io.Reader) (*Inputs, error) {
 	i := &Inputs{}
 	p := &Payload{}
 	if err := json.NewDecoder(r).Decode(p); err != nil {
