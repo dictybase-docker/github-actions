@@ -48,12 +48,16 @@ type Output struct {
 	Ref      string
 }
 
-func GetWorkflowInputs(data []byte) (*Inputs, error) {
-	o := new(Inputs)
-	if err := json.Unmarshal(data, &o); err != nil {
-		return o, fmt.Errorf("error in decoding json data to struct %s", err)
+func getWorkflowInputsFromJSON(r *os.File) (*Inputs, error) {
+	i := &Inputs{}
+	p := &Payload{}
+	if err := json.NewDecoder(r).Decode(p); err != nil {
+		return i, fmt.Errorf("error in decoding json %s", err)
 	}
-	return o, nil
+	if err := json.Unmarshal(p.Event.Inputs, &i); err != nil {
+		return i, fmt.Errorf("error in decoding json data to struct %s", err)
+	}
+	return i, nil
 }
 
 func ParseDeployCommand(c *cli.Context) error {
@@ -62,11 +66,7 @@ func ParseDeployCommand(c *cli.Context) error {
 		return fmt.Errorf("error in reading content from file %s", err)
 	}
 	defer r.Close()
-	i := &Payload{}
-	if err := json.NewDecoder(r).Decode(i); err != nil {
-		return fmt.Errorf("error in decoding json %s", err)
-	}
-	p, err := GetWorkflowInputs(i.Event.Inputs)
+	p, err := getWorkflowInputsFromJSON(r)
 	if err != nil {
 		return err
 	}
