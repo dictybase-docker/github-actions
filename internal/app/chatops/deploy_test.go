@@ -1,13 +1,31 @@
 package chatops
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/google/go-github/v32/github"
 	"github.com/stretchr/testify/require"
 )
+
+type mockPullRequestClient struct {
+	resp *github.PullRequest
+}
+
+func (m *mockPullRequestClient) Get(ctx context.Context, owner string, repo string, number int) (*github.PullRequest, *github.Response, error) {
+	return m.resp, nil, nil
+}
+
+type mockBranchClient struct {
+	resp *github.Branch
+}
+
+func (m *mockBranchClient) GetBranch(ctx context.Context, owner string, repo string, branch string) (*github.Branch, *github.Response, error) {
+	return m.resp, nil, nil
+}
 
 func openTestJSON(filename string) (*os.File, error) {
 	f := &os.File{}
@@ -53,4 +71,72 @@ func TestGetWorkflowInputsFromJSON(t *testing.T) {
 	assert.NoError(err, "should not receive error from extracting workflow inputs")
 	assert.Empty(i3.Branch, "should have empty branch value")
 	assert.Equal(i3.Commit, "f85f132b3a986c12eb0c2a61d60a5c3dd8347bf3", "should match commit value")
+}
+
+func TestParsePR(t *testing.T) {
+	assert := require.New(t)
+	mockSHA := "17f9184c165252d85994174b82fa86e7edf44b4f"
+	mc := &mockPullRequestClient{
+		resp: &github.PullRequest{
+			Head: &github.PullRequestBranch{
+				SHA: &mockSHA,
+			},
+		},
+	}
+	prc := &pullRequestClient{
+		ctx:               context.Background(),
+		pullRequestClient: mc,
+	}
+	// test output when given a commit
+	i := &Inputs{
+		Commit:      "f85f132b3a986c12eb0c2a61d60a5c3dd8347bf3",
+		IssueNumber: "9",
+	}
+	o, err := parsePR(prc, i)
+	assert.NoError(err, "should not have error from parsing pr")
+	assert.Equal(o.ImageTag, "pr-9-f85f132", "should match pr image tag")
+	assert.Equal(o.Ref, i.Commit, "should match ref value")
+
+	// test output when not given a commit
+	i2 := &Inputs{
+		IssueNumber: "9",
+	}
+	o2, err := parsePR(prc, i2)
+	assert.NoError(err, "should not have error from parsing pr")
+	assert.Equal(o2.ImageTag, "pr-9-17f9184", "should match pr image tag")
+	assert.Equal(o2.Ref, mockSHA, "should match ref value")
+}
+
+func TestParseIssue(t *testing.T) {
+	assert := require.New(t)
+	mockSHA := "17f9184c165252d85994174b82fa86e7edf44b4f"
+	mc := &mockBranchClient{
+		resp: &github.Branch{
+			Commit: &github.RepositoryCommit{
+				SHA: &mockSHA,
+			},
+		},
+	}
+	bc := &branchClient{
+		ctx:          context.Background(),
+		branchClient: mc,
+	}
+	// test when given a commit
+	i := &Inputs{
+		Commit:      "f85f132b3a986c12eb0c2a61d60a5c3dd8347bf3",
+		IssueNumber: "9",
+	}
+	o, err := parseIssue(bc, i)
+	assert.NoError(err, "should not have error from parsing issue")
+	assert.Equal(o.ImageTag, "f85f132", "should match commit image tag")
+	assert.Equal(o.Ref, i.Commit, "should match ref value")
+	// test when given a branch
+	i2 := &Inputs{
+		Branch:      "feature/new-command",
+		IssueNumber: "9",
+	}
+	o2, err := parseIssue(bc, i2)
+	assert.NoError(err, "should not have error from parsing issue")
+	assert.Equal(o2.ImageTag, "feature-new-command-17f9184", "should match branch image tag")
+	assert.Equal(o2.Ref, mockSHA, "should match ref value")
 }
