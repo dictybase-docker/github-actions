@@ -91,7 +91,7 @@ func ParseDeployCommand(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("error in parsing workflow inputs %s", err)
 	}
-	a.SetOutput("image-tag", o.ImageTag)
+	a.SetOutput("image_tag", o.ImageTag)
 	a.SetOutput("ref", o.Ref)
 	log.Info("added all keys to the output")
 	return nil
