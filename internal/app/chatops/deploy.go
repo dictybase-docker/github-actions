@@ -132,7 +132,7 @@ func parseIssue(p *Inputs) (*Output, error) {
 		if err != nil {
 			return o, err
 		}
-		cb := strings.ReplaceAll(p.Branch, "/", "")
+		cb := strings.ReplaceAll(p.Branch, "/", "-")
 		o.ImageTag = fmt.Sprintf("%s-%s", cb, ref[0:7])
 		o.Ref = ref
 		return o, nil
