@@ -15,6 +15,24 @@ import (
 	"github.com/urfave/cli"
 )
 
+type pullRequestGetter interface {
+	Get(ctx context.Context, owner string, repo string, number int) (*github.PullRequest, *github.Response, error)
+}
+
+type pullRequestClient struct {
+	ctx               context.Context
+	pullRequestClient pullRequestGetter
+}
+
+type branchGetter interface {
+	GetBranch(ctx context.Context, owner string, repo string, branch string) (*github.Branch, *github.Response, error)
+}
+
+type branchClient struct {
+	ctx          context.Context
+	branchClient branchGetter
+}
+
 type Inputs struct {
 	Cluster         string `json:"cluster"`
 	URL             string `json:"html-url"`
@@ -81,14 +99,23 @@ func ParseDeployCommand(c *cli.Context) error {
 
 func parseWorkflowInputs(p *Inputs) (*Output, error) {
 	ou := &Output{}
+	client := github.NewClient(nil)
+	prc := &pullRequestClient{
+		ctx:               context.Background(),
+		pullRequestClient: client.PullRequests,
+	}
+	bc := &branchClient{
+		ctx:          context.Background(),
+		branchClient: client.Repositories,
+	}
 	if strings.Contains(p.URL, "pull") {
-		o, err := parsePR(p)
+		o, err := parsePR(prc, p)
 		if err != nil {
 			return ou, err
 		}
 		return o, nil
 	} else {
-		o, err := parseIssue(p)
+		o, err := parseIssue(bc, p)
 		if err != nil {
 			return ou, err
 		}
@@ -96,10 +123,10 @@ func parseWorkflowInputs(p *Inputs) (*Output, error) {
 	}
 }
 
-func parsePR(p *Inputs) (*Output, error) {
+func parsePR(prc *pullRequestClient, p *Inputs) (*Output, error) {
 	o := &Output{}
 	if p.Commit == "" {
-		ref, err := getHeadCommitFromPR(p.RepositoryName, p.RepositoryOwner, p.IssueNumber)
+		ref, err := prc.getHeadCommitFromPR(p.RepositoryName, p.RepositoryOwner, p.IssueNumber)
 		if err != nil {
 			return o, err
 		}
@@ -112,23 +139,22 @@ func parsePR(p *Inputs) (*Output, error) {
 	return o, nil
 }
 
-func getHeadCommitFromPR(name, owner, id string) (string, error) {
-	client := github.NewClient(nil)
+func (prc *pullRequestClient) getHeadCommitFromPR(name, owner, id string) (string, error) {
 	num, err := strconv.Atoi(id)
 	if err != nil {
 		return "", fmt.Errorf("error converting string to int %s", err)
 	}
-	pr, _, err := client.PullRequests.Get(context.Background(), owner, name, num)
+	pr, _, err := prc.pullRequestClient.Get(context.Background(), owner, name, num)
 	if err != nil {
 		return "", fmt.Errorf("error getting pull request info %s", err)
 	}
 	return *pr.Head.SHA, nil
 }
 
-func parseIssue(p *Inputs) (*Output, error) {
+func parseIssue(bc *branchClient, p *Inputs) (*Output, error) {
 	o := &Output{}
 	if p.Branch != "" {
-		ref, err := getHeadCommitFromBranch(p.RepositoryName, p.RepositoryOwner, p.Branch)
+		ref, err := bc.getHeadCommitFromBranch(p.RepositoryName, p.RepositoryOwner, p.Branch)
 		if err != nil {
 			return o, err
 		}
@@ -145,9 +171,8 @@ func parseIssue(p *Inputs) (*Output, error) {
 	return o, nil
 }
 
-func getHeadCommitFromBranch(name, owner, branch string) (string, error) {
-	client := github.NewClient(nil)
-	b, _, err := client.Repositories.GetBranch(context.Background(), owner, name, branch)
+func (bc *branchClient) getHeadCommitFromBranch(name, owner, branch string) (string, error) {
+	b, _, err := bc.branchClient.GetBranch(context.Background(), owner, name, branch)
 	if err != nil {
 		return "", fmt.Errorf("error getting pull request info %s", err)
 	}
