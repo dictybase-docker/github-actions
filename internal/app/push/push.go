@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"strings"
 
 	"github.com/google/go-github/v32/github"
 
 	"github.com/dictyBase-docker/github-actions/internal/client"
+	gh "github.com/dictyBase-docker/github-actions/internal/github"
 	"github.com/dictyBase-docker/github-actions/internal/logger"
 	"github.com/urfave/cli"
 )
@@ -88,7 +88,7 @@ func suffixFilter(c *cli.Context, sl []string) []string {
 }
 
 func screenFiles(c *cli.Context, event *github.CommitsComparison) ([]string, error) {
-	files := committedFiles(event, c.BoolT("skip-deleted"))
+	files := gh.CommittedFiles(event, c.BoolT("skip-deleted"))
 	if len(files) == 0 {
 		return files,
 			errors.New("no committed file found matching the criteria")
@@ -104,33 +104,4 @@ func screenFiles(c *cli.Context, event *github.CommitsComparison) ([]string, err
 		}
 	}
 	return files, nil
-}
-
-func committedFiles(event *github.CommitsComparison, skipDeleted bool) []string {
-	var files []string
-	for _, f := range event.Files {
-		if skipDeleted {
-			if f.GetStatus() == "deleted" {
-				continue
-			}
-		}
-		files = append(files, f.GetFilename())
-	}
-	return uniqueFiles(files)
-}
-
-func uniqueFiles(sl []string) []string {
-	if len(sl) == 1 {
-		return sl
-	}
-	m := make(map[string]int)
-	var a []string
-	for _, v := range sl {
-		n := path.Base(v)
-		if _, ok := m[n]; !ok {
-			a = append(a, v)
-			m[n] = 1
-		}
-	}
-	return a
 }
