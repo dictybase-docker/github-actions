@@ -1,4 +1,4 @@
-package push
+package github
 
 import (
 	"encoding/json"
@@ -22,7 +22,7 @@ func testDataForGitPush() (*github.CommitsComparison, error) {
 		return cc, fmt.Errorf("unable to get current dir %s", err)
 	}
 	path := filepath.Join(
-		filepath.Dir(dir), "../../testdata", "event.json",
+		filepath.Dir(dir), "../testdata", "event.json",
 	)
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -45,7 +45,7 @@ func TestCommitedFiles(t *testing.T) {
 		cc.GetAheadBy(),
 		"total commits and ahead by should match",
 	)
-	files := committedFiles(cc, false)
+	files := CommittedFiles(cc, false)
 	assert.Len(files, 11, "should have committed 11 unique files")
 	assert.Contains(toFileNames(files), "navbar.json", "should have navbar.json file")
 }
