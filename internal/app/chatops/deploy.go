@@ -156,7 +156,7 @@ func (prc *pullRequestClient) getHeadCommitFromPR(name, owner, id string) (strin
 	if err != nil {
 		return "", fmt.Errorf("error getting pull request info %s", err)
 	}
-	return *pr.Head.SHA, nil
+	return pr.GetHead().GetSHA(), nil
 }
 
 func parseIssue(bc *branchClient, p *Inputs) (*Output, error) {
@@ -184,5 +184,5 @@ func (bc *branchClient) getHeadCommitFromBranch(name, owner, branch string) (str
 	if err != nil {
 		return "", fmt.Errorf("error getting pull request info %s", err)
 	}
-	return *b.Commit.SHA, nil
+	return b.GetCommit().GetSHA(), nil
 }
