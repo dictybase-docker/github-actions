@@ -17,11 +17,11 @@ func NewGithubManager(c *gh.Client) *GithubManager {
 	return &GithubManager{client: c}
 }
 
-func (g *GithubManager) CommitedFilesInPush(r io.Reader) ([]string, error) {
-	var files []string
+func (g *GithubManager) CommitedFilesInPush(r io.Reader) (*ChangedFilesBuilder, error) {
+	var b *ChangedFilesBuilder
 	pe := &gh.PushEvent{}
 	if err := json.NewDecoder(r).Decode(pe); err != nil {
-		return files, fmt.Errorf("error in decoding json %s", err)
+		return b, fmt.Errorf("error in decoding json %s", err)
 	}
 	comc, _, err := g.client.Repositories.CompareCommits(
 		context.Background(),
@@ -31,7 +31,7 @@ func (g *GithubManager) CommitedFilesInPush(r io.Reader) ([]string, error) {
 		pe.GetAfter(),
 	)
 	if err != nil {
-		return files, fmt.Errorf("error in comparing commits %s", err)
+		return b, fmt.Errorf("error in comparing commits %s", err)
 	}
 	return CommittedFiles(comc), nil
 }
