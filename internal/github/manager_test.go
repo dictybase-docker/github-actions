@@ -34,6 +34,15 @@ func fakeGithubCommitComparison() (*github.CommitsComparison, error) {
 	return cc, nil
 }
 
+func TestFilterUnique(t *testing.T) {
+	assert := require.New(t)
+	cc, err := fakeGithubCommitComparison()
+	assert.NoError(err, "should not receive any error for parsing push event data")
+	files := CommittedFiles(cc).FilterUniqueByName().List()
+	assert.Len(files, 11, "should have committed 11 unique files")
+	assert.Contains(toFileNames(files), "dicty_assay.obo", "should have dicty_assay.obo file")
+}
+
 func TestFilterDeleted(t *testing.T) {
 	assert := require.New(t)
 	cc, err := fakeGithubCommitComparison()
@@ -66,6 +75,19 @@ func TestCommitedFiles(t *testing.T) {
 	files := CommittedFiles(cc).List()
 	assert.Len(files, 14, "should have committed 14 unique files")
 	assert.Contains(toFileNames(files), "navbar.json", "should have navbar.json file")
+}
+
+func TestFilterChain(t *testing.T) {
+	assert := require.New(t)
+	cc, err := fakeGithubCommitComparison()
+	assert.NoError(err, "should not receive any error for parsing push event data")
+	files := CommittedFiles(cc).FilterSuffix("txt").FilterDeleted(true).FilterUniqueByName().List()
+	assert.Len(files, 4, "should have committed 4 unique files")
+	assert.Contains(
+		toFileNames(files),
+		"GWDI_Strain_Annotation.txt",
+		"should have GWDI_Strain_Annotation.txt file",
+	)
 }
 
 func toFileNames(s []string) []string {
