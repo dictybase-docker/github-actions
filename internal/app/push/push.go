@@ -1,15 +1,10 @@
 package push
 
 import (
-	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
-
-	"github.com/google/go-github/v32/github"
 
 	"github.com/dictyBase-docker/github-actions/internal/client"
 	gh "github.com/dictyBase-docker/github-actions/internal/github"
@@ -28,8 +23,13 @@ func PushFileCommited(c *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
-	logger.GetLogger(c).Infof("%d files has changed in the push", len(files))
-	fmt.Fprint(out, strings.Join(files, "\n"))
+	log := logger.GetLogger(c)
+	if len(files) == 0 {
+		log.Warn("no committed file found matching the criteria")
+	} else {
+		fmt.Fprint(out, strings.Join(files, "\n"))
+		log.Infof("%d files has changed in the push", len(files))
+	}
 	return nil
 }
 
@@ -54,54 +54,16 @@ func inputOutput(c *cli.Context) (*os.File, *os.File, error) {
 }
 
 func changedFiles(c *cli.Context, in io.Reader) ([]string, error) {
-	var files []string
-	pe := &github.PushEvent{}
-	if err := json.NewDecoder(in).Decode(pe); err != nil {
-		return files, fmt.Errorf("error in decoding json %s", err)
-	}
 	gclient, err := client.GetGithubClient(c.GlobalString("token"))
 	if err != nil {
-		return files, fmt.Errorf("error in getting github client %s", err)
+		return []string{}, fmt.Errorf("error in getting github client %s", err)
 	}
-	comc, _, err := gclient.Repositories.CompareCommits(
-		context.Background(),
-		pe.GetRepo().GetOwner().GetLogin(),
-		pe.GetRepo().GetName(),
-		pe.GetBefore(),
-		pe.GetAfter(),
-	)
+	fb, err := gh.NewGithubManager(gclient).CommitedFilesInPush(in)
 	if err != nil {
-		return files, fmt.Errorf("error in comparing commits %s", err)
+		return []string{}, err
 	}
-	return screenFiles(c, comc)
-}
-
-func suffixFilter(c *cli.Context, sl []string) []string {
-	var a []string
-	for _, v := range sl {
-		if strings.HasSuffix(v, c.String("include-file-suffix")) {
-			a = append(a, v)
-			continue
-		}
-	}
-	return a
-}
-
-func screenFiles(c *cli.Context, event *github.CommitsComparison) ([]string, error) {
-	files := gh.CommittedFiles(event, c.BoolT("skip-deleted"))
-	if len(files) == 0 {
-		return files,
-			errors.New("no committed file found matching the criteria")
-	}
-	if len(c.String("include-file-suffix")) > 0 {
-		files = suffixFilter(c, files)
-		if len(files) == 0 {
-			return files,
-				fmt.Errorf(
-					"no committed file found after filtering though include-file-suffix %s",
-					c.String("include-file-suffix"),
-				)
-		}
-	}
-	return files, nil
+	return fb.FilterUniqueByName().
+		FilterDeleted(c.BoolT("skip-deleted")).
+		FilterSuffix(c.String("include-file-suffix")).
+		List(), nil
 }
