@@ -12,44 +12,64 @@ type ChangedFiles struct {
 	Change string
 }
 
-func FilterSuffix(sl []string, suffix string) []string {
-	var a []string
-	for _, v := range sl {
-		if strings.HasSuffix(v, suffix) {
+type ChangedFilesBuilder struct {
+	files []*ChangedFiles
+}
+
+func (b *ChangedFilesBuilder) FilterSuffix(suffix string) *ChangedFilesBuilder {
+	if len(b.files) == 0 {
+		return b
+	}
+	var a []*ChangedFiles
+	for _, v := range b.files {
+		if strings.HasSuffix(v.Name, suffix) {
 			a = append(a, v)
 			continue
 		}
 	}
-	return a
+	return &ChangedFilesBuilder{files: a}
 }
 
-func FilterDeleted(sl []string, isDeleted bool) []string {
-
+func (b *ChangedFilesBuilder) FilterDeleted(isDeleted bool) *ChangedFilesBuilder {
+	if len(b.files) == 0 {
+		return b
+	}
+	var a []*ChangedFiles
+	for _, v := range b.files {
+		if v.Change == "deleted" {
+			continue
+		}
+		a = append(a, v)
+	}
+	return &ChangedFilesBuilder{files: a}
 }
 
-func UniqueFiles(sl []string) []string {
-	if len(sl) == 1 {
-		return sl
+func (b *ChangedFilesBuilder) UniqueFiles() *ChangedFilesBuilder {
+	if len(b.files) == 0 {
+		return b
+	}
+	if len(b.files) == 1 {
+		return b
 	}
 	m := make(map[string]int)
-	var a []string
-	for _, v := range sl {
-		n := path.Base(v)
+	var a []*ChangedFiles
+	for _, v := range b.files {
+		n := path.Base(v.Name)
 		if _, ok := m[n]; !ok {
 			a = append(a, v)
 			m[n] = 1
 		}
 	}
-	return a
+	return &ChangedFilesBuilder{files: a}
 }
 
-func CommittedFiles(event *github.CommitsComparison) []*ChangedFiles {
-	var files []*ChangedFiles
+func CommittedFiles(event *github.CommitsComparison) *ChangedFilesBuilder {
+	var a []*ChangedFiles
 	for _, f := range event.Files {
-		files = append(
-			files,
+		a = append(
+			a,
 			&ChangedFiles{Name: f.GetFilename(), Change: f.GetStatus()},
 		)
 	}
-	return files
+	return &ChangedFilesBuilder{files: a}
 }
