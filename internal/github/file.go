@@ -44,11 +44,8 @@ func (b *ChangedFilesBuilder) FilterDeleted(isDeleted bool) *ChangedFilesBuilder
 	return &ChangedFilesBuilder{files: a}
 }
 
-func (b *ChangedFilesBuilder) UniqueFiles() *ChangedFilesBuilder {
-	if len(b.files) == 0 {
-		return b
-	}
-	if len(b.files) == 1 {
+func (b *ChangedFilesBuilder) FilterUniqueByName() *ChangedFilesBuilder {
+	if len(b.files) <= 1 {
 		return b
 	}
 	m := make(map[string]int)
@@ -61,6 +58,14 @@ func (b *ChangedFilesBuilder) UniqueFiles() *ChangedFilesBuilder {
 		}
 	}
 	return &ChangedFilesBuilder{files: a}
+}
+
+func (b *ChangedFilesBuilder) List() []string {
+	var sl []string
+	for _, v := range b.files {
+		sl = append(sl, v.Name)
+	}
+	return sl
 }
 
 func CommittedFiles(event *github.CommitsComparison) *ChangedFilesBuilder {
