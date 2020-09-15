@@ -34,6 +34,24 @@ func fakeGithubCommitComparison() (*github.CommitsComparison, error) {
 	return cc, nil
 }
 
+func TestFilterDeleted(t *testing.T) {
+	assert := require.New(t)
+	cc, err := fakeGithubCommitComparison()
+	assert.NoError(err, "should not receive any error for parsing push event data")
+	files := CommittedFiles(cc).FilterDeleted(true).List()
+	assert.Len(files, 14, "should have committed 14 unique files")
+	assert.Contains(toFileNames(files), "dicty_assay.obo", "should have dicty_assay.obo file")
+}
+
+func TestFilterSuffix(t *testing.T) {
+	assert := require.New(t)
+	cc, err := fakeGithubCommitComparison()
+	assert.NoError(err, "should not receive any error for parsing push event data")
+	files := CommittedFiles(cc).FilterSuffix("obo").List()
+	assert.Len(files, 3, "should have committed 3 unique files")
+	assert.Contains(toFileNames(files), "dicty_anatomy.obo", "should have dicty_anatomy.obo file")
+}
+
 func TestCommitedFiles(t *testing.T) {
 	assert := require.New(t)
 	cc, err := fakeGithubCommitComparison()
