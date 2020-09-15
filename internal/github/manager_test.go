@@ -45,8 +45,8 @@ func TestCommitedFiles(t *testing.T) {
 		cc.GetAheadBy(),
 		"total commits and ahead by should match",
 	)
-	files := CommittedFiles(cc, false)
-	assert.Len(files, 11, "should have committed 11 unique files")
+	files := CommittedFiles(cc).List()
+	assert.Len(files, 14, "should have committed 14 unique files")
 	assert.Contains(toFileNames(files), "navbar.json", "should have navbar.json file")
 }
 
