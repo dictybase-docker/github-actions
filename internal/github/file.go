@@ -78,3 +78,11 @@ func CommittedFiles(event *github.CommitsComparison) *ChangedFilesBuilder {
 	}
 	return &ChangedFilesBuilder{files: a}
 }
+
+func FileNames(s []string) []string {
+	var a []string
+	for _, f := range s {
+		a = append(a, path.Base(f))
+	}
+	return a
+}
