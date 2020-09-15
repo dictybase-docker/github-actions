@@ -3,8 +3,6 @@ package github
 import (
 	"path"
 	"strings"
-
-	"github.com/google/go-github/v32/github"
 )
 
 type ChangedFiles struct {
@@ -66,17 +64,6 @@ func (b *ChangedFilesBuilder) List() []string {
 		sl = append(sl, v.Name)
 	}
 	return sl
-}
-
-func CommittedFiles(event *github.CommitsComparison) *ChangedFilesBuilder {
-	var a []*ChangedFiles
-	for _, f := range event.Files {
-		a = append(
-			a,
-			&ChangedFiles{Name: f.GetFilename(), Change: f.GetStatus()},
-		)
-	}
-	return &ChangedFilesBuilder{files: a}
 }
 
 func FileNames(s []string) []string {
