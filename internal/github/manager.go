@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/google/go-github/v32/github"
 	gh "github.com/google/go-github/v32/github"
 )
 
@@ -37,7 +36,7 @@ func (g *GithubManager) CommitedFilesInPush(r io.Reader) (*ChangedFilesBuilder, 
 	return CommittedFiles(comc), nil
 }
 
-func CommittedFiles(event *github.CommitsComparison) *ChangedFilesBuilder {
+func CommittedFiles(event *gh.CommitsComparison) *ChangedFilesBuilder {
 	var a []*ChangedFiles
 	for _, f := range event.Files {
 		a = append(
