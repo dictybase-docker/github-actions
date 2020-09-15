@@ -6,7 +6,7 @@ import (
 	"github.com/google/go-github/v32/github"
 )
 
-func uniqueFiles(sl []string) []string {
+func UniqueFiles(sl []string) []string {
 	if len(sl) == 1 {
 		return sl
 	}
@@ -22,15 +22,10 @@ func uniqueFiles(sl []string) []string {
 	return a
 }
 
-func CommittedFiles(event *github.CommitsComparison, skipDeleted bool) []string {
+func CommittedFiles(event *github.CommitsComparison) []string {
 	var files []string
 	for _, f := range event.Files {
-		if skipDeleted {
-			if f.GetStatus() == "deleted" {
-				continue
-			}
-		}
 		files = append(files, f.GetFilename())
 	}
-	return uniqueFiles(files)
+	return files
 }
