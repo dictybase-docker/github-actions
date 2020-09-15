@@ -93,10 +93,10 @@ func ParseDeployCommand(c *cli.Context) error {
 	}
 	imageTag := o.ImageTag
 	// add image tag prefixes for developers
-	if c.BoolT("frontend") && p.Cluster == "erickube" {
+	if c.Bool("frontend") && p.Cluster == "erickube" {
 		imageTag = fmt.Sprintf("ericdev-%s", o.ImageTag)
 	}
-	if c.BoolT("frontend") && p.Cluster == "siddkube" {
+	if c.Bool("frontend") && p.Cluster == "siddkube" {
 		imageTag = fmt.Sprintf("devsidd-%s", o.ImageTag)
 	}
 	a.SetOutput("image_tag", imageTag)

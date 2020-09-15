@@ -17,7 +17,7 @@ func ParseChatOpsDeploy() cli.Command {
 				Required: true,
 				Usage:    "path to JSON payload",
 			},
-			cli.BoolTFlag{
+			cli.BoolFlag{
 				Name:  "frontend",
 				Usage: "used if deploying frontend web app (needed for updating image-tag correctly)",
 			},
