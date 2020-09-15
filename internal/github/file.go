@@ -2,9 +2,30 @@ package github
 
 import (
 	"path"
+	"strings"
 
 	"github.com/google/go-github/v32/github"
 )
+
+type ChangedFiles struct {
+	Name   string
+	Change string
+}
+
+func FilterSuffix(sl []string, suffix string) []string {
+	var a []string
+	for _, v := range sl {
+		if strings.HasSuffix(v, suffix) {
+			a = append(a, v)
+			continue
+		}
+	}
+	return a
+}
+
+func FilterDeleted(sl []string, isDeleted bool) []string {
+
+}
 
 func UniqueFiles(sl []string) []string {
 	if len(sl) == 1 {
@@ -22,10 +43,13 @@ func UniqueFiles(sl []string) []string {
 	return a
 }
 
-func CommittedFiles(event *github.CommitsComparison) []string {
-	var files []string
+func CommittedFiles(event *github.CommitsComparison) []*ChangedFiles {
+	var files []*ChangedFiles
 	for _, f := range event.Files {
-		files = append(files, f.GetFilename())
+		files = append(
+			files,
+			&ChangedFiles{Name: f.GetFilename(), Change: f.GetStatus()},
+		)
 	}
 	return files
 }
