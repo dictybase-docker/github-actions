@@ -2,6 +2,7 @@ package github
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -27,7 +28,7 @@ func handleCommitComparison(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	path := filepath.Join(
-		filepath.Dir(dir), "../testdata", "event.json",
+		filepath.Dir(dir), "../testdata", "commit-diff.json",
 	)
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -45,6 +46,16 @@ func handleCommitComparison(w http.ResponseWriter, r *http.Request) {
 			http.StatusInternalServerError,
 		)
 	}
+}
+
+func fakePushPayload() (io.Reader, error) {
+	var r io.Reader
+	dir, err := os.Getwd()
+	if err != nil {
+		return r, fmt.Errorf("unable to get current dir %s", err)
+	}
+	path := filepath.Join(filepath.Dir(dir), "../testdata", "event.json")
+	return os.Open(path)
 }
 
 func fakeGhServerClient() (*httptest.Server, *gh.Client) {
