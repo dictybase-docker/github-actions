@@ -17,18 +17,27 @@ func NewGithubManager(c *gh.Client) *GithubManager {
 	return &GithubManager{client: c}
 }
 
-func (g *GithubManager) CommitedFilesInPullCreate(r io.Reader) (*ChangedFilesBuilder, error) {
+func (g *GithubManager) CommitedFilesInPull(r io.Reader) (*ChangedFilesBuilder, error) {
 	var b *ChangedFilesBuilder
 	pe := &gh.PullRequestEvent{}
 	if err := json.NewDecoder(r).Decode(pe); err != nil {
 		return b, fmt.Errorf("error in decoding json %s", err)
 	}
+	var after, before string
+	switch pe.GetAction() {
+	case "synchronize":
+		before = pe.GetBefore()
+		after = pe.GetAfter()
+	case "opened":
+		before = pe.GetPullRequest().GetBase().GetSHA()
+		after = pe.GetPullRequest().GetHead().GetSHA()
+	}
 	comc, _, err := g.client.Repositories.CompareCommits(
 		context.Background(),
 		pe.GetRepo().GetOwner().GetLogin(),
 		pe.GetRepo().GetName(),
-		pe.GetPullRequest().GetBase().GetSHA(),
-		pe.GetPullRequest().GetHead().GetSHA(),
+		before,
+		after,
 	)
 	if err != nil {
 		return b, fmt.Errorf("error in comparing commits %s", err)
