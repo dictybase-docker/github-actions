@@ -3,50 +3,14 @@ package github
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"net/url"
 	"os"
 	"path/filepath"
+	"testing"
 
-	gh "github.com/google/go-github/v32/github"
+	"github.com/dictyBase-docker/github-actions/internal/fake"
+
+	"github.com/stretchr/testify/require"
 )
-
-const (
-	baseURLPath = "/api-v3"
-)
-
-func handleCommitComparison(w http.ResponseWriter, r *http.Request) {
-	dir, err := os.Getwd()
-	if err != nil {
-		http.Error(
-			w,
-			fmt.Sprintf("unable to get current dir %s", err),
-			http.StatusInternalServerError,
-		)
-		return
-	}
-	path := filepath.Join(
-		filepath.Dir(dir), "../testdata", "commit-diff.json",
-	)
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		http.Error(
-			w,
-			"unable to read test file",
-			http.StatusInternalServerError,
-		)
-		return
-	}
-	if _, err := w.Write(b); err != nil {
-		http.Error(
-			w,
-			err.Error(),
-			http.StatusInternalServerError,
-		)
-	}
-}
 
 func fakePushPayload() (io.Reader, error) {
 	var r io.Reader
@@ -54,17 +18,51 @@ func fakePushPayload() (io.Reader, error) {
 	if err != nil {
 		return r, fmt.Errorf("unable to get current dir %s", err)
 	}
-	path := filepath.Join(filepath.Dir(dir), "../testdata", "event.json")
+	path := filepath.Join(filepath.Dir(dir), "../testdata", "push.json")
 	return os.Open(path)
 }
 
-func fakeGhServerClient() (*httptest.Server, *gh.Client) {
-	apiHandler := http.NewServeMux()
-	apiHandler.HandleFunc("/repos/o/r/compare/b...h", handleCommitComparison)
-	server := httptest.NewServer(apiHandler)
-	client := gh.NewClient(nil)
-	url, _ := url.Parse(server.URL + baseURLPath + "/")
-	client.BaseURL = url
-	client.UploadURL = url
-	return server, client
+func TestCommitedFilesInpush(t *testing.T) {
+	assert := require.New(t)
+	r, err := fakePushPayload()
+	assert.NoError(err, "should not receive any error from reading push payload")
+	server, client := fake.GhServerClient()
+	defer server.Close()
+	b, err := NewGithubManager(client).CommittedFilesInPush(r)
+	assert.NoError(
+		err,
+		"should not receive any error from getting a list of committed files",
+	)
+	files := b.FilterUniqueByName().List()
+	assert.Len(files, 11, "should have committed 11 unique files")
+	assert.Contains(
+		FileNames(files),
+		"dicty_assay.obo",
+		"should have dicty_assay.obo file",
+	)
+	files = b.FilterDeleted(true).List()
+	assert.Len(
+		files,
+		14,
+		"should have committed 14 unique files",
+	)
+	assert.Contains(
+		FileNames(files),
+		"dicty_assay.obo",
+		"should have dicty_assay.obo file",
+	)
+	files = b.FilterSuffix("obo").List()
+	assert.Len(files, 3, "should have committed 3 unique files")
+	assert.Contains(
+		FileNames(files),
+		"dicty_anatomy.obo",
+		"should have dicty_anatomy.obo file",
+	)
+	files = b.FilterSuffix("txt").FilterDeleted(true).FilterUniqueByName().List()
+	assert.Len(files, 4, "should have committed 4 unique files")
+	assert.Contains(
+		FileNames(files),
+		"GWDI_Strain_Annotation.txt",
+		"should have GWDI_Strain_Annotation.txt file",
+	)
 }

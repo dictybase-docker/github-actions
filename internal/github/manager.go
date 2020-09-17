@@ -45,7 +45,7 @@ func (g *GithubManager) CommitedFilesInPull(r io.Reader) (*ChangedFilesBuilder, 
 	return CommittedFiles(comc), nil
 }
 
-func (g *GithubManager) CommitedFilesInPush(r io.Reader) (*ChangedFilesBuilder, error) {
+func (g *GithubManager) CommittedFilesInPush(r io.Reader) (*ChangedFilesBuilder, error) {
 	var b *ChangedFilesBuilder
 	pe := &gh.PushEvent{}
 	if err := json.NewDecoder(r).Decode(pe); err != nil {
