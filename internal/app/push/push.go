@@ -58,7 +58,7 @@ func changedFiles(c *cli.Context, in io.Reader) ([]string, error) {
 	if err != nil {
 		return []string{}, fmt.Errorf("error in getting github client %s", err)
 	}
-	fb, err := gh.NewGithubManager(gclient).CommitedFilesInPush(in)
+	fb, err := gh.NewGithubManager(gclient).CommittedFilesInPush(in)
 	if err != nil {
 		return []string{}, err
 	}
