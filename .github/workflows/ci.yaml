@@ -17,7 +17,7 @@ jobs:
         with:
           go-version: 1.13.15
       - name: unit test
-        run: go test -covermode=atomic -coverprofile=profile.cov -v ./...
+        run: go test -parallel 4 -covermode=atomic -coverprofile=profile.cov -v ./...
       - name: upload coverage to codecov
         uses: codecov/codecov-action@v1
         with:
