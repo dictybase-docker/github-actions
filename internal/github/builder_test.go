@@ -34,6 +34,7 @@ func fakeGithubCommitComparison() (*gh.CommitsComparison, error) {
 }
 
 func TestFilterUnique(t *testing.T) {
+	t.Parallel()
 	assert := require.New(t)
 	cc, err := fakeGithubCommitComparison()
 	assert.NoError(err, "should not receive any error for parsing push event data")
@@ -43,6 +44,7 @@ func TestFilterUnique(t *testing.T) {
 }
 
 func TestFilterDeleted(t *testing.T) {
+	t.Parallel()
 	assert := require.New(t)
 	cc, err := fakeGithubCommitComparison()
 	assert.NoError(err, "should not receive any error for parsing push event data")
@@ -52,6 +54,7 @@ func TestFilterDeleted(t *testing.T) {
 }
 
 func TestFilterSuffix(t *testing.T) {
+	t.Parallel()
 	assert := require.New(t)
 	cc, err := fakeGithubCommitComparison()
 	assert.NoError(err, "should not receive any error for parsing push event data")
@@ -61,6 +64,7 @@ func TestFilterSuffix(t *testing.T) {
 }
 
 func TestCommitedFiles(t *testing.T) {
+	t.Parallel()
 	assert := require.New(t)
 	cc, err := fakeGithubCommitComparison()
 	assert.NoError(err, "should not receive any error for parsing push event data")
@@ -77,6 +81,7 @@ func TestCommitedFiles(t *testing.T) {
 }
 
 func TestFilterChain(t *testing.T) {
+	t.Parallel()
 	assert := require.New(t)
 	cc, err := fakeGithubCommitComparison()
 	assert.NoError(err, "should not receive any error for parsing push event data")

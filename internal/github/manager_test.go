@@ -23,6 +23,7 @@ func fakePushPayload() (io.Reader, error) {
 }
 
 func TestCommitedFilesInpush(t *testing.T) {
+	t.Parallel()
 	assert := require.New(t)
 	r, err := fakePushPayload()
 	assert.NoError(err, "should not receive any error from reading push payload")
