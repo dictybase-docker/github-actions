@@ -21,7 +21,7 @@ func fakeGithubCommitComparison() (*gh.CommitsComparison, error) {
 		return cc, fmt.Errorf("unable to get current dir %s", err)
 	}
 	path := filepath.Join(
-		filepath.Dir(dir), "../testdata", "event.json",
+		filepath.Dir(dir), "../testdata", "commit-diff.json",
 	)
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
