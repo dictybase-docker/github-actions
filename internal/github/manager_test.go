@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func fakePullReqSyncPayload() (io.Reader, error) {
+func fakePullReqPayload(name string) (io.Reader, error) {
 	var r io.Reader
 	dir, err := os.Getwd()
 	if err != nil {
@@ -21,7 +21,7 @@ func fakePullReqSyncPayload() (io.Reader, error) {
 	path := filepath.Join(
 		filepath.Dir(dir),
 		"../testdata",
-		"pull-request-sync.json",
+		name,
 	)
 	return os.Open(path)
 }
@@ -38,9 +38,16 @@ func fakePushPayload() (io.Reader, error) {
 
 func TestCommitedFilesInPullSync(t *testing.T) {
 	t.Parallel()
+	testPull(t, "pull-request-sync.json")
+}
+
+func testPull(t *testing.T, name string) {
 	assert := require.New(t)
-	r, err := fakePullReqSyncPayload()
-	assert.NoError(err, "should not receive any error from reading push payload")
+	r, err := fakePullReqPayload(name)
+	assert.NoError(
+		err,
+		"should not receive any error from reading payload for push",
+	)
 	server, client := fake.GhServerClient()
 	defer server.Close()
 	b, err := NewGithubManager(client).CommittedFilesInPush(r)
