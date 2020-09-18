@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/dictyBase-docker/github-actions/internal/client"
+
 	gh "github.com/google/go-github/v32/github"
+	"github.com/urfave/cli"
 )
 
 type GithubManager struct {
@@ -73,4 +76,25 @@ func CommittedFiles(event *gh.CommitsComparison) *ChangedFilesBuilder {
 		)
 	}
 	return &ChangedFilesBuilder{files: a}
+}
+
+func FilterCommittedFiles(c *cli.Context, in io.Reader, event string) ([]string, error) {
+	gclient, err := client.GetGithubClient(c.GlobalString("token"))
+	if err != nil {
+		return []string{}, fmt.Errorf("error in getting github client %s", err)
+	}
+	var fb *ChangedFilesBuilder
+	switch event {
+	case "push":
+		fb, err = NewGithubManager(gclient).CommittedFilesInPush(in)
+	case "pull":
+		fb, err = NewGithubManager(gclient).CommittedFilesInPull(in)
+	}
+	if err != nil {
+		return []string{}, err
+	}
+	return fb.FilterUniqueByName().
+		FilterDeleted(c.BoolT("skip-deleted")).
+		FilterSuffix(c.String("include-file-suffix")).
+		List(), nil
 }
