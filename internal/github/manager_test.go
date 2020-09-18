@@ -12,6 +12,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func fakePullReqSyncPayload() (io.Reader, error) {
+	var r io.Reader
+	dir, err := os.Getwd()
+	if err != nil {
+		return r, fmt.Errorf("unable to get current dir %s", err)
+	}
+	path := filepath.Join(
+		filepath.Dir(dir),
+		"../testdata",
+		"pull-request-sync.json",
+	)
+	return os.Open(path)
+}
+
 func fakePushPayload() (io.Reader, error) {
 	var r io.Reader
 	dir, err := os.Getwd()
