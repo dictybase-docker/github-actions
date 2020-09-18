@@ -1,40 +1,12 @@
 package github
 
 import (
-	"fmt"
-	"io"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/dictyBase-docker/github-actions/internal/fake"
 
 	"github.com/stretchr/testify/require"
 )
-
-func fakePullReqPayload(name string) (io.Reader, error) {
-	var r io.Reader
-	dir, err := os.Getwd()
-	if err != nil {
-		return r, fmt.Errorf("unable to get current dir %s", err)
-	}
-	path := filepath.Join(
-		filepath.Dir(dir),
-		"../testdata",
-		name,
-	)
-	return os.Open(path)
-}
-
-func fakePushPayload() (io.Reader, error) {
-	var r io.Reader
-	dir, err := os.Getwd()
-	if err != nil {
-		return r, fmt.Errorf("unable to get current dir %s", err)
-	}
-	path := filepath.Join(filepath.Dir(dir), "../testdata", "push.json")
-	return os.Open(path)
-}
 
 func TestCommittedFilesInPullSync(t *testing.T) {
 	t.Parallel()
@@ -49,7 +21,7 @@ func TestCommittedFilesInPullCreate(t *testing.T) {
 func TestCommitedFilesInpush(t *testing.T) {
 	t.Parallel()
 	assert := require.New(t)
-	r, err := fakePushPayload()
+	r, err := fake.PushPayload()
 	assert.NoError(err, "should not receive any error from reading push payload")
 	server, client := fake.GhServerClient()
 	defer server.Close()
@@ -99,7 +71,7 @@ func testCommitList(t *testing.T, b *ChangedFilesBuilder) {
 
 func testPull(t *testing.T, name string) {
 	assert := require.New(t)
-	r, err := fakePullReqPayload(name)
+	r, err := fake.PullReqPayload(name)
 	assert.NoError(
 		err,
 		"should not receive any error from reading payload for push",
