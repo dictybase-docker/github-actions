@@ -36,6 +36,21 @@ func fakePushPayload() (io.Reader, error) {
 	return os.Open(path)
 }
 
+func TestCommitedFilesInPullSync(t *testing.T) {
+	t.Parallel()
+	assert := require.New(t)
+	r, err := fakePullReqSyncPayload()
+	assert.NoError(err, "should not receive any error from reading push payload")
+	server, client := fake.GhServerClient()
+	defer server.Close()
+	b, err := NewGithubManager(client).CommittedFilesInPush(r)
+	assert.NoError(
+		err,
+		"should not receive any error from getting a list of committed files",
+	)
+	testCommitList(t, b)
+}
+
 func TestCommitedFilesInpush(t *testing.T) {
 	t.Parallel()
 	assert := require.New(t)
@@ -48,6 +63,11 @@ func TestCommitedFilesInpush(t *testing.T) {
 		err,
 		"should not receive any error from getting a list of committed files",
 	)
+	testCommitList(t, b)
+}
+
+func testCommitList(t *testing.T, b *ChangedFilesBuilder) {
+	assert := require.New(t)
 	files := b.FilterUniqueByName().List()
 	assert.Len(files, 11, "should have committed 11 unique files")
 	assert.Contains(
