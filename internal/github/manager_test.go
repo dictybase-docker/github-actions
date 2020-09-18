@@ -36,26 +36,14 @@ func fakePushPayload() (io.Reader, error) {
 	return os.Open(path)
 }
 
-func TestCommitedFilesInPullSync(t *testing.T) {
+func TestCommittedFilesInPullSync(t *testing.T) {
 	t.Parallel()
 	testPull(t, "pull-request-sync.json")
 }
 
-func testPull(t *testing.T, name string) {
-	assert := require.New(t)
-	r, err := fakePullReqPayload(name)
-	assert.NoError(
-		err,
-		"should not receive any error from reading payload for push",
-	)
-	server, client := fake.GhServerClient()
-	defer server.Close()
-	b, err := NewGithubManager(client).CommittedFilesInPush(r)
-	assert.NoError(
-		err,
-		"should not receive any error from getting a list of committed files",
-	)
-	testCommitList(t, b)
+func TestCommittedFilesInPullCreate(t *testing.T) {
+	t.Parallel()
+	testPull(t, "pull-request-create.json")
 }
 
 func TestCommitedFilesInpush(t *testing.T) {
@@ -107,4 +95,21 @@ func testCommitList(t *testing.T, b *ChangedFilesBuilder) {
 		"GWDI_Strain_Annotation.txt",
 		"should have GWDI_Strain_Annotation.txt file",
 	)
+}
+
+func testPull(t *testing.T, name string) {
+	assert := require.New(t)
+	r, err := fakePullReqPayload(name)
+	assert.NoError(
+		err,
+		"should not receive any error from reading payload for push",
+	)
+	server, client := fake.GhServerClient()
+	defer server.Close()
+	b, err := NewGithubManager(client).CommittedFilesInPull(r)
+	assert.NoError(
+		err,
+		"should not receive any error from getting a list of committed files",
+	)
+	testCommitList(t, b)
 }

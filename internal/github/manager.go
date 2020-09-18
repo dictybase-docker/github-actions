@@ -17,7 +17,7 @@ func NewGithubManager(c *gh.Client) *GithubManager {
 	return &GithubManager{client: c}
 }
 
-func (g *GithubManager) CommitedFilesInPull(r io.Reader) (*ChangedFilesBuilder, error) {
+func (g *GithubManager) CommittedFilesInPull(r io.Reader) (*ChangedFilesBuilder, error) {
 	var b *ChangedFilesBuilder
 	pe := &gh.PullRequestEvent{}
 	if err := json.NewDecoder(r).Decode(pe); err != nil {
