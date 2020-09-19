@@ -89,6 +89,8 @@ func FilterCommittedFiles(c *cli.Context, in io.Reader, event string) ([]string,
 		fb, err = NewGithubManager(gclient).CommittedFilesInPush(in)
 	case "pull":
 		fb, err = NewGithubManager(gclient).CommittedFilesInPull(in)
+	default:
+		return []string{}, fmt.Errorf("event type %s not supported", event)
 	}
 	if err != nil {
 		return []string{}, err
