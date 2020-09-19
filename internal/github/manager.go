@@ -6,11 +6,16 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/dictyBase-docker/github-actions/internal/client"
-
 	gh "github.com/google/go-github/v32/github"
-	"github.com/urfave/cli"
 )
+
+type CommittedFilesParams struct {
+	Client      *gh.Client
+	Input       io.Reader
+	Event       string
+	FileSuffix  string
+	SkipDeleted bool
+}
 
 type GithubManager struct {
 	client *gh.Client
@@ -78,25 +83,22 @@ func CommittedFiles(event *gh.CommitsComparison) *ChangedFilesBuilder {
 	return &ChangedFilesBuilder{files: a}
 }
 
-func FilterCommittedFiles(c *cli.Context, in io.Reader, event string) ([]string, error) {
-	gclient, err := client.GetGithubClient(c.GlobalString("token"))
-	if err != nil {
-		return []string{}, fmt.Errorf("error in getting github client %s", err)
-	}
+func FilterCommittedFiles(args *CommittedFilesParams) ([]string, error) {
 	var fb *ChangedFilesBuilder
-	switch event {
+	var err error
+	switch args.Event {
 	case "push":
-		fb, err = NewGithubManager(gclient).CommittedFilesInPush(in)
+		fb, err = NewGithubManager(args.Client).CommittedFilesInPush(args.Input)
 	case "pull":
-		fb, err = NewGithubManager(gclient).CommittedFilesInPull(in)
+		fb, err = NewGithubManager(args.Client).CommittedFilesInPull(args.Input)
 	default:
-		return []string{}, fmt.Errorf("event type %s not supported", event)
+		err = fmt.Errorf("event type %s not supported", args.Event)
 	}
 	if err != nil {
 		return []string{}, err
 	}
 	return fb.FilterUniqueByName().
-		FilterDeleted(c.BoolT("skip-deleted")).
-		FilterSuffix(c.String("include-file-suffix")).
+		FilterDeleted(args.SkipDeleted).
+		FilterSuffix(args.FileSuffix).
 		List(), nil
 }
