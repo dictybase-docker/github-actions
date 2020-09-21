@@ -47,7 +47,7 @@ func main() {
 		cmd.GetK8sClusterCredentialsCmd(),
 		cmd.GenerateMkdownCmd(),
 		cmd.DeployChartCmd(),
-		cmd.PushFileCommited(),
+		cmd.FilesCommited(),
 		cmd.BatchMultiRepo(),
 		cmd.ParseChatOpsDeploy(),
 	}
