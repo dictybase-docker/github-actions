@@ -89,7 +89,7 @@ func FilterCommittedFiles(args *CommittedFilesParams) ([]string, error) {
 	switch args.Event {
 	case "push":
 		fb, err = NewGithubManager(args.Client).CommittedFilesInPush(args.Input)
-	case "pull":
+	case "pull-request":
 		fb, err = NewGithubManager(args.Client).CommittedFilesInPull(args.Input)
 	default:
 		err = fmt.Errorf("event type %s not supported", args.Event)
