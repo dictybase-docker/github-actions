@@ -1,3 +1,7 @@
+% gh-action(8) 
+
+% 
+
 # NAME
 
 gh-action - run github action
@@ -37,6 +41,7 @@ gh-action [GLOBAL OPTIONS] command [COMMAND OPTIONS] [ARGUMENTS...]
 **--token, -t**="": github personal access token
 
 **--version, -v**: print the version
+
 
 # COMMANDS
 
@@ -108,17 +113,19 @@ deploy helm chart
 
 **--path**="": Relative chart path from the root of the repo
 
-## push-file-committed, pfc
+## files-committed, fc
 
-outputs list of file committed in a git push
+outputs list of file committed in a git push or pull-request
+
+**--event-type, -e**="": Name of the event, either or push or pull-request (default: push)
 
 **--include-file-suffix, --ifs**="": file with the given suffix will only be reported
 
 **--output, -o**="": Name of output file, defaults to stdout
 
-**--payload-file, -f**="": Full path to the file that contain the push payload
+**--payload-file, -f**="": Full path to the file that contain the event payload
 
-**--skip-deleted, --sd**: skip deleted files in the commit
+**--skip-deleted, --sd**: skip deleted files in the commit(s)
 
 ## batch-multi-repo, bmr
 
@@ -136,9 +143,11 @@ Commit a file to multiple repositories
 
 parses chatops deploy command and extracts ref and image tag values
 
-**--payload-file, -f**="": Full path to the file that contain the push payload
+**--frontend**: used if deploying frontend web app (needed for updating image-tag correctly)
+
+**--payload-file, -f**="": path to JSON payload
 
 ## help, h
 
 Shows a list of commands or help for one command
-<nil>
+ <nil>
