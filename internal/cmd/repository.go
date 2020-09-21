@@ -9,7 +9,7 @@ func FilesCommited() cli.Command {
 	return cli.Command{
 		Name:    "files-committed",
 		Usage:   "outputs list of file committed in a git push or pull-request",
-		Aliases: []string{"pfc"},
+		Aliases: []string{"fc"},
 		Action:  repository.FilesCommited,
 		Flags: []cli.Flag{
 			cli.StringFlag{
