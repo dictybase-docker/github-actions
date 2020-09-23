@@ -1,0 +1,101 @@
+[
+  {
+    "level": "ERROR",
+    "violations": [
+      {
+        "missing_ontology_description": [
+          {
+            "subject": "obo:ddanat.owl",
+            "property": "dc11:description"
+          }
+        ]
+      },
+      {
+        "missing_ontology_license": [
+          {
+            "subject": "obo:ddanat.owl",
+            "property": "dc:license"
+          }
+        ]
+      },
+      {
+        "missing_ontology_title": [
+          {
+            "subject": "obo:ddanat.owl",
+            "property": "dc11:title"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "level": "WARN",
+    "violations": [
+      {
+        "missing_definition": [
+          {
+            "subject": "BFO:0000050",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "IAO:0000115",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "RO:0002202",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "oboInOwl:hasAlternativeId",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "oboInOwl:hasBroadSynonym",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "oboInOwl:hasDbXref",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "oboInOwl:hasExactSynonym",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "oboInOwl:hasNarrowSynonym",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "oboInOwl:hasOBOFormatVersion",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "oboInOwl:hasOBONamespace",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "oboInOwl:hasRelatedSynonym",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "oboInOwl:shorthand",
+            "property": "IAO:0000115"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "level": "INFO",
+    "violations": [
+      {
+        "missing_superclass": [
+          {
+            "subject": "DDANAT:0010001",
+            "property": "rdfs:subClassOf"
+          }
+        ]
+      }
+    ]
+  }
+]

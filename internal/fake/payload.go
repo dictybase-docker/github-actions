@@ -7,6 +7,18 @@ import (
 	"path/filepath"
 )
 
+func OntoErrorFile() (string, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("unable to get current dir %s", err)
+	}
+	return filepath.Join(
+		filepath.Dir(dir),
+		"../testdata",
+		"report.json",
+	), nil
+}
+
 func PullReqPayload(name string) (io.Reader, error) {
 	var r io.Reader
 	dir, err := os.Getwd()
