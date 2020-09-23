@@ -1,6 +1,7 @@
 module github.com/dictyBase-docker/github-actions
 
 require (
+	github.com/Jeffail/gabs/v2 v2.6.0
 	github.com/buger/jsonparser v1.0.0
 	github.com/go-ini/ini v1.42.0 // indirect
 	github.com/google/go-github v17.0.0+incompatible
