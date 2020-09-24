@@ -136,10 +136,10 @@ func mkdownOutput(data interface{}) (*bytes.Buffer, error) {
 func committedFiles(path string) ([]string, error) {
 	var a []string
 	r, err := os.Open(path)
-	defer r.Close()
 	if err != nil {
 		return a, fmt.Errorf("unable to open file %s", err)
 	}
+	defer r.Close()
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		a = append(a, baseNoSuffix(scanner.Text()))

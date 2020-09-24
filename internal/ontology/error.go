@@ -8,7 +8,6 @@ type ViolationNotFound struct {
 
 func (v *ViolationNotFound) Error() string {
 	return fmt.Sprintf("violation %s is not found", v.Level)
-
 }
 
 func IsViolationNotFound(err error) bool {
