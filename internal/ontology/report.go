@@ -34,7 +34,6 @@ func ParseViolations(path string, level string) ([]string, error) {
 	for _, child := range violCont.S("violations").Children() {
 		for k := range child.ChildrenMap() {
 			s = append(s, strings.ReplaceAll(k, "_", " "))
-
 		}
 	}
 	return s, nil
