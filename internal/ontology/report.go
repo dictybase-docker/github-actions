@@ -1,6 +1,7 @@
 package ontology
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -14,8 +15,12 @@ func ParseViolations(path string, level string) ([]string, error) {
 	}
 	hasLevel := false
 	var violCont *gabs.Container
-	for _, child := range cont.S("").Children() {
-		if !child.ExistsP(level) {
+	for _, child := range cont.Children() {
+		v, ok := child.Search("level").Data().(string)
+		if !ok {
+			return []string{""}, errors.New("incompatible report format, level key not found")
+		}
+		if v != level {
 			continue
 		}
 		violCont = child
@@ -26,8 +31,11 @@ func ParseViolations(path string, level string) ([]string, error) {
 		return []string{}, &ViolationNotFound{Level: level}
 	}
 	var s []string
-	for k := range violCont.S("violations").ChildrenMap() {
-		s = append(s, strings.ReplaceAll(k, "_", " "))
+	for _, child := range violCont.S("violations").Children() {
+		for k := range child.ChildrenMap() {
+			s = append(s, strings.ReplaceAll(k, "_", " "))
+
+		}
 	}
 	return s, nil
 }
