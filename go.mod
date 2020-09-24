@@ -16,6 +16,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	google.golang.org/appengine v1.6.0 // indirect
 	gopkg.in/ini.v1 v1.42.0 // indirect
+	honnef.co/go/tools v0.0.1-2020.1.5 // indirect
 )
 
 go 1.13
