@@ -54,7 +54,7 @@ type reportContent struct {
 }
 
 func OntoReportOnPullComment(c *cli.Context) error {
-	cf, err := committedFiles(c.String("commit-list-file"))
+	cf, err := listCommittedFiles(c.String("commit-list-file"))
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
@@ -133,7 +133,7 @@ func mkdownOutput(data interface{}) (*bytes.Buffer, error) {
 	return out, nil
 }
 
-func committedFiles(path string) ([]string, error) {
+func listCommittedFiles(path string) ([]string, error) {
 	var a []string
 	r, err := os.Open(path)
 	if err != nil {

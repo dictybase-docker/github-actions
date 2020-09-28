@@ -1,6 +1,9 @@
 package comment
 
 import (
+	"fmt"
+	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -103,4 +106,30 @@ func TestMkdownOutput(t *testing.T) {
 	}
 	assert.False(strings.Contains(b.String(), "dicty_pheno"))
 	assert.False(strings.Contains(b.String(), "best of the best"))
+}
+
+func TestListCommittedFiles(t *testing.T) {
+	assert := require.New(t)
+	tmpf, err := ioutil.TempFile("", "jxt")
+	assert.NoError(
+		err,
+		"should not throw error from creating a temp file",
+	)
+	defer os.Remove(tmpf.Name())
+	content := []string{"/onto/dicty_assay.obo", "/pronto/dicty_flower.obo"}
+	for _, line := range content {
+		if _, err := fmt.Fprintf(tmpf, "%s\n", line); err != nil {
+			assert.NoError(
+				err,
+				"should not throw error from writing to the temp file",
+			)
+		}
+	}
+	files, err := listCommittedFiles(tmpf.Name())
+	assert.NoError(err, "should not throw error from getting the list")
+	assert.ElementsMatch(
+		files,
+		[]string{"dicty_assay", "dicty_flower"},
+		"should match the contents of test file",
+	)
 }
