@@ -147,6 +147,16 @@ parses chatops deploy command and extracts ref and image tag values
 
 **--payload-file, -f**="": path to JSON payload
 
+## report-as-comment, rac
+
+generate ontology report in pull request comment
+
+**--commit-list-file, -c**="": file that contain a list of committed file in the push event
+
+**--pull-request-id, --id**="": id of a pull-request where the comment should be made (default: 0)
+
+**--report-dir, -d**="": folder containing ontology reports
+
 ## help, h
 
 Shows a list of commands or help for one command

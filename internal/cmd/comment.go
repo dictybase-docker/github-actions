@@ -14,7 +14,7 @@ func OntoReportOnPullComment() cli.Command {
 				Usage:    "file that contain a list of committed file in the push event",
 			},
 			cli.StringFlag{
-				Name:     "report-dir",
+				Name:     "report-dir,d",
 				Required: true,
 				Usage:    "folder containing ontology reports",
 			},
