@@ -54,7 +54,7 @@ type reportContent struct {
 }
 
 func OntoReportOnPullComment(c *cli.Context) error {
-	cf, err := committedFiles(c.String("commit-file-list"))
+	cf, err := committedFiles(c.String("commit-list-file"))
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}

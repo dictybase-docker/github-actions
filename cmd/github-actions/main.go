@@ -50,6 +50,7 @@ func main() {
 		cmd.FilesCommited(),
 		cmd.BatchMultiRepo(),
 		cmd.ParseChatOpsDeploy(),
+		cmd.OntoReportOnPullComment(),
 	}
 	if err := app.Run(os.Args); err != nil {
 		log.Fatalf("error in running command %s", err)
