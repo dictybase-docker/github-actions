@@ -7,8 +7,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestParseEmptyViolations(t *testing.T) {
+	assert := require.New(t)
+	f, err := fake.OntoReportWithEmptyError()
+	assert.NoError(
+		err,
+		"should not receive any error from getting error report file",
+	)
+	_, err = ParseViolations(f, "ERROR")
+	assert.True(IsViolationNotFound(err), "should be violation not found error")
+}
+
 func TestParseViolations(t *testing.T) {
-	t.Parallel()
 	assert := require.New(t)
 	f, err := fake.OntoErrorFile()
 	assert.NoError(

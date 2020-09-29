@@ -7,6 +7,18 @@ import (
 	"path/filepath"
 )
 
+func OntoReportWithEmptyError() (string, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("unable to get current dir %s", err)
+	}
+	return filepath.Join(
+		filepath.Dir(dir),
+		"../testdata",
+		"pheno_report.json",
+	), nil
+}
+
 func OntoErrorFile() (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
