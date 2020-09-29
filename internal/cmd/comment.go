@@ -1,12 +1,16 @@
 package cmd
 
-import "github.com/urfave/cli"
+import (
+	"github.com/dictyBase-docker/github-actions/internal/app/comment"
+	"github.com/urfave/cli"
+)
 
 func OntoReportOnPullComment() cli.Command {
 	return cli.Command{
 		Name:    "report-as-comment",
 		Usage:   "generate ontology report in pull request comment",
 		Aliases: []string{"rac"},
+		Action:  comment.OntoReportOnPullComment,
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:     "commit-list-file,c",
