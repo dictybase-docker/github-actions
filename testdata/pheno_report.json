@@ -1,0 +1,90 @@
+[
+  {
+    "level": "ERROR"
+  },
+  {
+    "level": "WARN",
+    "violations": [
+      {
+        "missing_definition": [
+          {
+            "subject": "DDPHENO:0000021",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "DDPHENO:0001201",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "DDPHENO:0001417",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "DDPHENO:0010000",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "IAO:0000115",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "oboInOwl:hasAlternativeId",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "oboInOwl:hasBroadSynonym",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "oboInOwl:hasDbXref",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "oboInOwl:hasExactSynonym",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "oboInOwl:hasNarrowSynonym",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "oboInOwl:hasOBOFormatVersion",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "oboInOwl:hasOBONamespace",
+            "property": "IAO:0000115"
+          },
+          {
+            "subject": "oboInOwl:hasRelatedSynonym",
+            "property": "IAO:0000115"
+          }
+        ]
+      },
+      {
+        "missing_obsolete_label": [
+          {
+            "subject": "DDPHENO:0000388",
+            "property": "rdfs:label",
+            "values": [
+              "abolished vacuolation"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "level": "INFO",
+    "violations": [
+      {
+        "missing_superclass": [
+          {
+            "subject": "DDPHENO:0010000",
+            "property": "rdfs:subClassOf"
+          }
+        ]
+      }
+    ]
+  }
+]
