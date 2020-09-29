@@ -107,12 +107,12 @@ func createCommentFromReport(args *reportParams) error {
 	if err != nil {
 		return err
 	}
-	_, _, err = gclient.PullRequests.CreateComment(
+	_, _, err = gclient.Issues.CreateComment(
 		context.Background(),
 		args.owner,
 		args.repository,
 		args.prid,
-		&github.PullRequestComment{
+		&github.IssueComment{
 			Body: github.String(mk.String()),
 		})
 	if err != nil {
