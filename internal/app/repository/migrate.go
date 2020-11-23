@@ -110,6 +110,8 @@ func MigrateRepositories(c *cli.Context) error {
 	}
 	nc := make(chan string)
 	rc := make(chan *gh.Repository)
+	defer close(rc)
+	defer close(nc)
 	log := logger.GetLogger(c)
 	fgr, ctx := errgroup.WithContext(context.Background())
 	m := newMigration(&migrateParams{
@@ -125,11 +127,6 @@ func MigrateRepositories(c *cli.Context) error {
 	fgr.Go(m.createFork)
 	fgr.Go(m.makeArchive)
 	fgr.Go(m.delRepo)
-	go func() {
-		fgr.Wait()
-		close(rc)
-		close(nc)
-	}()
 	if err := fgr.Wait(); err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error in migrating repository %s", err),
