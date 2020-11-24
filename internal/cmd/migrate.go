@@ -14,7 +14,7 @@ func MigrateRepositories() cli.Command {
 		Flags: []cli.Flag{
 			cli.StringSliceFlag{
 				Name:     "repo-to-move,m",
-				Usage:    "repositories that will be migrated",
+				Usage:    "repositories that will be migrated, repeat the option for multiple values",
 				Required: true,
 			},
 			cli.StringFlag{

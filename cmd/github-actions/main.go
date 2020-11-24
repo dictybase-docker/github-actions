@@ -51,6 +51,7 @@ func main() {
 		cmd.BatchMultiRepo(),
 		cmd.ParseChatOpsDeploy(),
 		cmd.OntoReportOnPullComment(),
+		cmd.MigrateRepositories(),
 	}
 	if err := app.Run(os.Args); err != nil {
 		log.Fatalf("error in running command %s", err)
