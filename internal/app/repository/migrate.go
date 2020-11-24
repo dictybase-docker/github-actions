@@ -49,6 +49,7 @@ func newMigration(args *migrateParams) *migration {
 }
 
 func (m *migration) createFork() error {
+	defer close(m.repoShare)
 	for _, repo := range m.repositories {
 		r, _, err := m.client.Repositories.CreateFork(
 			m.ctx,
@@ -68,6 +69,7 @@ func (m *migration) createFork() error {
 }
 
 func (m *migration) makeArchive() error {
+	defer close(m.repoNameShare)
 	for repo := range m.repoShare {
 		repo.Archived = gh.Bool(true)
 		_, _, err := m.client.Repositories.Edit(
@@ -110,8 +112,6 @@ func MigrateRepositories(c *cli.Context) error {
 	}
 	nc := make(chan string)
 	rc := make(chan *gh.Repository)
-	defer close(rc)
-	defer close(nc)
 	log := logger.GetLogger(c)
 	fgr, ctx := errgroup.WithContext(context.Background())
 	m := newMigration(&migrateParams{
