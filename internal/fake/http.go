@@ -41,23 +41,11 @@ func routeTable() []*route {
 }
 
 func handleCommitComparison(w http.ResponseWriter, r *http.Request) {
-	dir, err := os.Getwd()
+	b, err := payloadFile("commit-diff.json")
 	if err != nil {
 		http.Error(
 			w,
-			fmt.Sprintf("unable to get current dir %s", err),
-			http.StatusInternalServerError,
-		)
-		return
-	}
-	path := filepath.Join(
-		filepath.Dir(dir), "../testdata", "commit-diff.json",
-	)
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		http.Error(
-			w,
-			"unable to read test file",
+			err.Error(),
 			http.StatusInternalServerError,
 		)
 		return
@@ -79,6 +67,21 @@ func router(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	http.NotFound(w, r)
+}
+
+func payloadFile(file string) ([]byte, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return []byte(""), fmt.Errorf("unable to get current dir %s", err)
+	}
+	path := filepath.Join(
+		filepath.Dir(dir), "../testdata", file,
+	)
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return []byte(""), fmt.Errorf("unable to read test file %s", path)
+	}
+	return b, nil
 }
 
 func GhServerClient() (*httptest.Server, *gh.Client) {
