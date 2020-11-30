@@ -13,17 +13,6 @@ import (
 	"github.com/urfave/cli"
 )
 
-type migrateParams struct {
-	repositories  []string
-	client        *gh.Client
-	from          string
-	to            string
-	ctx           context.Context
-	repoShare     chan *gh.Repository
-	repoNameShare chan string
-	logger        *logrus.Entry
-}
-
 type migration struct {
 	repositories  []string
 	client        *gh.Client
@@ -33,19 +22,6 @@ type migration struct {
 	repoShare     chan *gh.Repository
 	repoNameShare chan string
 	logger        *logrus.Entry
-}
-
-func newMigration(args *migrateParams) *migration {
-	return &migration{
-		repositories:  args.repositories,
-		client:        args.client,
-		from:          args.from,
-		to:            args.to,
-		ctx:           args.ctx,
-		logger:        args.logger,
-		repoShare:     args.repoShare,
-		repoNameShare: args.repoNameShare,
-	}
 }
 
 func (m *migration) createFork() error {
@@ -59,10 +35,16 @@ func (m *migration) createFork() error {
 				Organization: m.to,
 			},
 		)
-		if err != nil {
+		if err == nil {
+			return fmt.Errorf(
+				"error in creating fork for %s, did not get accepted response",
+				repo,
+			)
+		}
+		if _, ok := err.(*gh.AcceptedError); !ok {
 			return fmt.Errorf("error in creating fork %s", err)
 		}
-		m.logger.Debugf("forked repository %s", repo)
+		m.logger.Debugf("started forking of repository %s", repo)
 		m.repoShare <- r
 	}
 	return nil
@@ -114,7 +96,7 @@ func MigrateRepositories(c *cli.Context) error {
 	rc := make(chan *gh.Repository)
 	log := logger.GetLogger(c)
 	fgr, ctx := errgroup.WithContext(context.Background())
-	m := newMigration(&migrateParams{
+	m := &migration{
 		repositories:  c.StringSlice("repo-to-move"),
 		from:          c.GlobalString("owner"),
 		to:            c.String("owner-to-migrate"),
@@ -123,7 +105,7 @@ func MigrateRepositories(c *cli.Context) error {
 		repoShare:     rc,
 		repoNameShare: nc,
 		logger:        log,
-	})
+	}
 	fgr.Go(m.createFork)
 	fgr.Go(m.makeArchive)
 	fgr.Go(m.delRepo)
