@@ -21,44 +21,58 @@ type httpFunc func(string, http.ResponseWriter, *http.Request)
 
 type route struct {
 	file   string
+	method string
 	regexp *regexp.Regexp
 	fn     httpFunc
 }
 
-func newRoute(pattern, file string, fn httpFunc) *route {
-	return &route{
-		regexp: regexp.MustCompile(fmt.Sprintf("^%s$", pattern)),
-		fn:     fn,
-		file:   file,
-	}
-}
-
 func routeTable() []*route {
 	return []*route{
-		newRoute(
-			fmt.Sprintf("%s%s",
-				baseURLPath,
-				`/repos/([^/]+)/([^/]+)`,
-			),
-			"edit-repo.json",
-			handleSuccess,
-		),
-		newRoute(
-			fmt.Sprintf("%s%s",
-				baseURLPath,
-				`/repos/([^/]+)/([^/]+)/forks`,
-			),
-			"create-fork.json",
-			handleAccepted,
-		),
-		newRoute(
-			fmt.Sprintf("%s%s",
-				baseURLPath,
-				`/repos/([^/]+)/([^/]+)/compare/\w+\.\.\.\w+`,
-			),
-			"commit-diff.json",
-			handleSuccess,
-		)}
+		{
+			method: "DELETE",
+			file:   "delete-repo.json",
+			fn:     handleSuccess,
+			regexp: regexp.MustCompile(
+				fmt.Sprintf(
+					"^%s%s$",
+					baseURLPath,
+					`/repos/([^/]+)/([^/]+)`,
+				)),
+		},
+		{
+			method: "PATCH",
+			file:   "edit-repo.json",
+			fn:     handleSuccess,
+			regexp: regexp.MustCompile(
+				fmt.Sprintf(
+					"^%s%s$",
+					baseURLPath,
+					`/repos/([^/]+)/([^/]+)`,
+				)),
+		},
+		{
+			file:   "create-fork.json",
+			fn:     handleAccepted,
+			method: "POST",
+			regexp: regexp.MustCompile(
+				fmt.Sprintf(
+					"^%s%s$",
+					baseURLPath,
+					`/repos/([^/]+)/([^/]+)/forks`,
+				)),
+		},
+		{
+			file:   "commit-diff.json",
+			fn:     handleSuccess,
+			method: "GET",
+			regexp: regexp.MustCompile(
+				fmt.Sprintf(
+					"^%s%s$",
+					baseURLPath,
+					`/repos/([^/]+)/([^/]+)/compare/\w+\.\.\.\w+`,
+				)),
+		},
+	}
 }
 
 func handleAccepted(file string, w http.ResponseWriter, r *http.Request) {
@@ -102,10 +116,14 @@ func handleSuccess(file string, w http.ResponseWriter, r *http.Request) {
 
 func router(w http.ResponseWriter, r *http.Request) {
 	for _, rt := range routeTable() {
-		if rt.regexp.MatchString(r.URL.Path) {
-			rt.fn(rt.file, w, r)
-			return
+		if r.Method != rt.method {
+			continue
 		}
+		if !rt.regexp.MatchString(r.URL.Path) {
+			continue
+		}
+		rt.fn(rt.file, w, r)
+		return
 	}
 	http.NotFound(w, r)
 }
