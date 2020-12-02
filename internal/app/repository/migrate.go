@@ -3,11 +3,14 @@ package repository
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"time"
 
 	"golang.org/x/sync/errgroup"
 
 	"github.com/dictyBase-docker/github-actions/internal/client"
 	"github.com/dictyBase-docker/github-actions/internal/logger"
+	"github.com/google/go-github/github"
 	gh "github.com/google/go-github/v32/github"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -22,10 +25,44 @@ type migration struct {
 	repoShare     chan *gh.Repository
 	repoNameShare chan string
 	logger        *logrus.Entry
+	pollThreshold time.Duration
+	pollInterval  time.Duration
+}
+
+func (m *migration) pollForRepo(repo *gh.Repository) error {
+	until := time.Now().Add(m.pollThreshold)
+	ticker := time.NewTicker(m.pollInterval)
+	defer ticker.Stop()
+	for t := range ticker.C {
+		if t.After(until) {
+			return fmt.Errorf("polling timed out for repository %s", repo.GetName())
+		}
+		r, _, err := m.client.Repositories.Get(
+			m.ctx,
+			repo.GetOwner().GetLogin(),
+			repo.GetName(),
+		)
+		if err == nil {
+			m.logger.Debugf(
+				"repository %s forked at %s", r.GetName(), r.GetOwner().GetLogin(),
+			)
+			m.repoShare <- r
+			return nil
+		}
+		errResp, ok := err.(*github.ErrorResponse)
+		if !ok {
+			return fmt.Errorf("unexpected github error %s", err)
+		}
+		if errResp.Response.StatusCode != http.StatusNotFound {
+			return fmt.Errorf("unexpected github error %s", err)
+		}
+	}
+	return nil
 }
 
 func (m *migration) createFork() error {
 	defer close(m.repoShare)
+	rgr := new(errgroup.Group)
 	for _, repo := range m.repositories {
 		r, _, err := m.client.Repositories.CreateFork(
 			m.ctx,
@@ -45,9 +82,13 @@ func (m *migration) createFork() error {
 			return fmt.Errorf("error in creating fork %s", err)
 		}
 		m.logger.Debugf("started forking of repository %s", repo)
-		m.repoShare <- r
+		func(repo *gh.Repository) {
+			rgr.Go(func() error {
+				return m.pollForRepo(repo)
+			})
+		}(r)
 	}
-	return nil
+	return rgr.Wait()
 }
 
 func (m *migration) makeArchive() error {
