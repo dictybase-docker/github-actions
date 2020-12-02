@@ -17,15 +17,19 @@ const (
 	baseURLPath = "/api-v3"
 )
 
+type httpFunc func(string, http.ResponseWriter, *http.Request)
+
 type route struct {
+	file   string
 	regexp *regexp.Regexp
-	fn     http.HandlerFunc
+	fn     httpFunc
 }
 
-func newRoute(pattern string, fn http.HandlerFunc) *route {
+func newRoute(pattern, file string, fn httpFunc) *route {
 	return &route{
 		regexp: regexp.MustCompile(fmt.Sprintf("^%s$", pattern)),
 		fn:     fn,
+		file:   file,
 	}
 }
 
@@ -34,21 +38,31 @@ func routeTable() []*route {
 		newRoute(
 			fmt.Sprintf("%s%s",
 				baseURLPath,
+				`/repos/([^/]+)/([^/]+)`,
+			),
+			"edit-repo.json",
+			handleSuccess,
+		),
+		newRoute(
+			fmt.Sprintf("%s%s",
+				baseURLPath,
 				`/repos/([^/]+)/([^/]+)/forks`,
 			),
-			handleCreateFork,
+			"create-fork.json",
+			handleAccepted,
 		),
 		newRoute(
 			fmt.Sprintf("%s%s",
 				baseURLPath,
 				`/repos/([^/]+)/([^/]+)/compare/\w+\.\.\.\w+`,
 			),
-			handleCommitComparison,
+			"commit-diff.json",
+			handleSuccess,
 		)}
 }
 
-func handleCreateFork(w http.ResponseWriter, r *http.Request) {
-	b, err := payloadFile("create-fork.json")
+func handleAccepted(file string, w http.ResponseWriter, r *http.Request) {
+	b, err := payloadFile(file)
 	if err != nil {
 		http.Error(
 			w,
@@ -67,8 +81,8 @@ func handleCreateFork(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleCommitComparison(w http.ResponseWriter, r *http.Request) {
-	b, err := payloadFile("commit-diff.json")
+func handleSuccess(file string, w http.ResponseWriter, r *http.Request) {
+	b, err := payloadFile(file)
 	if err != nil {
 		http.Error(
 			w,
@@ -89,7 +103,7 @@ func handleCommitComparison(w http.ResponseWriter, r *http.Request) {
 func router(w http.ResponseWriter, r *http.Request) {
 	for _, rt := range routeTable() {
 		if rt.regexp.MatchString(r.URL.Path) {
-			rt.fn(w, r)
+			rt.fn(rt.file, w, r)
 			return
 		}
 	}
