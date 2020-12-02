@@ -34,10 +34,37 @@ func routeTable() []*route {
 		newRoute(
 			fmt.Sprintf("%s%s",
 				baseURLPath,
+				`/repos/([^/]+)/([^/]+)/forks`,
+			),
+			handleCreateFork,
+		),
+		newRoute(
+			fmt.Sprintf("%s%s",
+				baseURLPath,
 				`/repos/([^/]+)/([^/]+)/compare/\w+\.\.\.\w+`,
 			),
 			handleCommitComparison,
 		)}
+}
+
+func handleCreateFork(w http.ResponseWriter, r *http.Request) {
+	b, err := payloadFile("create-fork.json")
+	if err != nil {
+		http.Error(
+			w,
+			err.Error(),
+			http.StatusInternalServerError,
+		)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
+	if _, err := fmt.Fprint(w, string(b)); err != nil {
+		http.Error(
+			w,
+			err.Error(),
+			http.StatusInternalServerError,
+		)
+	}
 }
 
 func handleCommitComparison(w http.ResponseWriter, r *http.Request) {
