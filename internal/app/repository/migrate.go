@@ -10,7 +10,6 @@ import (
 
 	"github.com/dictyBase-docker/github-actions/internal/client"
 	"github.com/dictyBase-docker/github-actions/internal/logger"
-	"github.com/google/go-github/github"
 	gh "github.com/google/go-github/v32/github"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -49,7 +48,7 @@ func (m *migration) pollForRepo(repo *gh.Repository) error {
 			m.repoShare <- r
 			return nil
 		}
-		errResp, ok := err.(*github.ErrorResponse)
+		errResp, ok := err.(*gh.ErrorResponse)
 		if !ok {
 			return fmt.Errorf("unexpected github error %s", err)
 		}
