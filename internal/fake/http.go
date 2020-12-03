@@ -30,7 +30,7 @@ func routeTable() []*route {
 	return []*route{
 		{
 			method: "DELETE",
-			file:   "delete-repo.json",
+			file:   "",
 			fn:     handleNoContent,
 			regexp: regexp.MustCompile(
 				fmt.Sprintf(
@@ -76,17 +76,8 @@ func routeTable() []*route {
 }
 
 func handleNoContent(file string, w http.ResponseWriter, r *http.Request) {
-	b, err := payloadFile(file)
-	if err != nil {
-		http.Error(
-			w,
-			err.Error(),
-			http.StatusInternalServerError,
-		)
-		return
-	}
 	w.WriteHeader(http.StatusNoContent)
-	if _, err := fmt.Fprint(w, string(b)); err != nil {
+	if _, err := fmt.Fprint(w, file); err != nil {
 		http.Error(
 			w,
 			err.Error(),
