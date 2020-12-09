@@ -25,41 +25,8 @@ type route struct {
 	fn     httpFunc
 }
 
-func routeTable() []*route {
+func fetchRoute() []*route {
 	return []*route{
-		{
-			method: "DELETE",
-			file:   "",
-			fn:     handleNoContent,
-			regexp: regexp.MustCompile(
-				fmt.Sprintf(
-					"^%s%s$",
-					baseURLPath,
-					`/repos/([^/]+)/([^/]+)`,
-				)),
-		},
-		{
-			method: "PATCH",
-			file:   "../../../testdata/edit-repo.json",
-			fn:     handleSuccess,
-			regexp: regexp.MustCompile(
-				fmt.Sprintf(
-					"^%s%s$",
-					baseURLPath,
-					`/repos/([^/]+)/([^/]+)`,
-				)),
-		},
-		{
-			file:   "../../../testdata/create-fork.json",
-			fn:     handleAccepted,
-			method: "POST",
-			regexp: regexp.MustCompile(
-				fmt.Sprintf(
-					"^%s%s$",
-					baseURLPath,
-					`/repos/([^/]+)/([^/]+)/forks`,
-				)),
-		},
 		{
 			method: "GET",
 			file:   "../../../testdata/get-repo.json",
@@ -83,6 +50,56 @@ func routeTable() []*route {
 				)),
 		},
 	}
+}
+
+func postRoute() []*route {
+	return []*route{
+		{
+			method: "PATCH",
+			file:   "../../../testdata/edit-repo.json",
+			fn:     handleSuccess,
+			regexp: regexp.MustCompile(
+				fmt.Sprintf(
+					"^%s%s$",
+					baseURLPath,
+					`/repos/([^/]+)/([^/]+)`,
+				)),
+		},
+		{
+			file:   "../../../testdata/create-fork.json",
+			fn:     handleAccepted,
+			method: "POST",
+			regexp: regexp.MustCompile(
+				fmt.Sprintf(
+					"^%s%s$",
+					baseURLPath,
+					`/repos/([^/]+)/([^/]+)/forks`,
+				)),
+		},
+	}
+}
+
+func delRoute() []*route {
+	return []*route{
+		{
+			method: "DELETE",
+			file:   "",
+			fn:     handleNoContent,
+			regexp: regexp.MustCompile(
+				fmt.Sprintf(
+					"^%s%s$",
+					baseURLPath,
+					`/repos/([^/]+)/([^/]+)`,
+				)),
+		},
+	}
+}
+
+func routeTable() []*route {
+	var route []*route
+	route = append(route, fetchRoute()...)
+	route = append(route, postRoute()...)
+	return append(route, delRoute()...)
 }
 
 func handleNoContent(file string, w http.ResponseWriter, r *http.Request) {
