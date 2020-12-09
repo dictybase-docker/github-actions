@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"path/filepath"
 	"regexp"
 
@@ -41,7 +40,7 @@ func routeTable() []*route {
 		},
 		{
 			method: "PATCH",
-			file:   "edit-repo.json",
+			file:   "../../../testdata/edit-repo.json",
 			fn:     handleSuccess,
 			regexp: regexp.MustCompile(
 				fmt.Sprintf(
@@ -51,7 +50,7 @@ func routeTable() []*route {
 				)),
 		},
 		{
-			file:   "create-fork.json",
+			file:   "../../../testdata/create-fork.json",
 			fn:     handleAccepted,
 			method: "POST",
 			regexp: regexp.MustCompile(
@@ -62,7 +61,18 @@ func routeTable() []*route {
 				)),
 		},
 		{
-			file:   "commit-diff.json",
+			method: "GET",
+			file:   "../../../testdata/get-repo.json",
+			fn:     handleSuccess,
+			regexp: regexp.MustCompile(
+				fmt.Sprintf(
+					"^%s%s$",
+					baseURLPath,
+					`/repos/([^/]+)/([^/]+)`,
+				)),
+		},
+		{
+			file:   "../../testdata/commit-diff.json",
 			fn:     handleSuccess,
 			method: "GET",
 			regexp: regexp.MustCompile(
@@ -97,13 +107,7 @@ func handleAccepted(file string, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusAccepted)
-	if _, err := fmt.Fprint(w, string(b)); err != nil {
-		http.Error(
-			w,
-			err.Error(),
-			http.StatusInternalServerError,
-		)
-	}
+	fmt.Fprint(w, string(b))
 }
 
 func handleSuccess(file string, w http.ResponseWriter, r *http.Request) {
@@ -140,13 +144,10 @@ func router(w http.ResponseWriter, r *http.Request) {
 }
 
 func payloadFile(file string) ([]byte, error) {
-	dir, err := os.Getwd()
+	path, err := filepath.Abs(file)
 	if err != nil {
-		return []byte(""), fmt.Errorf("unable to get current dir %s", err)
+		return []byte(""), fmt.Errorf("unable to get current file %s", err)
 	}
-	path := filepath.Join(
-		filepath.Dir(dir), "../testdata", file,
-	)
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		return []byte(""), fmt.Errorf("unable to read test file %s", path)
