@@ -19,7 +19,7 @@ func TestMigrateRepositories(t *testing.T) {
 	server, client := fake.GhServerClient()
 	defer server.Close()
 	gr := new(errgroup.Group)
-	deadline := time.Now().Add(6 * time.Second)
+	deadline := time.Now().Add(4 * time.Second)
 	ctx, cancelFn := context.WithDeadline(context.Background(), deadline)
 	defer cancelFn()
 	m := &migration{
@@ -29,7 +29,7 @@ func TestMigrateRepositories(t *testing.T) {
 		client:        client,
 		repoShare:     make(chan *gh.Repository),
 		repoNameShare: make(chan string),
-		pollInterval:  time.Second * 1,
+		pollInterval:  time.Millisecond * 500,
 		pollThreshold: ctx,
 		log: logrus.NewEntry(&logrus.Logger{
 			Out:   ioutil.Discard,
