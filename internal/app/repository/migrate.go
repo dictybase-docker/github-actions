@@ -27,6 +27,7 @@ type poll struct {
 func (p *poll) forRepo() error {
 	ticker := time.NewTicker(p.pollInterval)
 	defer ticker.Stop()
+OUTER:
 	for {
 		select {
 		case <-ticker.C:
@@ -41,7 +42,7 @@ func (p *poll) forRepo() error {
 					"polling finished for repo %s/%s",
 					r.GetName(), r.GetOwner().GetLogin(),
 				)
-				return nil
+				break OUTER
 			}
 			errResp, ok := err.(*gh.ErrorResponse)
 			if !ok {
