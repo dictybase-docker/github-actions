@@ -11,6 +11,7 @@ import (
 	"github.com/dictyBase-docker/github-actions/internal/client"
 	"github.com/dictyBase-docker/github-actions/internal/logger"
 	gh "github.com/google/go-github/v32/github"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -20,6 +21,7 @@ type poll struct {
 	repoShare     chan *gh.Repository
 	pollThreshold context.Context
 	pollInterval  time.Duration
+	log           *logrus.Entry
 }
 
 func (p *poll) forRepo() error {
@@ -35,6 +37,10 @@ func (p *poll) forRepo() error {
 			)
 			if err == nil {
 				p.repoShare <- r
+				p.log.Debugf(
+					"polling finished for repo %s/%s",
+					r.GetName(), r.GetOwner().GetLogin(),
+				)
 				return nil
 			}
 			errResp, ok := err.(*gh.ErrorResponse)
@@ -60,6 +66,7 @@ type migration struct {
 	repoNameShare chan string
 	pollThreshold context.Context
 	pollInterval  time.Duration
+	log           *logrus.Entry
 }
 
 func (m *migration) createFork() error {
@@ -83,9 +90,13 @@ func (m *migration) createFork() error {
 		if _, ok := err.(*gh.AcceptedError); !ok {
 			return fmt.Errorf("error in creating fork for repo %s %v", repo, err)
 		}
-		fmt.Printf("created fork for repo %s\n", repo)
+		m.log.Debugf(
+			"created fork for repo %s on organization\n",
+			repo, r.GetOwner().GetLogin(),
+		)
 		p := &poll{
 			repo:          r,
+			log:           m.log,
 			client:        m.client,
 			repoShare:     m.repoShare,
 			pollThreshold: m.pollThreshold,
@@ -110,6 +121,10 @@ func (m *migration) makeArchive() error {
 			return fmt.Errorf("error in setting archive status %s", err)
 		}
 		m.repoNameShare <- repo.GetName()
+		m.log.Debugf(
+			"created archive for repo %s/%s",
+			repo.GetName(), repo.GetOwner().GetLogin(),
+		)
 	}
 	return nil
 }
@@ -124,6 +139,7 @@ func (m *migration) delRepo() error {
 		if err != nil {
 			return fmt.Errorf("error in deleting repo %s %s", repo, err)
 		}
+		m.log.Debugf("deleted repo %", repo)
 	}
 	return nil
 }
@@ -136,10 +152,7 @@ func MigrateRepositories(c *cli.Context) error {
 			2,
 		)
 	}
-	nc := make(chan string)
-	rc := make(chan *gh.Repository)
 	log := logger.GetLogger(c)
-	fgr := new(errgroup.Group)
 	deadline := time.Now().Add(time.Duration(c.Int64("poll-for")) * time.Second)
 	ctx, cancelFn := context.WithDeadline(context.Background(), deadline)
 	defer cancelFn()
@@ -150,9 +163,11 @@ func MigrateRepositories(c *cli.Context) error {
 		pollInterval:  time.Duration(c.Int64("poll-interval")) * time.Second,
 		pollThreshold: ctx,
 		client:        gclient,
-		repoShare:     rc,
-		repoNameShare: nc,
+		log:           log,
+		repoShare:     make(chan *gh.Repository),
+		repoNameShare: make(chan string),
 	}
+	fgr := new(errgroup.Group)
 	fgr.Go(m.createFork)
 	fgr.Go(m.makeArchive)
 	fgr.Go(m.delRepo)
