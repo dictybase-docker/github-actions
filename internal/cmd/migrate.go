@@ -22,6 +22,16 @@ func MigrateRepositories() cli.Command {
 				Usage:    "owner name where the repositories will be migrated",
 				Required: true,
 			},
+			cli.Int64Flag{
+				Name:  "poll-for",
+				Usage: "threshold for polling forked repository(in seconds)",
+				Value: 60,
+			},
+			cli.Int64Flag{
+				Name:  "poll-interval",
+				Usage: "polling interval for forked repository(in seconds)",
+				Value: 2,
+			},
 		},
 	}
 }
