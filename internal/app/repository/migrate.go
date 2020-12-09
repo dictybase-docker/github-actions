@@ -91,7 +91,7 @@ func (m *migration) createFork() error {
 			return fmt.Errorf("error in creating fork for repo %s %v", repo, err)
 		}
 		m.log.Debugf(
-			"created fork for repo %s on organization\n",
+			"created fork for repo %s on organization %s\n",
 			repo, r.GetOwner().GetLogin(),
 		)
 		p := &poll{
@@ -139,7 +139,7 @@ func (m *migration) delRepo() error {
 		if err != nil {
 			return fmt.Errorf("error in deleting repo %s %s", repo, err)
 		}
-		m.log.Debugf("deleted repo %", repo)
+		m.log.Debugf("deleted repo %s", repo)
 	}
 	return nil
 }
