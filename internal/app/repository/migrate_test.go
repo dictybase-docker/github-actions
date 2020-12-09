@@ -14,6 +14,7 @@ import (
 )
 
 func TestMigrateRepositories(t *testing.T) {
+	t.Parallel()
 	assert := require.New(t)
 	server, client := fake.GhServerClient()
 	defer server.Close()

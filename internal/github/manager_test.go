@@ -18,7 +18,7 @@ func TestCommittedFilesInPullCreate(t *testing.T) {
 	testPull(t, "pull-request-create.json")
 }
 
-func TestCommitedFilesInpush(t *testing.T) {
+func TestCommittedFilesInpush(t *testing.T) {
 	t.Parallel()
 	assert := require.New(t)
 	r, err := fake.PushPayload()
