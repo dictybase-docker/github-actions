@@ -27,6 +27,11 @@ func OntoReportOnPullComment() cli.Command {
 				Required: true,
 				Usage:    "id of a pull-request where the comment should be made",
 			},
+			cli.StringFlag{
+				Name:     "ref",
+				Usage:    "git reference name, tag or commit id",
+				Required: true,
+			},
 		},
 	}
 }
