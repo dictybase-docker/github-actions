@@ -46,6 +46,16 @@ type reportParams struct {
 	repository string
 	token      string
 	prid       int
+	ref        string
+}
+
+type checkStatusParams struct {
+	data       map[string][]*reportContent
+	client     *github.Client
+	owner      string
+	repository string
+	ref        string
+	report     string
 }
 
 type reportContent struct {
@@ -90,6 +100,7 @@ func OntoReportOnPullComment(c *cli.Context) error {
 		repository: c.GlobalString("repository"),
 		owner:      c.GlobalString("owner"),
 		token:      c.GlobalString("token"),
+		ref:        c.String("ref"),
 		data:       rs,
 	})
 	if err != nil {
@@ -118,7 +129,14 @@ func createCommentFromReport(args *reportParams) error {
 	if err != nil {
 		return fmt.Errorf("error in creating pull request comment %s", err)
 	}
-	return err
+	return manageCheckStatus(&checkStatusParams{
+		owner:      args.owner,
+		repository: args.repository,
+		ref:        args.ref,
+		data:       args.data,
+		client:     gclient,
+		report:     "report",
+	})
 }
 
 func mkdownOutput(data interface{}) (*bytes.Buffer, error) {
@@ -149,4 +167,45 @@ func listCommittedFiles(path string) ([]string, error) {
 
 func baseNoSuffix(path string) string {
 	return strings.Split(filepath.Base(path), ".")[0]
+}
+
+func manageCheckStatus(args *checkStatusParams) error {
+	chresult, _, err := args.client.Checks.ListCheckRunsForRef(
+		context.Background(),
+		args.owner,
+		args.repository,
+		args.ref,
+		&github.ListCheckRunsOptions{
+			CheckName: github.String(args.report),
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("error in listing check runs %s", err)
+	}
+	if chresult.GetTotal() < 1 {
+		return fmt.Errorf("should have at least one check status, got %d", chresult.GetTotal())
+	}
+	return updateCheckStatus(chresult.CheckRuns[0], args)
+}
+
+func updateCheckStatus(res *github.CheckRun, args *checkStatusParams) error {
+	concl := "success"
+	if _, ok := args.data["fail"]; ok {
+		concl = "failure"
+	}
+	_, _, err := args.client.Checks.UpdateCheckRun(
+		context.Background(),
+		args.owner,
+		args.repository,
+		res.GetID(),
+		github.UpdateCheckRunOptions{
+			Name:       args.report,
+			Status:     github.String("completed"),
+			Conclusion: github.String(concl),
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("error in updating status check %s", err)
+	}
+	return nil
 }
