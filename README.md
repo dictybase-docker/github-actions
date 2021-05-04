@@ -3,8 +3,7 @@
 [![Code coverage](https://codecov.io/gh/dictybase-docker/github-actions/branch/develop/graph/badge.svg)](https://codecov.io/gh/dictybase-docker/github-actions)
 [![Maintainability](https://api.codeclimate.com/v1/badges/27d8dea5aa1373847404/maintainability)](https://codeclimate.com/github/dictybase-docker/github-actions/maintainability)
 ![Last commit](https://badgen.net/github/last-commit/dictyBase-docker/github-actions/develop)   
-[![Funding](https://badgen.net/badge/NIGMS/Rex%20L%20Chisholm,dictyBase-docker/yellow?list=|)](https://projectreporter.nih.gov/project_info_description.cfm?aid=9476993)
-[![Funding](https://badgen.net/badge/NIGMS/Rex%20L%20Chisholm,DSC/yellow?list=|)](https://projectreporter.nih.gov/project_info_description.cfm?aid=9438930)   
+[![Funding](https://badgen.net/badge/NIGMS/Rex%20L%20Chisholm,DCR/yellow?list=|)](https://reporter.nih.gov/project-details/10024726)   
 
 cli to manage dictyBase github actions 
 
