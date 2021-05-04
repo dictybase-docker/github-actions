@@ -3,7 +3,6 @@ module github.com/dictyBase-docker/github-actions
 require (
 	github.com/Jeffail/gabs/v2 v2.6.0
 	github.com/go-ini/ini v1.42.0 // indirect
-	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-github/v32 v32.1.0
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/minio/minio-go v6.0.14+incompatible
