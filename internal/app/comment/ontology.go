@@ -106,6 +106,16 @@ func OntoReportOnPullComment(c *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
+	return reportStatusError(rs)
+}
+
+func reportStatusError(rs map[string][]*reportContent) error {
+	if _, ok := rs["fail"]; ok {
+		return cli.NewExitError(
+			fmt.Sprintf("failed report count %d", len(rs["fail"])),
+			2,
+		)
+	}
 	return nil
 }
 
@@ -129,14 +139,7 @@ func createCommentFromReport(args *reportParams) error {
 	if err != nil {
 		return fmt.Errorf("error in creating pull request comment %s", err)
 	}
-	return manageCheckStatus(&checkStatusParams{
-		owner:      args.owner,
-		repository: args.repository,
-		ref:        args.ref,
-		data:       args.data,
-		client:     gclient,
-		report:     "report",
-	})
+	return nil
 }
 
 func mkdownOutput(data interface{}) (*bytes.Buffer, error) {
