@@ -60,6 +60,7 @@ type checkStatusParams struct {
 
 type reportContent struct {
 	Name       string
+	Html       string
 	Violations []string
 }
 
@@ -107,6 +108,17 @@ func OntoReportOnPullComment(c *cli.Context) error {
 		return cli.NewExitError(err.Error(), 2)
 	}
 	return reportStatusError(rs)
+}
+
+func readHtmlContent(file string) (string, error) {
+	if _, err := os.Stat(file); os.IsNotExist(err) {
+		return "", nil
+	}
+	ct, err := os.ReadFile(file)
+	if err != nil {
+		return "", err
+	}
+	return string(ct), nil
 }
 
 func reportStatusError(rs map[string][]*reportContent) error {
