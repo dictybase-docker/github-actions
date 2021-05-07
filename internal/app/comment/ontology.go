@@ -27,6 +27,10 @@ const tmpl = `
 {{- range $y,$v := $rc.Violations}}
 - {{$v}}
 {{- end}}
+{{if $rc.Html}}
+> #### Full report
+{{$rc.Html}}
+{{- end}}
 {{- end}}
 {{- end}}
 
@@ -36,6 +40,10 @@ const tmpl = `
 ## :heavy_check_mark: :heavy_check_mark: Ontology pass :heavy_check_mark: :heavy_check_mark:
 {{- range $i,$rc := index . "pass"}}
 > ### File: *{{$rc.Name}}*
+{{if $rc.Html}}
+> #### Full report
+{{$rc.Html}}
+{{- end}}
 {{- end}}
 {{- end}}
 `
@@ -71,6 +79,15 @@ func OntoReportOnPullComment(c *cli.Context) error {
 	}
 	rs := make(map[string][]*reportContent)
 	for _, f := range cf {
+		html, err := readHtmlContent(
+			fmt.Sprintf(
+				"%s.html",
+				filepath.Join(c.String("report-dir"), f),
+			),
+		)
+		if err != nil {
+			return cli.NewExitError(err.Error(), 2)
+		}
 		v, err := ontology.ParseViolations(
 			fmt.Sprintf("%s/%s.json", c.String("report-dir"), f),
 			"ERROR",
@@ -80,21 +97,35 @@ func OntoReportOnPullComment(c *cli.Context) error {
 				return cli.NewExitError(err.Error(), 2)
 			}
 			if _, ok := rs["pass"]; ok {
-				rs["pass"] = append(rs["pass"],
-					&reportContent{Name: fmt.Sprintf("%s.obo", f)},
+				rs["pass"] = append(
+					rs["pass"],
+					&reportContent{
+						Name: fmt.Sprintf("%s.obo", f),
+						Html: html,
+					},
 				)
 			} else {
-				rs["pass"] = []*reportContent{{Name: fmt.Sprintf("%s.obo", f)}}
+				rs["pass"] = []*reportContent{
+					{Name: fmt.Sprintf("%s.obo", f), Html: html},
+				}
 			}
 			continue
 		}
 		if _, ok := rs["fail"]; ok {
 			rs["fail"] = append(rs["fail"],
-				&reportContent{Name: fmt.Sprintf("%s.obo", f), Violations: v},
+				&reportContent{
+					Name:       fmt.Sprintf("%s.obo", f),
+					Violations: v,
+					Html:       html,
+				},
 			)
 			continue
 		}
-		rs["fail"] = []*reportContent{{Name: fmt.Sprintf("%s.obo", f), Violations: v}}
+		rs["fail"] = []*reportContent{{
+			Name:       fmt.Sprintf("%s.obo", f),
+			Violations: v,
+			Html:       html,
+		}}
 	}
 	err = createCommentFromReport(&reportParams{
 		prid:       c.Int("pull-request-id"),
