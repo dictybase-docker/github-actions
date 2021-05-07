@@ -10,6 +10,48 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	fakeHtml = `
+			<head>
+			  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+			</head>
+			<body>
+			<table class="table table-bordered table-striped">
+			<thead class="bg-dark text-white header-row">
+			<tr>
+			  <th>Level</th>
+			  <th>Rule Name</th>
+			  <th>Subject</th>
+			  <th>Property</th>
+			  <th>Value</th>
+			</tr>
+			</thead>
+				<tr class="table-warning">
+					<td>WARN</td>
+					<td>missing_definition</td>
+					<td><a href="http://purl.obolibrary.org/obo/DDSTRAINCHAR_0000001">obo:DDSTRAINCHAR_0000001</a></td>
+					<td><a href="http://purl.obolibrary.org/obo/IAO_0000115">IAO:0000115</a></td>
+					<td></td>
+				</tr>
+				<tr class="table-info">
+					<td>INFO</td>
+					<td>missing_superclass</td>
+					<td><a href="http://purl.obolibrary.org/obo/DDSTRAINCHAR_0000001">obo:DDSTRAINCHAR_0000001</a></td>
+					<td><a href="http://www.w3.org/2000/01/rdf-schema#subClassOf">rdfs:subClassOf</a></td>
+					<td></td>
+				</tr>
+				<tr class="table-warning">
+					<td>WARN</td>
+					<td>missing_obsolete_label</td>
+					<td><a href="http://purl.obolibrary.org/obo/DDPHENO_0000388">DDPHENO:0000388</a></td>
+					<td><a href="http://www.w3.org/2000/01/rdf-schema#label">rdfs:label</a></td>
+					<td>abolished vacuolation</td>
+				</tr>
+			</table>
+			</body>
+`
+)
+
 func failData() map[string][]*reportContent {
 	data := make(map[string][]*reportContent)
 	data["fail"] = []*reportContent{
@@ -27,6 +69,7 @@ func failData() map[string][]*reportContent {
 				"no env",
 				"green is good",
 			},
+			Html: fakeHtml,
 		},
 	}
 	return data
@@ -36,7 +79,7 @@ func passData() map[string][]*reportContent {
 	data := make(map[string][]*reportContent)
 	data["pass"] = []*reportContent{
 		{Name: "dicty_assay.obo"},
-		{Name: "dicty_flower.obo"},
+		{Name: "dicty_flower.obo", Html: fakeHtml},
 		{Name: "foobar.obo"},
 	}
 	return data
@@ -45,7 +88,7 @@ func passData() map[string][]*reportContent {
 func failAndPassData() map[string][]*reportContent {
 	data := make(map[string][]*reportContent)
 	data["pass"] = []*reportContent{
-		{Name: "dicty_assay.obo"},
+		{Name: "dicty_assay.obo", Html: fakeHtml},
 		{Name: "dicty_flower.obo"},
 		{Name: "foobar.obo"},
 	}
@@ -70,6 +113,14 @@ func failAndPassData() map[string][]*reportContent {
 }
 
 func TestMkdownOutput(t *testing.T) {
+	htmlStr := []string{
+		"Full report",
+		"bootstrap",
+		"missing_definition",
+		"missing_obsolete_label",
+		"missing_superclass",
+		"abolished vacuolation",
+	}
 	assert := require.New(t)
 	b, err := mkdownOutput(failAndPassData())
 	assert.NoError(err, "should not produce any error from template execution")
@@ -83,6 +134,9 @@ func TestMkdownOutput(t *testing.T) {
 	for _, n := range subslice {
 		assert.True(strings.Contains(b.String(), n))
 	}
+	for _, s := range htmlStr {
+		assert.Containsf(b.String(), s, "should have the string %s", s)
+	}
 	b, err = mkdownOutput(failData())
 	assert.NoError(err, "should not produce any error from template execution")
 	subslice = []string{
@@ -95,6 +149,9 @@ func TestMkdownOutput(t *testing.T) {
 		assert.True(strings.Contains(b.String(), n))
 	}
 	assert.False(strings.Contains(b.String(), "dicty_assay"))
+	for _, s := range htmlStr {
+		assert.Containsf(b.String(), s, "should have the string %s", s)
+	}
 	b, err = mkdownOutput(passData())
 	assert.NoError(err, "should not produce any error from template execution")
 	subslice = []string{
@@ -106,6 +163,9 @@ func TestMkdownOutput(t *testing.T) {
 	}
 	assert.False(strings.Contains(b.String(), "dicty_pheno"))
 	assert.False(strings.Contains(b.String(), "best of the best"))
+	for _, s := range htmlStr {
+		assert.Containsf(b.String(), s, "should have the string %s", s)
+	}
 }
 
 func TestListCommittedFiles(t *testing.T) {
