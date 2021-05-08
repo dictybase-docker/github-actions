@@ -77,6 +77,25 @@ func OntoReportOnPullComment(c *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
+	rs, err := ontoReport(c, cf)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 2)
+	}
+	err = createCommentFromReport(&reportParams{
+		prid:       c.Int("pull-request-id"),
+		repository: c.GlobalString("repository"),
+		owner:      c.GlobalString("owner"),
+		token:      c.GlobalString("token"),
+		ref:        c.String("ref"),
+		data:       rs,
+	})
+	if err != nil {
+		return cli.NewExitError(err.Error(), 2)
+	}
+	return reportStatusError(rs)
+}
+
+func ontoReport(c *cli.Context, cf []string) (map[string][]*reportContent, error) {
 	rs := make(map[string][]*reportContent)
 	for _, f := range cf {
 		html, err := readHtmlContent(
@@ -86,7 +105,7 @@ func OntoReportOnPullComment(c *cli.Context) error {
 			),
 		)
 		if err != nil {
-			return cli.NewExitError(err.Error(), 2)
+			return rs, err
 		}
 		v, err := ontology.ParseViolations(
 			fmt.Sprintf("%s/%s.json", c.String("report-dir"), f),
@@ -94,7 +113,7 @@ func OntoReportOnPullComment(c *cli.Context) error {
 		)
 		if err != nil {
 			if !ontology.IsViolationNotFound(err) {
-				return cli.NewExitError(err.Error(), 2)
+				return rs, err
 			}
 			if _, ok := rs["pass"]; ok {
 				rs["pass"] = append(
@@ -127,18 +146,7 @@ func OntoReportOnPullComment(c *cli.Context) error {
 			Html:       html,
 		}}
 	}
-	err = createCommentFromReport(&reportParams{
-		prid:       c.Int("pull-request-id"),
-		repository: c.GlobalString("repository"),
-		owner:      c.GlobalString("owner"),
-		token:      c.GlobalString("token"),
-		ref:        c.String("ref"),
-		data:       rs,
-	})
-	if err != nil {
-		return cli.NewExitError(err.Error(), 2)
-	}
-	return reportStatusError(rs)
+	return rs, nil
 }
 
 func readHtmlContent(file string) (string, error) {
