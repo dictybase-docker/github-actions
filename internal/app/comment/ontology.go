@@ -90,10 +90,7 @@ func ontoReport(c *cli.Context, cf []string) (map[string][]*reportContent, error
 	rs := make(map[string][]*reportContent)
 	for _, f := range cf {
 		html, err := readHTMLContent(
-			fmt.Sprintf(
-				"%s.html",
-				filepath.Join(c.String("report-dir"), f),
-			),
+			fmt.Sprintf("%s.html", filepath.Join(c.String("report-dir"), f)),
 		)
 		if err != nil {
 			return rs, err
@@ -107,28 +104,21 @@ func ontoReport(c *cli.Context, cf []string) (map[string][]*reportContent, error
 				return rs, err
 			}
 			if _, ok := rs["pass"]; ok {
-				rs["pass"] = append(
-					rs["pass"],
-					&reportContent{
-						Name: fmt.Sprintf("%s.obo", f),
-						HTML: html,
-					},
-				)
+				rs["pass"] = append(rs["pass"], &reportContent{
+					Name: fmt.Sprintf("%s.obo", f),
+					HTML: html,
+				})
 			} else {
-				rs["pass"] = []*reportContent{
-					{Name: fmt.Sprintf("%s.obo", f), HTML: html},
-				}
+				rs["pass"] = []*reportContent{{Name: fmt.Sprintf("%s.obo", f), HTML: html}}
 			}
 			continue
 		}
 		if _, ok := rs["fail"]; ok {
-			rs["fail"] = append(rs["fail"],
-				&reportContent{
-					Name:       fmt.Sprintf("%s.obo", f),
-					Violations: v,
-					HTML:       html,
-				},
-			)
+			rs["fail"] = append(rs["fail"], &reportContent{
+				Name:       fmt.Sprintf("%s.obo", f),
+				Violations: v,
+				HTML:       html,
+			})
 			continue
 		}
 		rs["fail"] = []*reportContent{{
