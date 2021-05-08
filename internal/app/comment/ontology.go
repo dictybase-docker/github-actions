@@ -27,9 +27,9 @@ const tmpl = `
 {{- range $y,$v := $rc.Violations}}
 - {{$v}}
 {{- end}}
-{{if $rc.Html}}
+{{if $rc.HTML}}
 > #### Full report
-{{$rc.Html}}
+{{$rc.HTML}}
 {{- end}}
 {{- end}}
 {{- end}}
@@ -40,9 +40,9 @@ const tmpl = `
 ## :heavy_check_mark: :heavy_check_mark: Ontology pass :heavy_check_mark: :heavy_check_mark:
 {{- range $i,$rc := index . "pass"}}
 > ### File: *{{$rc.Name}}*
-{{if $rc.Html}}
+{{if $rc.HTML}}
 > #### Full report
-{{$rc.Html}}
+{{$rc.HTML}}
 {{- end}}
 {{- end}}
 {{- end}}
@@ -59,7 +59,7 @@ type reportParams struct {
 
 type reportContent struct {
 	Name       string
-	Html       string
+	HTML       string
 	Violations []string
 }
 
@@ -89,7 +89,7 @@ func OntoReportOnPullComment(c *cli.Context) error {
 func ontoReport(c *cli.Context, cf []string) (map[string][]*reportContent, error) {
 	rs := make(map[string][]*reportContent)
 	for _, f := range cf {
-		html, err := readHtmlContent(
+		html, err := readHTMLContent(
 			fmt.Sprintf(
 				"%s.html",
 				filepath.Join(c.String("report-dir"), f),
@@ -111,12 +111,12 @@ func ontoReport(c *cli.Context, cf []string) (map[string][]*reportContent, error
 					rs["pass"],
 					&reportContent{
 						Name: fmt.Sprintf("%s.obo", f),
-						Html: html,
+						HTML: html,
 					},
 				)
 			} else {
 				rs["pass"] = []*reportContent{
-					{Name: fmt.Sprintf("%s.obo", f), Html: html},
+					{Name: fmt.Sprintf("%s.obo", f), HTML: html},
 				}
 			}
 			continue
@@ -126,7 +126,7 @@ func ontoReport(c *cli.Context, cf []string) (map[string][]*reportContent, error
 				&reportContent{
 					Name:       fmt.Sprintf("%s.obo", f),
 					Violations: v,
-					Html:       html,
+					HTML:       html,
 				},
 			)
 			continue
@@ -134,13 +134,13 @@ func ontoReport(c *cli.Context, cf []string) (map[string][]*reportContent, error
 		rs["fail"] = []*reportContent{{
 			Name:       fmt.Sprintf("%s.obo", f),
 			Violations: v,
-			Html:       html,
+			HTML:       html,
 		}}
 	}
 	return rs, nil
 }
 
-func readHtmlContent(file string) (string, error) {
+func readHTMLContent(file string) (string, error) {
 	if _, err := os.Stat(file); os.IsNotExist(err) {
 		return "", nil
 	}

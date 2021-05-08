@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	fakeHtml = `
+	fakeHTML = `
 			<head>
 			  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 			</head>
@@ -69,7 +69,7 @@ func failData() map[string][]*reportContent {
 				"no env",
 				"green is good",
 			},
-			Html: fakeHtml,
+			HTML: fakeHTML,
 		},
 	}
 	return data
@@ -79,7 +79,7 @@ func passData() map[string][]*reportContent {
 	data := make(map[string][]*reportContent)
 	data["pass"] = []*reportContent{
 		{Name: "dicty_assay.obo"},
-		{Name: "dicty_flower.obo", Html: fakeHtml},
+		{Name: "dicty_flower.obo", HTML: fakeHTML},
 		{Name: "foobar.obo"},
 	}
 	return data
@@ -88,7 +88,7 @@ func passData() map[string][]*reportContent {
 func failAndPassData() map[string][]*reportContent {
 	data := make(map[string][]*reportContent)
 	data["pass"] = []*reportContent{
-		{Name: "dicty_assay.obo", Html: fakeHtml},
+		{Name: "dicty_assay.obo", HTML: fakeHTML},
 		{Name: "dicty_flower.obo"},
 		{Name: "foobar.obo"},
 	}
