@@ -57,15 +57,6 @@ type reportParams struct {
 	ref        string
 }
 
-type checkStatusParams struct {
-	data       map[string][]*reportContent
-	client     *github.Client
-	owner      string
-	repository string
-	ref        string
-	report     string
-}
-
 type reportContent struct {
 	Name       string
 	Html       string
