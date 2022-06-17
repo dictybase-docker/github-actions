@@ -9,10 +9,11 @@ jobs:
         id: vars
         run: |
           branch=$(echo ${{ github.ref }} | sed -r 's/refs\/heads\///')
-          echo ::set-output name=branch::${branch}
+          echo "branch_name=${branch}" >> $GITHUB_ENV
       - name: pull-request
-        uses: repo-sync/pull-request@v2
+        uses: peter-evans/create-pull-request@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          destination_branch: "develop"
-          pr_title: "Pulling ${{ steps.vars.outputs.branch }} into develop"
+          token: ${{ secrets.WORKFLOW_RUN }}
+          delete-branch: true
+          branch: ${{ env.branch_name }}
+          base: develop
