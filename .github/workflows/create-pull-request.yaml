@@ -16,3 +16,4 @@ jobs:
           token: ${{ secrets.WORKFLOW_RUN }}
           delete-branch: true
           branch: ${{ env.branch_name }}
+          base: develop
