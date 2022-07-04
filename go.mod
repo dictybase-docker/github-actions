@@ -10,7 +10,7 @@ require (
 	github.com/sethvargo/go-githubactions v1.0.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a // indirect
-	github.com/stretchr/testify v1.7.5
+	github.com/stretchr/testify v1.8.0
 	github.com/urfave/cli v1.22.9
 	golang.org/x/crypto v0.0.0-20190510104115-cbcb75029529 // indirect
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
