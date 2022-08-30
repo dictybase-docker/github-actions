@@ -12,6 +12,7 @@ func OntoReportWithEmptyError() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("unable to get current dir %s", err)
 	}
+
 	return filepath.Join(
 		filepath.Dir(dir),
 		"../testdata",
@@ -24,6 +25,7 @@ func OntoErrorFile() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("unable to get current dir %s", err)
 	}
+
 	return filepath.Join(
 		filepath.Dir(dir),
 		"../testdata",
@@ -42,7 +44,12 @@ func PullReqPayload(name string) (io.Reader, error) {
 		"../testdata",
 		name,
 	)
-	return os.Open(path)
+	fhd, err := os.Open(path)
+	if err != nil {
+		return fhd, fmt.Errorf("error in opening file %s", err)
+	}
+
+	return fhd, nil
 }
 
 func PushPayload() (io.Reader, error) {
@@ -52,5 +59,10 @@ func PushPayload() (io.Reader, error) {
 		return r, fmt.Errorf("unable to get current dir %s", err)
 	}
 	path := filepath.Join(filepath.Dir(dir), "../testdata", "push.json")
-	return os.Open(path)
+	fhd, err := os.Open(path)
+	if err != nil {
+		return fhd, fmt.Errorf("error in opening file %s", err)
+	}
+
+	return fhd, nil
 }

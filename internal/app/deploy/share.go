@@ -23,40 +23,42 @@ type Payload struct {
 
 func GetPayload(data []byte) (*Payload, error) {
 	var s string
-	p := new(Payload)
+	pld := new(Payload)
 	if err := json.Unmarshal(data, &s); err != nil {
-		return p, fmt.Errorf("error in decoding json data to string %s", err)
+		return pld, fmt.Errorf("error in decoding json data to string %s", err)
 	}
-	if err := json.Unmarshal([]byte(s), p); err != nil {
-		return p, fmt.Errorf("error in decoding string to structure %s", err)
+	if err := json.Unmarshal([]byte(s), pld); err != nil {
+		return pld, fmt.Errorf("error in decoding string to structure %s", err)
 	}
-	return p, nil
+
+	return pld, nil
 }
 
-func ShareDeployPayload(c *cli.Context) error {
-	r, err := os.Open(c.String("payload-file"))
+func ShareDeployPayload(clt *cli.Context) error {
+	pld, err := os.Open(clt.String("payload-file"))
 	if err != nil {
 		return fmt.Errorf("error in reading content from file %s", err)
 	}
-	defer r.Close()
-	d := &github.Deployment{}
-	if err := json.NewDecoder(r).Decode(d); err != nil {
+	defer pld.Close()
+	gdl := &github.Deployment{}
+	if err := json.NewDecoder(pld).Decode(gdl); err != nil {
 		return fmt.Errorf("error in decoding json %s", err)
 	}
-	p, err := GetPayload(d.Payload)
+	pgdl, err := GetPayload(gdl.Payload)
 	if err != nil {
 		return err
 	}
-	a := githubactions.New()
-	log := logger.GetLogger(c)
-	a.SetOutput("id", strconv.Itoa(int(d.GetID())))
-	a.SetOutput("url", d.GetURL())
-	a.SetOutput("cluster", p.Cluster)
-	a.SetOutput("zone", p.Zone)
-	a.SetOutput("chart", p.Chart)
-	a.SetOutput("namespace", p.Namespace)
-	a.SetOutput("image_tag", p.ImageTag)
-	a.SetOutput("path", p.Path)
+	act := githubactions.New()
+	log := logger.GetLogger(clt)
+	act.SetOutput("id", strconv.Itoa(int(gdl.GetID())))
+	act.SetOutput("url", gdl.GetURL())
+	act.SetOutput("cluster", pgdl.Cluster)
+	act.SetOutput("zone", pgdl.Zone)
+	act.SetOutput("chart", pgdl.Chart)
+	act.SetOutput("namespace", pgdl.Namespace)
+	act.SetOutput("image_tag", pgdl.ImageTag)
+	act.SetOutput("path", pgdl.Path)
 	log.Info("added all keys to the output")
+
 	return nil
 }

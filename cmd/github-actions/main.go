@@ -52,6 +52,7 @@ func main() {
 		cmd.ParseChatOpsDeploy(),
 		cmd.OntoReportOnPullComment(),
 		cmd.MigrateRepositories(),
+		cmd.AnalyticsReportCmd(),
 	}
 	if err := app.Run(os.Args); err != nil {
 		log.Fatalf("error in running command %s", err)

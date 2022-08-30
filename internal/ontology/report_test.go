@@ -8,6 +8,7 @@ import (
 )
 
 func TestParseEmptyViolations(t *testing.T) {
+	t.Parallel()
 	assert := require.New(t)
 	f, err := fake.OntoReportWithEmptyError()
 	assert.NoError(
@@ -19,13 +20,14 @@ func TestParseEmptyViolations(t *testing.T) {
 }
 
 func TestParseViolations(t *testing.T) {
+	t.Parallel()
 	assert := require.New(t)
-	f, err := fake.OntoErrorFile()
+	fhd, err := fake.OntoErrorFile()
 	assert.NoError(
 		err,
 		"should not receive any error from getting error report file",
 	)
-	viol, err := ParseViolations(f, "ERROR")
+	viol, err := ParseViolations(fhd, "ERROR")
 	assert.NoError(
 		err,
 		"should not produce any error from parsing violations",
@@ -41,6 +43,6 @@ func TestParseViolations(t *testing.T) {
 		"missing ontology title",
 		"should have missing ontology title violation",
 	)
-	_, err = ParseViolations(f, "FATAL")
+	_, err = ParseViolations(fhd, "FATAL")
 	assert.True(IsViolationNotFound(err), "should be violation not found error")
 }

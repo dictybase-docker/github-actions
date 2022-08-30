@@ -16,6 +16,7 @@ func NewGcloud() (*Gcloud, error) {
 		return &Gcloud{},
 			fmt.Errorf("gcloud command not found %s %s", err, os.Getenv("PATH"))
 	}
+
 	return &Gcloud{Cmd: path}, nil
 }
 
@@ -23,6 +24,7 @@ func NewGcloudWithPath(path string) (*Gcloud, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return &Gcloud{}, fmt.Errorf("file %s does not exist", path)
 	}
+
 	return &Gcloud{Cmd: path}, nil
 }
 
@@ -42,5 +44,6 @@ func (g *Gcloud) GetClusterCredentials(project, zone, cluster string) error {
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("error %s in running command %s", err, cmd.String())
 	}
+
 	return nil
 }

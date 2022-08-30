@@ -9,11 +9,6 @@ cli to manage dictyBase github actions
 
 # [Cli documentation](docs/README.md)
 
-
-# Active Developers
-<a href="https://sourcerer.io/cybersiddhu"><img src="https://sourcerer.io/assets/avatar/cybersiddhu" height="80px" alt="Sourcerer"></a>
-<a href="https://sourcerer.io/wildlifehexagon"><img src="https://sourcerer.io/assets/avatar/wildlifehexagon" height="80px" alt="Sourcerer"></a>
-
 # Misc. Badges
 ![Issues](https://badgen.net/github/issues/dictyBase-docker/github-actions)
 ![Open Issues](https://badgen.net/github/open-issues/dictyBase-docker/github-actions)

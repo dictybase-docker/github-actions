@@ -5,7 +5,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-func DeployChart(c *cli.Context) error {
+func DeployChart(clt *cli.Context) error {
 	helm, err := runner.NewHelm()
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
@@ -13,28 +13,30 @@ func DeployChart(c *cli.Context) error {
 	if err := helm.IsConnected(); err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
-	return installOrUpgrade(c, helm)
+
+	return installOrUpgrade(clt, helm)
 }
 
-func installOrUpgrade(c *cli.Context, helm *runner.Helm) error {
-	ok, err := helm.IsChartDeployed(c.String("name"))
+func installOrUpgrade(clt *cli.Context, helm *runner.Helm) error {
+	isok, err := helm.IsChartDeployed(clt.String("name"))
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
-	p := &runner.ChartParams{
-		Name:      c.String("name"),
-		Namespace: c.String("namespace"),
-		ImageTag:  c.String("image-tag"),
-		ChartPath: c.String("path"),
+	prc := &runner.ChartParams{
+		Name:      clt.String("name"),
+		Namespace: clt.String("namespace"),
+		ImageTag:  clt.String("image-tag"),
+		ChartPath: clt.String("path"),
 	}
-	if ok {
-		if err := helm.UpgradeChart(p); err != nil {
+	if isok {
+		if err := helm.UpgradeChart(prc); err != nil {
 			return cli.NewExitError(err.Error(), 2)
 		}
 	} else {
-		if err := helm.InstallChart(p); err != nil {
+		if err := helm.InstallChart(prc); err != nil {
 			return cli.NewExitError(err.Error(), 2)
 		}
 	}
+
 	return nil
 }

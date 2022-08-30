@@ -63,71 +63,81 @@ type reportContent struct {
 	Violations []string
 }
 
-func OntoReportOnPullComment(c *cli.Context) error {
-	cf, err := listCommittedFiles(c.String("commit-list-file"))
+func OntoReportOnPullComment(clt *cli.Context) error {
+	cf, err := listCommittedFiles(clt.String("commit-list-file"))
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
-	rs, err := ontoReport(c, cf)
+	rps, err := ontoReport(clt, cf)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
 	err = createCommentFromReport(&reportParams{
-		prid:       c.Int("pull-request-id"),
-		repository: c.GlobalString("repository"),
-		owner:      c.GlobalString("owner"),
-		token:      c.GlobalString("token"),
-		ref:        c.String("ref"),
-		data:       rs,
+		prid:       clt.Int("pull-request-id"),
+		repository: clt.GlobalString("repository"),
+		owner:      clt.GlobalString("owner"),
+		token:      clt.GlobalString("token"),
+		ref:        clt.String("ref"),
+		data:       rps,
 	})
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
-	return reportStatusError(rs)
+
+	return reportStatusError(rps)
 }
 
-func ontoReport(c *cli.Context, cf []string) (map[string][]*reportContent, error) {
-	rs := make(map[string][]*reportContent)
-	for _, f := range cf {
+func ontoReport(
+	clt *cli.Context,
+	cf []string,
+) (map[string][]*reportContent, error) {
+	rcs := make(map[string][]*reportContent)
+	for _, folder := range cf {
 		html, err := readHTMLContent(
-			fmt.Sprintf("%s.html", filepath.Join(c.String("report-dir"), f)),
+			fmt.Sprintf(
+				"%s.html",
+				filepath.Join(clt.String("report-dir"), folder),
+			),
 		)
 		if err != nil {
-			return rs, err
+			return rcs, err
 		}
-		v, err := ontology.ParseViolations(
-			fmt.Sprintf("%s/%s.json", c.String("report-dir"), f),
+		viol, err := ontology.ParseViolations(
+			fmt.Sprintf("%s/%s.json", clt.String("report-dir"), folder),
 			"ERROR",
 		)
 		if err != nil {
 			if !ontology.IsViolationNotFound(err) {
-				return rs, err
+				return rcs, fmt.Errorf("ontology not found %s", err)
 			}
-			if _, ok := rs["pass"]; ok {
-				rs["pass"] = append(rs["pass"], &reportContent{
-					Name: fmt.Sprintf("%s.obo", f),
+			if _, ok := rcs["pass"]; ok {
+				rcs["pass"] = append(rcs["pass"], &reportContent{
+					Name: fmt.Sprintf("%s.obo", folder),
 					HTML: html,
 				})
 			} else {
-				rs["pass"] = []*reportContent{{Name: fmt.Sprintf("%s.obo", f), HTML: html}}
+				rcs["pass"] = []*reportContent{{Name: fmt.Sprintf("%s.obo", folder), HTML: html}}
 			}
+
 			continue
 		}
-		if _, ok := rs["fail"]; ok {
-			rs["fail"] = append(rs["fail"], &reportContent{
-				Name:       fmt.Sprintf("%s.obo", f),
-				Violations: v,
+		if _, ok := rcs["fail"]; ok {
+			rcs["fail"] = append(rcs["fail"], &reportContent{
+				Name:       fmt.Sprintf("%s.obo", folder),
+				Violations: viol,
 				HTML:       html,
 			})
+
 			continue
 		}
-		rs["fail"] = []*reportContent{{
-			Name:       fmt.Sprintf("%s.obo", f),
-			Violations: v,
+		rcs["fail"] = []*reportContent{{
+			Name:       fmt.Sprintf("%s.obo", folder),
+			Violations: viol,
 			HTML:       html,
 		}}
 	}
-	return rs, nil
+
+	return rcs, nil
 }
 
 func readHTMLContent(file string) (string, error) {
@@ -136,8 +146,9 @@ func readHTMLContent(file string) (string, error) {
 	}
 	ct, err := os.ReadFile(file)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error in reading file %s", err)
 	}
+
 	return string(ct), nil
 }
 
@@ -148,15 +159,16 @@ func reportStatusError(rs map[string][]*reportContent) error {
 			2,
 		)
 	}
+
 	return nil
 }
 
 func createCommentFromReport(args *reportParams) error {
 	gclient, err := client.GetGithubClient(args.token)
 	if err != nil {
-		return err
+		return fmt.Errorf("error in getting github client %s", err)
 	}
-	mk, err := mkdownOutput(args.data)
+	mkd, err := mkdownOutput(args.data)
 	if err != nil {
 		return err
 	}
@@ -166,11 +178,12 @@ func createCommentFromReport(args *reportParams) error {
 		args.repository,
 		args.prid,
 		&github.IssueComment{
-			Body: github.String(mk.String()),
+			Body: github.String(mkd.String()),
 		})
 	if err != nil {
 		return fmt.Errorf("error in creating pull request comment %s", err)
 	}
+
 	return nil
 }
 
@@ -183,21 +196,26 @@ func mkdownOutput(data interface{}) (*bytes.Buffer, error) {
 	if err := t.Execute(out, data); err != nil {
 		return out, fmt.Errorf("error in executing template %s", err)
 	}
+
 	return out, nil
 }
 
 func listCommittedFiles(path string) ([]string, error) {
-	var a []string
+	var afiles []string
 	r, err := os.Open(path)
 	if err != nil {
-		return a, fmt.Errorf("unable to open file %s", err)
+		return afiles, fmt.Errorf("unable to open file %s", err)
 	}
 	defer r.Close()
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
-		a = append(a, baseNoSuffix(scanner.Text()))
+		afiles = append(afiles, baseNoSuffix(scanner.Text()))
 	}
-	return a, scanner.Err()
+	if err := scanner.Err(); err != nil {
+		return afiles, fmt.Errorf("error from scanning %s", err)
+	}
+
+	return afiles, nil
 }
 
 func baseNoSuffix(path string) string {

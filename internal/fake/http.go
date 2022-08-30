@@ -2,10 +2,10 @@ package fake
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"path/filepath"
 	"regexp"
 
@@ -99,6 +99,7 @@ func routeTable() []*route {
 	var route []*route
 	route = append(route, fetchRoute()...)
 	route = append(route, postRoute()...)
+
 	return append(route, delRoute()...)
 }
 
@@ -113,51 +114,54 @@ func handleNoContent(file string, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleAccepted(file string, w http.ResponseWriter, r *http.Request) {
-	b, err := payloadFile(file)
+func handleAccepted(file string, wrt http.ResponseWriter, r *http.Request) {
+	bfl, err := payloadFile(file)
 	if err != nil {
 		http.Error(
-			w,
+			wrt,
 			err.Error(),
 			http.StatusInternalServerError,
 		)
+
 		return
 	}
-	w.WriteHeader(http.StatusAccepted)
-	fmt.Fprint(w, string(b))
+	wrt.WriteHeader(http.StatusAccepted)
+	fmt.Fprint(wrt, string(bfl))
 }
 
-func handleSuccess(file string, w http.ResponseWriter, r *http.Request) {
-	b, err := payloadFile(file)
+func handleSuccess(file string, wrt http.ResponseWriter, r *http.Request) {
+	bfl, err := payloadFile(file)
 	if err != nil {
 		http.Error(
-			w,
+			wrt,
 			err.Error(),
 			http.StatusInternalServerError,
 		)
+
 		return
 	}
-	if _, err := w.Write(b); err != nil {
+	if _, err := wrt.Write(bfl); err != nil {
 		http.Error(
-			w,
+			wrt,
 			err.Error(),
 			http.StatusInternalServerError,
 		)
 	}
 }
 
-func router(w http.ResponseWriter, r *http.Request) {
-	for _, rt := range routeTable() {
-		if r.Method != rt.method {
+func router(wrt http.ResponseWriter, req *http.Request) {
+	for _, rtbl := range routeTable() {
+		if req.Method != rtbl.method {
 			continue
 		}
-		if !rt.regexp.MatchString(r.URL.Path) {
+		if !rtbl.regexp.MatchString(req.URL.Path) {
 			continue
 		}
-		rt.fn(rt.file, w, r)
+		rtbl.fn(rtbl.file, wrt, req)
+
 		return
 	}
-	http.NotFound(w, r)
+	http.NotFound(wrt, req)
 }
 
 func payloadFile(file string) ([]byte, error) {
@@ -165,10 +169,11 @@ func payloadFile(file string) ([]byte, error) {
 	if err != nil {
 		return []byte(""), fmt.Errorf("unable to get current file %s", err)
 	}
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return []byte(""), fmt.Errorf("unable to read test file %s", path)
 	}
+
 	return b, nil
 }
 
@@ -180,5 +185,6 @@ func GhServerClient() (*httptest.Server, *gh.Client) {
 	url, _ := url.Parse(server.URL + baseURLPath + "/")
 	client.BaseURL = url
 	client.UploadURL = url
+
 	return server, client
 }

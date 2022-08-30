@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -17,79 +17,80 @@ type repo struct {
 	name, owner string
 }
 
-func BatchMultiRepo(c *cli.Context) error {
-	gclient, err := client.GetGithubClient(c.GlobalString("token"))
+func BatchMultiRepo(clt *cli.Context) error {
+	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
 	if err != nil {
 		return cli.NewExitError(
-			fmt.Sprintf("error in getting github client %s", err),
-			2,
-		)
+			fmt.Sprintf("error in getting github client %s", err), 2)
 	}
-	rl, wc, err := readFiles(c)
+	rfl, wbc, err := readFiles(clt)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
 	path := fmt.Sprintf(
-		"%s/%s", c.String("repository-path"),
-		filepath.Base(c.String("input-file")),
+		"%s/%s", clt.String("repository-path"),
+		filepath.Base(clt.String("input-file")),
 	)
 	msg := github.String(
 		fmt.Sprintf("adding %s file",
-			filepath.Base(c.String("input-file")),
+			filepath.Base(clt.String("input-file")),
 		),
 	)
-	for _, r := range parseOwnerRepo(string(rl)) {
+	for _, rpo := range parseOwnerRepo(string(rfl)) {
 		_, _, err := gclient.Repositories.CreateFile(
 			context.Background(),
-			r.owner, r.name, path,
+			rpo.owner, rpo.name, path,
 			&github.RepositoryContentFileOptions{
 				Message: msg,
-				Content: wc,
-				Branch:  github.String(c.String("branch")),
+				Content: wbc,
+				Branch:  github.String(clt.String("branch")),
 			},
 		)
 		if err != nil {
 			return cli.NewExitError(
 				fmt.Sprintf("error in adding file %s to repository %s %s",
-					path, fmt.Sprintf("%s/%s", r.owner, r.name), err,
+					path, fmt.Sprintf("%s/%s", rpo.owner, rpo.name), err,
 				),
 				2,
 			)
 		}
-		logger.GetLogger(c).Debugf(
+		logger.GetLogger(clt).Debugf(
 			"uploaded file %s to repository %s", path,
-			fmt.Sprintf("%s/%s", r.owner, r.name),
+			fmt.Sprintf("%s/%s", rpo.owner, rpo.name),
 		)
 	}
+
 	return nil
 }
 
-func readFiles(c *cli.Context) ([]byte, []byte, error) {
-	var b []byte
-	rl, err := ioutil.ReadFile(c.String("repository-list"))
+func readFiles(clt *cli.Context) ([]byte, []byte, error) {
+	var byr []byte
+	rpl, err := os.ReadFile(clt.String("repository-list"))
 	if err != nil {
-		return rl, b, fmt.Errorf(
+		return rpl, byr, fmt.Errorf(
 			"error in opening repository list %s %s",
-			c.String("repository-list"),
+			clt.String("repository-list"),
 			err,
 		)
 	}
-	wc, err := ioutil.ReadFile(c.String("input-file"))
+	wnc, err := os.ReadFile(clt.String("input-file"))
 	if err != nil {
-		return rl, wc, fmt.Errorf(
+		return rpl, wnc, fmt.Errorf(
 			"error in opening input file %s %s",
-			c.String("input-file"),
+			clt.String("input-file"),
 			err,
 		)
 	}
-	return rl, wc, nil
+
+	return rpl, wnc, nil
 }
 
 func parseOwnerRepo(str string) []*repo {
-	var r []*repo
+	rpo := make([]*repo, 0)
 	for _, f := range strings.Split(str, "\n") {
 		v := strings.Split(f, "/")
-		r = append(r, &repo{owner: v[0], name: v[1]})
+		rpo = append(rpo, &repo{owner: v[0], name: v[1]})
 	}
-	return r
+
+	return rpo
 }

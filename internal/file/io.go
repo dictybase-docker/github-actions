@@ -7,22 +7,23 @@ import (
 	"github.com/urfave/cli"
 )
 
-func InputOutput(c *cli.Context) (*os.File, *os.File, error) {
-	var in *os.File
+func InputOutput(clt *cli.Context) (*os.File, *os.File, error) {
+	var inp *os.File
 	var out *os.File
-	r, err := os.Open(c.String("payload-file"))
+	r, err := os.Open(clt.String("payload-file"))
 	if err != nil {
-		return in, out, fmt.Errorf("error in reading content from file %s", err)
+		return inp, out, fmt.Errorf("error in reading content from file %s", err)
 	}
-	in = r
-	if len(c.String("output")) > 0 {
-		w, err := os.Create(c.String("output"))
+	inp = r
+	if len(clt.String("output")) > 0 {
+		w, err := os.Create(clt.String("output"))
 		if err != nil {
-			return in, out, fmt.Errorf("error in creating file %s %s", c.String("output"), err)
+			return inp, out, fmt.Errorf("error in creating file %s %s", clt.String("output"), err)
 		}
 		out = w
 	} else {
 		out = os.Stdout
 	}
-	return in, out, nil
+
+	return inp, out, nil
 }

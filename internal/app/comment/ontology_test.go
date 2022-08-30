@@ -2,7 +2,6 @@ package comment
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -72,6 +71,7 @@ func failData() map[string][]*reportContent {
 			HTML: fakeHTML,
 		},
 	}
+
 	return data
 }
 
@@ -82,6 +82,7 @@ func passData() map[string][]*reportContent {
 		{Name: "dicty_flower.obo", HTML: fakeHTML},
 		{Name: "foobar.obo"},
 	}
+
 	return data
 }
 
@@ -109,10 +110,12 @@ func failAndPassData() map[string][]*reportContent {
 			},
 		},
 	}
+
 	return data
 }
 
 func TestMkdownOutput(t *testing.T) {
+	t.Parallel()
 	htmlStr := []string{
 		"Full report",
 		"bootstrap",
@@ -122,7 +125,7 @@ func TestMkdownOutput(t *testing.T) {
 		"abolished vacuolation",
 	}
 	assert := require.New(t)
-	b, err := mkdownOutput(failAndPassData())
+	bout, err := mkdownOutput(failAndPassData())
 	assert.NoError(err, "should not produce any error from template execution")
 	subslice := []string{
 		"dicty_env",
@@ -132,12 +135,12 @@ func TestMkdownOutput(t *testing.T) {
 		"green is good",
 	}
 	for _, n := range subslice {
-		assert.True(strings.Contains(b.String(), n))
+		assert.True(strings.Contains(bout.String(), n))
 	}
 	for _, s := range htmlStr {
-		assert.Containsf(b.String(), s, "should have the string %s", s)
+		assert.Containsf(bout.String(), s, "should have the string %s", s)
 	}
-	b, err = mkdownOutput(failData())
+	bout, err = mkdownOutput(failData())
 	assert.NoError(err, "should not produce any error from template execution")
 	subslice = []string{
 		"dicty_env",
@@ -146,31 +149,32 @@ func TestMkdownOutput(t *testing.T) {
 		"green is good",
 	}
 	for _, n := range subslice {
-		assert.True(strings.Contains(b.String(), n))
+		assert.True(strings.Contains(bout.String(), n))
 	}
-	assert.False(strings.Contains(b.String(), "dicty_assay"))
+	assert.False(strings.Contains(bout.String(), "dicty_assay"))
 	for _, s := range htmlStr {
-		assert.Containsf(b.String(), s, "should have the string %s", s)
+		assert.Containsf(bout.String(), s, "should have the string %s", s)
 	}
-	b, err = mkdownOutput(passData())
+	bout, err = mkdownOutput(passData())
 	assert.NoError(err, "should not produce any error from template execution")
 	subslice = []string{
 		"dicty_assay",
 		"dicty_flower",
 	}
 	for _, n := range subslice {
-		assert.True(strings.Contains(b.String(), n))
+		assert.True(strings.Contains(bout.String(), n))
 	}
-	assert.False(strings.Contains(b.String(), "dicty_pheno"))
-	assert.False(strings.Contains(b.String(), "best of the best"))
+	assert.False(strings.Contains(bout.String(), "dicty_pheno"))
+	assert.False(strings.Contains(bout.String(), "best of the best"))
 	for _, s := range htmlStr {
-		assert.Containsf(b.String(), s, "should have the string %s", s)
+		assert.Containsf(bout.String(), s, "should have the string %s", s)
 	}
 }
 
 func TestListCommittedFiles(t *testing.T) {
+	t.Parallel()
 	assert := require.New(t)
-	tmpf, err := ioutil.TempFile("", "jxt")
+	tmpf, err := os.CreateTemp("", "jxt")
 	assert.NoError(
 		err,
 		"should not throw error from creating a temp file",

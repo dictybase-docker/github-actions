@@ -10,7 +10,7 @@ func DeployStatusCmd() cli.Command {
 		Name:    "deploy-status",
 		Aliases: []string{"ds"},
 		Usage:   "create a github deployment status",
-		Action:  deploy.DeployStatus,
+		Action:  deploy.Status,
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:     "state",
