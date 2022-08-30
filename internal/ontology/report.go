@@ -25,17 +25,19 @@ func ParseViolations(path string, level string) ([]string, error) {
 		}
 		violCont = child
 		hasLevel = true
+
 		break
 	}
 	children := violCont.S("violations").Children()
 	if !hasLevel || len(children) == 0 {
-		return []string{}, &ViolationNotFound{Level: level}
+		return []string{}, &ViolationNotFoundError{Level: level}
 	}
-	var s []string
+	var slc []string
 	for _, child := range children {
 		for k := range child.ChildrenMap() {
-			s = append(s, strings.ReplaceAll(k, "_", " "))
+			slc = append(slc, strings.ReplaceAll(k, "_", " "))
 		}
 	}
-	return s, nil
+
+	return slc, nil
 }

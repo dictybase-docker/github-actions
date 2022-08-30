@@ -8,18 +8,23 @@ import (
 	"github.com/urfave/cli"
 )
 
-func getS3Host(c *cli.Context) string {
-	if len(c.String("s3-server-port")) > 0 {
-		return fmt.Sprintf("%s:%s", c.String("s3-server"), c.String("s3-server-port"))
+func getS3Host(clt *cli.Context) string {
+	if len(clt.String("s3-server-port")) > 0 {
+		return fmt.Sprintf(
+			"%s:%s",
+			clt.String("s3-server"),
+			clt.String("s3-server-port"),
+		)
 	}
-	return c.String("s3-server")
+
+	return clt.String("s3-server")
 }
 
-func SaveInS3(c *cli.Context) error {
+func SaveInS3(clt *cli.Context) error {
 	s3Client, err := minio.New(
-		getS3Host(c),
-		c.String("access-key"),
-		c.String("secret-key"),
+		getS3Host(clt),
+		clt.String("access-key"),
+		clt.String("secret-key"),
 		true,
 	)
 	if err != nil {
@@ -28,16 +33,16 @@ func SaveInS3(c *cli.Context) error {
 			2,
 		)
 	}
-	l := logger.GetLogger(c)
-	path := c.String("upload-path")
+	log := logger.GetLogger(clt)
+	path := clt.String("upload-path")
 	if len(path) == 0 {
-		path = c.String("input")
+		path = clt.String("input")
 	}
-	l.Debugf("upload path %s", path)
+	log.Debugf("upload path %s", path)
 	_, err = s3Client.FPutObject(
-		c.String("s3-bucket"),
+		clt.String("s3-bucket"),
 		path,
-		c.String("input"),
+		clt.String("input"),
 		minio.PutObjectOptions{ContentType: "application/text"},
 	)
 	if err != nil {
@@ -46,6 +51,7 @@ func SaveInS3(c *cli.Context) error {
 			2,
 		)
 	}
-	l.Infof("save file %s to s3 storage", c.String("input"))
+	log.Infof("save file %s to s3 storage", clt.String("input"))
+
 	return nil
 }

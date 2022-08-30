@@ -17,87 +17,99 @@ type CommittedFilesParams struct {
 	SkipDeleted bool
 }
 
-type GithubManager struct {
+type Manager struct {
 	client *gh.Client
 }
 
-func NewGithubManager(c *gh.Client) *GithubManager {
-	return &GithubManager{client: c}
+func NewGithubManager(c *gh.Client) *Manager {
+	return &Manager{client: c}
 }
 
-func (g *GithubManager) CommittedFilesInPull(r io.Reader) (*ChangedFilesBuilder, error) {
-	var b *ChangedFilesBuilder
-	pe := &gh.PullRequestEvent{}
-	if err := json.NewDecoder(r).Decode(pe); err != nil {
-		return b, fmt.Errorf("error in decoding json %s", err)
+func (g *Manager) CommittedFilesInPull(
+	r io.Reader,
+) (*ChangedFilesBuilder, error) {
+	var bcf *ChangedFilesBuilder
+	pev := &gh.PullRequestEvent{}
+	if err := json.NewDecoder(r).Decode(pev); err != nil {
+		return bcf, fmt.Errorf("error in decoding json %s", err)
 	}
 	var after, before string
-	switch pe.GetAction() {
+	switch pev.GetAction() {
 	case "synchronize":
-		before = pe.GetBefore()
-		after = pe.GetAfter()
+		before = pev.GetBefore()
+		after = pev.GetAfter()
 	case "opened":
-		before = pe.GetPullRequest().GetBase().GetSHA()
-		after = pe.GetPullRequest().GetHead().GetSHA()
+		before = pev.GetPullRequest().GetBase().GetSHA()
+		after = pev.GetPullRequest().GetHead().GetSHA()
 	}
 	comc, _, err := g.client.Repositories.CompareCommits(
 		context.Background(),
-		pe.GetRepo().GetOwner().GetLogin(),
-		pe.GetRepo().GetName(),
+		pev.GetRepo().GetOwner().GetLogin(),
+		pev.GetRepo().GetName(),
 		before,
 		after,
 	)
 	if err != nil {
-		return b, fmt.Errorf("error in comparing commits %s", err)
+		return bcf, fmt.Errorf("error in comparing commits %s", err)
 	}
+
 	return CommittedFiles(comc), nil
 }
 
-func (g *GithubManager) CommittedFilesInPush(r io.Reader) (*ChangedFilesBuilder, error) {
-	var b *ChangedFilesBuilder
-	pe := &gh.PushEvent{}
-	if err := json.NewDecoder(r).Decode(pe); err != nil {
-		return b, fmt.Errorf("error in decoding json %s", err)
+func (g *Manager) CommittedFilesInPush(
+	r io.Reader,
+) (*ChangedFilesBuilder, error) {
+	var bfl *ChangedFilesBuilder
+	pev := &gh.PushEvent{}
+	if err := json.NewDecoder(r).Decode(pev); err != nil {
+		return bfl, fmt.Errorf("error in decoding json %s", err)
 	}
 	comc, _, err := g.client.Repositories.CompareCommits(
 		context.Background(),
-		pe.GetRepo().GetOwner().GetLogin(),
-		pe.GetRepo().GetName(),
-		pe.GetBefore(),
-		pe.GetAfter(),
+		pev.GetRepo().GetOwner().GetLogin(),
+		pev.GetRepo().GetName(),
+		pev.GetBefore(),
+		pev.GetAfter(),
 	)
 	if err != nil {
-		return b, fmt.Errorf("error in comparing commits %s", err)
+		return bfl, fmt.Errorf("error in comparing commits %s", err)
 	}
+
 	return CommittedFiles(comc), nil
 }
 
 func CommittedFiles(event *gh.CommitsComparison) *ChangedFilesBuilder {
-	var a []*ChangedFiles
+	afc := make([]*ChangedFiles, 0)
 	for _, f := range event.Files {
-		a = append(
-			a,
+		afc = append(
+			afc,
 			&ChangedFiles{Name: f.GetFilename(), Change: f.GetStatus()},
 		)
 	}
-	return &ChangedFilesBuilder{files: a}
+
+	return &ChangedFilesBuilder{files: afc}
 }
 
 func FilterCommittedFiles(args *CommittedFilesParams) ([]string, error) {
-	var fb *ChangedFilesBuilder
+	var fbl *ChangedFilesBuilder
 	var err error
 	switch args.Event {
 	case "push":
-		fb, err = NewGithubManager(args.Client).CommittedFilesInPush(args.Input)
+		fbl, err = NewGithubManager(
+			args.Client,
+		).CommittedFilesInPush(args.Input)
 	case "pull-request":
-		fb, err = NewGithubManager(args.Client).CommittedFilesInPull(args.Input)
+		fbl, err = NewGithubManager(
+			args.Client,
+		).CommittedFilesInPull(args.Input)
 	default:
 		err = fmt.Errorf("event type %s not supported", args.Event)
 	}
 	if err != nil {
 		return []string{}, err
 	}
-	return fb.FilterUniqueByName().
+
+	return fbl.FilterUniqueByName().
 		FilterDeleted(args.SkipDeleted).
 		FilterSuffix(args.FileSuffix).
 		List(), nil

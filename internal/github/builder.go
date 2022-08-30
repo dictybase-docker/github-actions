@@ -18,58 +18,66 @@ func (b *ChangedFilesBuilder) FilterSuffix(suffix string) *ChangedFilesBuilder {
 	if len(b.files) == 0 {
 		return b
 	}
-	var a []*ChangedFiles
+	var afl []*ChangedFiles
 	for _, v := range b.files {
 		if strings.HasSuffix(v.Name, suffix) {
-			a = append(a, v)
+			afl = append(afl, v)
+
 			continue
 		}
 	}
-	return &ChangedFilesBuilder{files: a}
+
+	return &ChangedFilesBuilder{files: afl}
 }
 
-func (b *ChangedFilesBuilder) FilterDeleted(isDeleted bool) *ChangedFilesBuilder {
+func (b *ChangedFilesBuilder) FilterDeleted(
+	isDeleted bool,
+) *ChangedFilesBuilder {
 	if len(b.files) == 0 {
 		return b
 	}
-	var a []*ChangedFiles
-	for _, v := range b.files {
-		if v.Change == "deleted" {
+	afl := make([]*ChangedFiles, 0)
+	for _, vfl := range b.files {
+		if vfl.Change == "deleted" {
 			continue
 		}
-		a = append(a, v)
+		afl = append(afl, vfl)
 	}
-	return &ChangedFilesBuilder{files: a}
+
+	return &ChangedFilesBuilder{files: afl}
 }
 
 func (b *ChangedFilesBuilder) FilterUniqueByName() *ChangedFilesBuilder {
 	if len(b.files) <= 1 {
 		return b
 	}
-	m := make(map[string]int)
-	var a []*ChangedFiles
+	mnt := make(map[string]int)
+	afl := make([]*ChangedFiles, 0)
 	for _, v := range b.files {
 		n := path.Base(v.Name)
-		if _, ok := m[n]; !ok {
-			a = append(a, v)
-			m[n] = 1
+		if _, ok := mnt[n]; !ok {
+			afl = append(afl, v)
+			mnt[n] = 1
 		}
 	}
-	return &ChangedFilesBuilder{files: a}
+
+	return &ChangedFilesBuilder{files: afl}
 }
 
 func (b *ChangedFilesBuilder) List() []string {
-	var sl []string
+	slc := make([]string, 0)
 	for _, v := range b.files {
-		sl = append(sl, v.Name)
+		slc = append(slc, v.Name)
 	}
-	return sl
+
+	return slc
 }
 
 func FileNames(s []string) []string {
-	var a []string
+	afl := make([]string, 0)
 	for _, f := range s {
-		a = append(a, path.Base(f))
+		afl = append(afl, path.Base(f))
 	}
-	return a
+
+	return afl
 }

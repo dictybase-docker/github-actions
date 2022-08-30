@@ -16,7 +16,12 @@ import (
 )
 
 type pullRequestGetter interface {
-	Get(ctx context.Context, owner string, repo string, number int) (*github.PullRequest, *github.Response, error)
+	Get(
+		ctx context.Context,
+		owner string,
+		repo string,
+		number int,
+	) (*github.PullRequest, *github.Response, error)
 }
 
 type pullRequestClient struct {
@@ -25,7 +30,12 @@ type pullRequestClient struct {
 }
 
 type branchGetter interface {
-	GetBranch(ctx context.Context, owner string, repo string, branch string) (*github.Branch, *github.Response, error)
+	GetBranch(
+		ctx context.Context,
+		owner string,
+		repo string,
+		branch string,
+	) (*github.Branch, *github.Response, error)
 }
 
 type branchClient struct {
@@ -64,125 +74,157 @@ type Output struct {
 }
 
 func getWorkflowInputsFromJSON(r io.Reader) (*Inputs, error) {
-	i := &Inputs{}
+	inp := &Inputs{}
 	w := &WorkflowDispatchEvent{}
 	if err := json.NewDecoder(r).Decode(w); err != nil {
-		return i, fmt.Errorf("error in decoding json %s", err)
+		return inp, fmt.Errorf("error in decoding json %s", err)
 	}
-	if err := json.Unmarshal(w.Inputs, &i); err != nil {
-		return i, fmt.Errorf("error in decoding json data to struct %s", err)
+	if err := json.Unmarshal(w.Inputs, &inp); err != nil {
+		return inp, fmt.Errorf("error in decoding json data to struct %s", err)
 	}
-	return i, nil
+
+	return inp, nil
 }
 
-func ParseDeployCommand(c *cli.Context) error {
-	r, err := os.Open(c.String("payload-file"))
+func ParseDeployCommand(clt *cli.Context) error {
+	r, err := os.Open(clt.String("payload-file"))
 	if err != nil {
 		return fmt.Errorf("error in reading content from file %s", err)
 	}
 	defer r.Close()
-	p, err := getWorkflowInputsFromJSON(r)
+	pjson, err := getWorkflowInputsFromJSON(r)
 	if err != nil {
 		return err
 	}
-	a := githubactions.New()
-	log := logger.GetLogger(c)
-	o, err := parseWorkflowInputs(p)
+	act := githubactions.New()
+	log := logger.GetLogger(clt)
+	oinput, err := parseWorkflowInputs(pjson)
 	if err != nil {
 		return fmt.Errorf("error in parsing workflow inputs %s", err)
 	}
-	imageTag := o.ImageTag
+	imageTag := oinput.ImageTag
 	// add image tag prefixes for developers
-	if c.Bool("frontend") && p.Cluster == "erickube" {
-		imageTag = fmt.Sprintf("ericdev-%s", o.ImageTag)
+	if clt.Bool("frontend") && pjson.Cluster == "erickube" {
+		imageTag = fmt.Sprintf("ericdev-%s", oinput.ImageTag)
 	}
-	if c.Bool("frontend") && p.Cluster == "siddkube" {
-		imageTag = fmt.Sprintf("devsidd-%s", o.ImageTag)
+	if clt.Bool("frontend") && pjson.Cluster == "siddkube" {
+		imageTag = fmt.Sprintf("devsidd-%s", oinput.ImageTag)
 	}
-	a.SetOutput("image_tag", imageTag)
-	a.SetOutput("ref", o.Ref)
+	act.SetOutput("image_tag", imageTag)
+	act.SetOutput("ref", oinput.Ref)
 	log.Info("added all keys to the output")
+
 	return nil
 }
 
-func parseWorkflowInputs(p *Inputs) (*Output, error) {
-	ou := &Output{}
+func parseWorkflowInputs(param *Inputs) (*Output, error) {
+	out := &Output{}
 	client := github.NewClient(nil)
 	prc := &pullRequestClient{
 		ctx:               context.Background(),
 		pullRequestClient: client.PullRequests,
 	}
-	bc := &branchClient{
+	bclient := &branchClient{
 		ctx:          context.Background(),
 		branchClient: client.Repositories,
 	}
-	if strings.Contains(p.URL, "pull") {
-		o, err := parsePR(prc, p)
+	if strings.Contains(param.URL, "pull") {
+		o, err := parsePR(prc, param)
 		if err != nil {
-			return ou, err
+			return out, err
 		}
-		return o, nil
-	} else {
-		o, err := parseIssue(bc, p)
-		if err != nil {
-			return ou, err
-		}
-		return o, nil
-	}
-}
 
-func parsePR(prc *pullRequestClient, p *Inputs) (*Output, error) {
-	o := &Output{}
-	if p.Commit == "" {
-		ref, err := prc.getHeadCommitFromPR(p.RepositoryName, p.RepositoryOwner, p.IssueNumber)
-		if err != nil {
-			return o, err
-		}
-		o.ImageTag = fmt.Sprintf("pr-%s-%s", p.IssueNumber, ref[0:7])
-		o.Ref = ref
 		return o, nil
 	}
-	o.ImageTag = fmt.Sprintf("pr-%s-%s", p.IssueNumber, p.Commit[0:7])
-	o.Ref = p.Commit
+	o, err := parseIssue(bclient, param)
+	if err != nil {
+		return out, err
+	}
+
 	return o, nil
 }
 
-func (prc *pullRequestClient) getHeadCommitFromPR(name, owner, id string) (string, error) {
+func parsePR(prc *pullRequestClient, param *Inputs) (*Output, error) {
+	out := &Output{}
+	if param.Commit == "" {
+		ref, err := prc.getHeadCommitFromPR(
+			param.RepositoryName,
+			param.RepositoryOwner,
+			param.IssueNumber,
+		)
+		if err != nil {
+			return out, err
+		}
+		out.ImageTag = fmt.Sprintf("pr-%s-%s", param.IssueNumber, ref[0:7])
+		out.Ref = ref
+
+		return out, nil
+	}
+	out.ImageTag = fmt.Sprintf("pr-%s-%s", param.IssueNumber, param.Commit[0:7])
+	out.Ref = param.Commit
+
+	return out, nil
+}
+
+func (prc *pullRequestClient) getHeadCommitFromPR(
+	name, owner, id string,
+) (string, error) {
 	num, err := strconv.Atoi(id)
 	if err != nil {
 		return "", fmt.Errorf("error converting string to int %s", err)
 	}
-	pr, _, err := prc.pullRequestClient.Get(context.Background(), owner, name, num)
+	pgr, _, err := prc.pullRequestClient.Get(
+		context.Background(),
+		owner,
+		name,
+		num,
+	)
 	if err != nil {
 		return "", fmt.Errorf("error getting pull request info %s", err)
 	}
-	return pr.GetHead().GetSHA(), nil
+
+	return pgr.GetHead().GetSHA(), nil
 }
 
-func parseIssue(bc *branchClient, p *Inputs) (*Output, error) {
-	o := &Output{}
-	if p.Branch != "" {
-		ref, err := bc.getHeadCommitFromBranch(p.RepositoryName, p.RepositoryOwner, p.Branch)
+func parseIssue(bc *branchClient, param *Inputs) (*Output, error) {
+	out := &Output{}
+	if param.Branch != "" {
+		ref, err := bc.getHeadCommitFromBranch(
+			param.RepositoryName,
+			param.RepositoryOwner,
+			param.Branch,
+		)
 		if err != nil {
-			return o, err
+			return out, err
 		}
-		cb := strings.ReplaceAll(p.Branch, "/", "-")
-		o.ImageTag = fmt.Sprintf("%s-%s", cb, ref[0:7])
-		o.Ref = ref
-		return o, nil
+		cb := strings.ReplaceAll(param.Branch, "/", "-")
+		out.ImageTag = fmt.Sprintf("%s-%s", cb, ref[0:7])
+		out.Ref = ref
+
+		return out, nil
 	}
-	if p.Commit != "" {
-		o.ImageTag = p.Commit[0:7]
-		o.Ref = p.Commit
-		return o, nil
+	if param.Commit != "" {
+		out.ImageTag = param.Commit[0:7]
+		out.Ref = param.Commit
+
+		return out, nil
 	}
-	return o, nil
+
+	return out, nil
 }
 
-func (bc *branchClient) getHeadCommitFromBranch(name, owner, branch string) (string, error) {
-	b, _, err := bc.branchClient.GetBranch(context.Background(), owner, name, branch)
+func (bc *branchClient) getHeadCommitFromBranch(
+	name, owner, branch string,
+) (string, error) {
+	brch, _, err := bc.branchClient.GetBranch(
+		context.Background(),
+		owner,
+		name,
+		branch,
+	)
 	if err != nil {
 		return "", fmt.Errorf("error getting pull request info %s", err)
 	}
-	return b.GetCommit().GetSHA(), nil
+
+	return brch.GetCommit().GetSHA(), nil
 }

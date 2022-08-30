@@ -20,38 +20,47 @@ const (
 	fileLayout = "01-02-2006-150405"
 )
 
-func CommentsReport(c *cli.Context) error {
+func CommentsReport(clt *cli.Context) error {
 	var fname string
-	if len(c.String("output")) > 0 {
-		fname = c.String("output")
+	if len(clt.String("output")) > 0 {
+		fname = clt.String("output")
 	} else {
-		fname = fmt.Sprintf("%s-%s.csv", c.String("output"), time.Now().Format(fileLayout))
+		fname = fmt.Sprintf("%s-%s.csv", clt.String("output"), time.Now().Format(fileLayout))
 	}
 	output, err := os.Create(fname)
 	if err != nil {
 		return cli.NewExitError(
-			fmt.Sprintf("unable to create file %s %s", c.String("output"), err),
+			fmt.Sprintf(
+				"unable to create file %s %s",
+				clt.String("output"),
+				err,
+			),
 			2,
 		)
 	}
 	defer output.Close()
 	writer := csv.NewWriter(output)
-	gclient, err := client.GetGithubClient(c.GlobalString("token"))
+	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error in getting github client %s", err),
 			2,
 		)
 	}
-	count, err := writeIssues(c, gclient, writer)
+	count, err := writeIssues(clt, gclient, writer)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
-	logger.GetLogger(c).Infof("wrote %d records in the report", count)
+	logger.GetLogger(clt).Infof("wrote %d records in the report", count)
+
 	return nil
 }
 
-func writeIssues(c *cli.Context, gclient *github.Client, writer *csv.Writer) (int, error) {
+func writeIssues(
+	clt *cli.Context,
+	gclient *github.Client,
+	writer *csv.Writer,
+) (int, error) {
 	count := 0
 	err := writer.Write([]string{
 		"Issue ID", "Title", "Total Comments",
@@ -60,12 +69,12 @@ func writeIssues(c *cli.Context, gclient *github.Client, writer *csv.Writer) (in
 	if err != nil {
 		return count, fmt.Errorf("error in writing file header %s", err)
 	}
-	opt := issueOpts(c)
+	opt := issueOpts(clt)
 	for {
 		issues, resp, err := gclient.Issues.ListByRepo(
 			context.Background(),
-			c.GlobalString("owner"),
-			c.GlobalString("repository"),
+			clt.GlobalString("owner"),
+			clt.GlobalString("repository"),
 			opt,
 		)
 		if err != nil {
@@ -88,7 +97,10 @@ func writeIssues(c *cli.Context, gclient *github.Client, writer *csv.Writer) (in
 				closedStr,
 			})
 			if err != nil {
-				return count, fmt.Errorf("error in writing issues to csv file %s", err)
+				return count, fmt.Errorf(
+					"error in writing issues to csv file %s",
+					err,
+				)
 			}
 			count++
 		}
@@ -98,7 +110,11 @@ func writeIssues(c *cli.Context, gclient *github.Client, writer *csv.Writer) (in
 		opt.Page = resp.NextPage
 	}
 	writer.Flush()
-	return count, writer.Error()
+	if err := writer.Error(); err != nil {
+		return count, fmt.Errorf("error in writing %s", err)
+	}
+
+	return count, nil
 }
 
 func issueOpts(c *cli.Context) *github.IssueListByRepoOptions {

@@ -12,20 +12,21 @@ import (
 )
 
 func GithubCommitComparison() (*gh.CommitsComparison, error) {
-	cc := &gh.CommitsComparison{}
+	ccg := &gh.CommitsComparison{}
 	dir, err := os.Getwd()
 	if err != nil {
-		return cc, fmt.Errorf("unable to get current dir %s", err)
+		return ccg, fmt.Errorf("unable to get current dir %s", err)
 	}
 	path := filepath.Join(
 		filepath.Dir(dir), "../testdata", "commit-diff.json",
 	)
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
-		return cc, errors.New("unable to read test file")
+		return ccg, errors.New("unable to read test file")
 	}
-	if err := json.Unmarshal(b, cc); err != nil {
-		return cc, fmt.Errorf("error in decoding json %s", err)
+	if err := json.Unmarshal(b, ccg); err != nil {
+		return ccg, fmt.Errorf("error in decoding json %s", err)
 	}
-	return cc, nil
+
+	return ccg, nil
 }

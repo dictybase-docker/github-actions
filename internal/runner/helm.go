@@ -24,6 +24,7 @@ func NewHelm() (*Helm, error) {
 		return &Helm{},
 			fmt.Errorf("helm command not found %s", err)
 	}
+
 	return &Helm{Cmd: path}, nil
 }
 
@@ -32,6 +33,7 @@ func NewHelmWithPath(path string) (*Helm, error) {
 		return &Helm{},
 			fmt.Errorf("helm command %s does not exist %s", path, err)
 	}
+
 	return &Helm{Cmd: path}, nil
 }
 
@@ -51,6 +53,7 @@ func (h *Helm) InstallChart(args *ChartParams) error {
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("error %s in installing helm chart %s", err, cmd.String())
 	}
+
 	return nil
 }
 
@@ -69,6 +72,7 @@ func (h *Helm) UpgradeChart(args *ChartParams) error {
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("error %s in upgrading helm chart %s", err, cmd.String())
 	}
+
 	return nil
 }
 
@@ -89,11 +93,13 @@ func (h *Helm) IsChartDeployed(name string) (bool, error) {
 	if name == string(trimmed) {
 		return true, nil
 	}
+
 	return false, nil
 }
 
 func (h *Helm) IsConnected() error {
 	_, err := h.ServerVersion()
+
 	return err
 }
 
@@ -110,5 +116,6 @@ func (h *Helm) ServerVersion() (string, error) {
 	if err := cmd.Run(); err != nil {
 		return "", fmt.Errorf("error in getting helm version %s", err)
 	}
+
 	return out.String(), nil
 }

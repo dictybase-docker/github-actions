@@ -10,23 +10,23 @@ import (
 	"github.com/urfave/cli"
 )
 
-func DeployStatus(c *cli.Context) error {
-	logger := logger.GetLogger(c)
-	gclient, err := client.GetGithubClient(c.GlobalString("token"))
+func Status(clt *cli.Context) error {
+	logger := logger.GetLogger(clt)
+	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error in getting github client %s", err),
 			2,
 		)
 	}
-	state := c.String("state")
-	url := c.String("url")
-	desc := fmt.Sprintf("setting deployment status %s", c.String("state"))
-	ds, _, err := gclient.Repositories.CreateDeploymentStatus(
+	state := clt.String("state")
+	url := clt.String("url")
+	desc := fmt.Sprintf("setting deployment status %s", clt.String("state"))
+	dsp, _, err := gclient.Repositories.CreateDeploymentStatus(
 		context.Background(),
-		c.GlobalString("owner"),
-		c.GlobalString("repository"),
-		c.Int64("deployment_id"),
+		clt.GlobalString("owner"),
+		clt.GlobalString("repository"),
+		clt.Int64("deployment_id"),
 		&github.DeploymentStatusRequest{
 			State:       &state,
 			LogURL:      &url,
@@ -34,14 +34,19 @@ func DeployStatus(c *cli.Context) error {
 		})
 	if err != nil {
 		return cli.NewExitError(
-			fmt.Sprintf("error in creating deployment status %s %s", state, err),
+			fmt.Sprintf(
+				"error in creating deployment status %s %s",
+				state,
+				err,
+			),
 			2,
 		)
 	}
 	logger.Infof(
 		"created deployment status %s with id %d",
-		ds.GetState(),
-		ds.GetID(),
+		dsp.GetState(),
+		dsp.GetID(),
 	)
+
 	return nil
 }

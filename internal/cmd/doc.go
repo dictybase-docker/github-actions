@@ -12,6 +12,7 @@ func GenerateMkdownCmd() cli.Command {
 		Usage: "generate markdown documentation",
 		Action: func(c *cli.Context) error {
 			fmt.Println(c.App.ToMarkdown())
+
 			return nil
 		},
 	}

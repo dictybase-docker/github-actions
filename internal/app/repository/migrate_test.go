@@ -18,11 +18,11 @@ func TestMigrateRepositories(t *testing.T) {
 	assert := require.New(t)
 	server, client := fake.GhServerClient()
 	defer server.Close()
-	gr := new(errgroup.Group)
+	grp := new(errgroup.Group)
 	deadline := time.Now().Add(4 * time.Second)
 	ctx, cancelFn := context.WithDeadline(context.Background(), deadline)
 	defer cancelFn()
-	m := &migration{
+	mgn := &migration{
 		repositories:  []string{"abc", "cde", "efg"},
 		from:          "vandeley",
 		to:            "varnsen",
@@ -36,9 +36,9 @@ func TestMigrateRepositories(t *testing.T) {
 			Level: logrus.ErrorLevel,
 		}),
 	}
-	gr.Go(m.createFork)
-	gr.Go(m.makeArchive)
-	gr.Go(m.delRepo)
-	err := gr.Wait()
+	grp.Go(mgn.createFork)
+	grp.Go(mgn.makeArchive)
+	grp.Go(mgn.delRepo)
+	err := grp.Wait()
 	assert.NoError(err, "expect to have no error from migration")
 }

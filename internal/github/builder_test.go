@@ -11,7 +11,10 @@ func TestFilterUnique(t *testing.T) {
 	t.Parallel()
 	assert := require.New(t)
 	cc, err := fake.GithubCommitComparison()
-	assert.NoError(err, "should not receive any error for parsing push event data")
+	assert.NoError(
+		err,
+		"should not receive any error for parsing push event data",
+	)
 	files := CommittedFiles(cc).FilterUniqueByName().List()
 	assert.Len(files, 11, "should have committed 11 unique files")
 	assert.Contains(
@@ -25,7 +28,10 @@ func TestFilterDeleted(t *testing.T) {
 	t.Parallel()
 	assert := require.New(t)
 	cc, err := fake.GithubCommitComparison()
-	assert.NoError(err, "should not receive any error for parsing push event data")
+	assert.NoError(
+		err,
+		"should not receive any error for parsing push event data",
+	)
 	files := CommittedFiles(cc).FilterDeleted(true).List()
 	assert.Len(files, 14, "should have committed 14 unique files")
 	assert.Contains(
@@ -39,35 +45,57 @@ func TestFilterSuffix(t *testing.T) {
 	t.Parallel()
 	assert := require.New(t)
 	cc, err := fake.GithubCommitComparison()
-	assert.NoError(err, "should not receive any error for parsing push event data")
+	assert.NoError(
+		err,
+		"should not receive any error for parsing push event data",
+	)
 	files := CommittedFiles(cc).FilterSuffix("obo").List()
 	assert.Len(files, 3, "should have committed 3 unique files")
-	assert.Contains(FileNames(files), "dicty_anatomy.obo", "should have dicty_anatomy.obo file")
+	assert.Contains(
+		FileNames(files),
+		"dicty_anatomy.obo",
+		"should have dicty_anatomy.obo file",
+	)
 }
 
 func TestCommitedFiles(t *testing.T) {
 	t.Parallel()
 	assert := require.New(t)
-	cc, err := fake.GithubCommitComparison()
-	assert.NoError(err, "should not receive any error for parsing push event data")
-	assert.Equal(cc.GetStatus(), "ahead", "should match the status")
-	assert.Equal(cc.GetAheadBy(), 31, "should match ahead by value")
+	ccg, err := fake.GithubCommitComparison()
+	assert.NoError(
+		err,
+		"should not receive any error for parsing push event data",
+	)
+	assert.Equal(ccg.GetStatus(), "ahead", "should match the status")
+	assert.Equal(ccg.GetAheadBy(), 31, "should match ahead by value")
 	assert.Equal(
-		cc.GetTotalCommits(),
-		cc.GetAheadBy(),
+		ccg.GetTotalCommits(),
+		ccg.GetAheadBy(),
 		"total commits and ahead by should match",
 	)
-	files := CommittedFiles(cc).List()
+	files := CommittedFiles(ccg).List()
 	assert.Len(files, 14, "should have committed 14 unique files")
-	assert.Contains(FileNames(files), "navbar.json", "should have navbar.json file")
+	assert.Contains(
+		FileNames(files),
+		"navbar.json",
+		"should have navbar.json file",
+	)
 }
 
 func TestFilterChain(t *testing.T) {
 	t.Parallel()
 	assert := require.New(t)
-	cc, err := fake.GithubCommitComparison()
-	assert.NoError(err, "should not receive any error for parsing push event data")
-	files := CommittedFiles(cc).FilterSuffix("txt").FilterDeleted(true).FilterUniqueByName().List()
+	ccg, err := fake.GithubCommitComparison()
+	assert.NoError(
+		err,
+		"should not receive any error for parsing push event data",
+	)
+	files := CommittedFiles(
+		ccg,
+	).FilterSuffix("txt").
+		FilterDeleted(true).
+		FilterUniqueByName().
+		List()
 	assert.Len(files, 4, "should have committed 4 unique files")
 	assert.Contains(
 		FileNames(files),

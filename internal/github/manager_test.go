@@ -33,16 +33,17 @@ func TestCommittedFilesInpush(t *testing.T) {
 	testCommitList(t, b)
 }
 
-func testCommitList(t *testing.T, b *ChangedFilesBuilder) {
+func testCommitList(t *testing.T, bfl *ChangedFilesBuilder) {
+	t.Helper()
 	assert := require.New(t)
-	files := b.FilterUniqueByName().List()
+	files := bfl.FilterUniqueByName().List()
 	assert.Len(files, 11, "should have committed 11 unique files")
 	assert.Contains(
 		FileNames(files),
 		"dicty_assay.obo",
 		"should have dicty_assay.obo file",
 	)
-	files = b.FilterDeleted(true).List()
+	files = bfl.FilterDeleted(true).List()
 	assert.Len(
 		files,
 		14,
@@ -53,14 +54,14 @@ func testCommitList(t *testing.T, b *ChangedFilesBuilder) {
 		"dicty_assay.obo",
 		"should have dicty_assay.obo file",
 	)
-	files = b.FilterSuffix("obo").List()
+	files = bfl.FilterSuffix("obo").List()
 	assert.Len(files, 3, "should have committed 3 unique files")
 	assert.Contains(
 		FileNames(files),
 		"dicty_anatomy.obo",
 		"should have dicty_anatomy.obo file",
 	)
-	files = b.FilterSuffix("txt").FilterDeleted(true).FilterUniqueByName().List()
+	files = bfl.FilterSuffix("txt").FilterDeleted(true).FilterUniqueByName().List()
 	assert.Len(files, 4, "should have committed 4 unique files")
 	assert.Contains(
 		FileNames(files),
@@ -70,15 +71,16 @@ func testCommitList(t *testing.T, b *ChangedFilesBuilder) {
 }
 
 func testPull(t *testing.T, name string) {
+	t.Helper()
 	assert := require.New(t)
-	r, err := fake.PullReqPayload(name)
+	reqp, err := fake.PullReqPayload(name)
 	assert.NoError(
 		err,
 		"should not receive any error from reading payload for push",
 	)
 	server, client := fake.GhServerClient()
 	defer server.Close()
-	b, err := NewGithubManager(client).CommittedFilesInPull(r)
+	b, err := NewGithubManager(client).CommittedFilesInPull(reqp)
 	assert.NoError(
 		err,
 		"should not receive any error from getting a list of committed files",
