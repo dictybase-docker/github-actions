@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"testing"
 	"time"
 
@@ -32,7 +32,7 @@ func TestMigrateRepositories(t *testing.T) {
 		pollInterval:  time.Millisecond * 500,
 		pollThreshold: ctx,
 		log: logrus.NewEntry(&logrus.Logger{
-			Out:   ioutil.Discard,
+			Out:   io.Discard,
 			Level: logrus.ErrorLevel,
 		}),
 	}

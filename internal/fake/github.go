@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -20,7 +19,7 @@ func GithubCommitComparison() (*gh.CommitsComparison, error) {
 	path := filepath.Join(
 		filepath.Dir(dir), "../testdata", "commit-diff.json",
 	)
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return ccg, errors.New("unable to read test file")
 	}

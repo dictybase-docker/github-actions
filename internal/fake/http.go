@@ -2,10 +2,10 @@ package fake
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"path/filepath"
 	"regexp"
 
@@ -169,7 +169,7 @@ func payloadFile(file string) ([]byte, error) {
 	if err != nil {
 		return []byte(""), fmt.Errorf("unable to get current file %s", err)
 	}
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return []byte(""), fmt.Errorf("unable to read test file %s", path)
 	}

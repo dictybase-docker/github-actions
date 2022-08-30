@@ -2,7 +2,6 @@ package comment
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -175,7 +174,7 @@ func TestMkdownOutput(t *testing.T) {
 func TestListCommittedFiles(t *testing.T) {
 	t.Parallel()
 	assert := require.New(t)
-	tmpf, err := ioutil.TempFile("", "jxt")
+	tmpf, err := os.CreateTemp("", "jxt")
 	assert.NoError(
 		err,
 		"should not throw error from creating a temp file",

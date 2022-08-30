@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -65,7 +65,7 @@ func BatchMultiRepo(clt *cli.Context) error {
 
 func readFiles(clt *cli.Context) ([]byte, []byte, error) {
 	var byr []byte
-	rpl, err := ioutil.ReadFile(clt.String("repository-list"))
+	rpl, err := os.ReadFile(clt.String("repository-list"))
 	if err != nil {
 		return rpl, byr, fmt.Errorf(
 			"error in opening repository list %s %s",
@@ -73,7 +73,7 @@ func readFiles(clt *cli.Context) ([]byte, []byte, error) {
 			err,
 		)
 	}
-	wnc, err := ioutil.ReadFile(clt.String("input-file"))
+	wnc, err := os.ReadFile(clt.String("input-file"))
 	if err != nil {
 		return rpl, wnc, fmt.Errorf(
 			"error in opening input file %s %s",
