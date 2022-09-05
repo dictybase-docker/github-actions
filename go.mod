@@ -6,7 +6,7 @@ require (
 	github.com/Jeffail/gabs/v2 v2.6.1
 	github.com/google/go-github/v32 v32.1.0
 	github.com/minio/minio-go v6.0.14+incompatible
-	github.com/repeale/fp-go v0.6.0
+	github.com/repeale/fp-go v0.10.1
 	github.com/sethvargo/go-githubactions v1.0.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.7.0
