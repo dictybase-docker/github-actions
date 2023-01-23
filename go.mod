@@ -10,7 +10,7 @@ require (
 	github.com/sethvargo/go-githubactions v1.1.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.1
-	github.com/urfave/cli v1.22.10
+	github.com/urfave/cli v1.22.12
 	golang.org/x/exp v0.0.0-20220613132600-b0d781184e0d
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	golang.org/x/sync v0.1.0
@@ -21,7 +21,7 @@ require (
 require (
 	cloud.google.com/go/compute v1.14.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-ini/ini v1.66.6 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
@@ -34,9 +34,8 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/russross/blackfriday/v2 v2.0.1 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sethvargo/go-envconfig v0.8.0 // indirect
-	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
 	golang.org/x/net v0.0.0-20221014081412-f15817d10f9b // indirect
