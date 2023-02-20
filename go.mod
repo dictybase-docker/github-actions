@@ -3,7 +3,7 @@ module github.com/dictyBase-docker/github-actions
 go 1.18
 
 require (
-	github.com/Jeffail/gabs/v2 v2.6.1
+	github.com/Jeffail/gabs/v2 v2.7.0
 	github.com/google/go-github/v32 v32.1.0
 	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/repeale/fp-go v0.11.1
