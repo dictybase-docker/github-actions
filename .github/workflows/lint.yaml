@@ -1,19 +1,19 @@
-name: Lint golang code 
-on: 
+name: Lint Golang code
+on:
   pull_request:
     branches-ignore:
       - master
 jobs:
   lint:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-      - name: setup golang
-        uses: actions/setup-go@v3
-        with: 
-          go-version: "^1.18"
+          go-version: 1.22
+          cache: false
       - name: run linter
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.52.2
