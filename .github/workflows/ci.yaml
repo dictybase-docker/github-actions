@@ -8,18 +8,18 @@ on:
       - "**"
 jobs:
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: set up golang
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
-          go-version: "^1.18"
+          go-version: 1.22
       - name: unit test
         run: go test -parallel 4 -covermode=atomic -coverprofile=profile.cov -v ./...
       - name: upload coverage to codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v4
         with:
           file: ./profile.cov
           token: ${{ secrets.CODECOV_TOKEN }}
