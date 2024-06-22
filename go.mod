@@ -8,7 +8,7 @@ require (
 	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/repeale/fp-go v0.11.1
 	github.com/sethvargo/go-githubactions v1.1.0
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
 	github.com/urfave/cli v1.22.15
 	golang.org/x/exp v0.0.0-20220613132600-b0d781184e0d
