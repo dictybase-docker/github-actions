@@ -9,8 +9,8 @@ require (
 	github.com/repeale/fp-go v0.11.1
 	github.com/sethvargo/go-githubactions v1.1.0
 	github.com/sirupsen/logrus v1.9.0
-	github.com/stretchr/testify v1.8.2
-	github.com/urfave/cli v1.22.12
+	github.com/stretchr/testify v1.9.0
+	github.com/urfave/cli v1.22.15
 	golang.org/x/exp v0.0.0-20220613132600-b0d781184e0d
 	golang.org/x/oauth2 v0.21.0
 	golang.org/x/sync v0.1.0
@@ -20,7 +20,7 @@ require (
 
 require (
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-ini/ini v1.66.6 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
