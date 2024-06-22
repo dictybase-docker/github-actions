@@ -10,9 +10,7 @@ linters:
     - asciicheck
     - bodyclose
     - cyclop 
-    - deadcode
     - decorder
-    - depguard
     - dogsled
     - dupl
     - errcheck
@@ -29,9 +27,7 @@ linters:
     - gosimple
     - govet
     - gocognit
-    - ifshort
     - ineffassign
-    - interfacer
     - lll
     - maintidx
     - misspell
@@ -45,7 +41,6 @@ linters:
     - revive
     - rowserrcheck
     - staticcheck
-    - structcheck
     - stylecheck
     - typecheck
     - unconvert
@@ -57,7 +52,6 @@ linters:
     - unparam
     - varnamelen
     - wastedassign
-    - varcheck
     - whitespace
     - wrapcheck
 
