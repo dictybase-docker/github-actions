@@ -12,15 +12,14 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/urfave/cli v1.22.12
 	golang.org/x/exp v0.0.0-20220613132600-b0d781184e0d
-	golang.org/x/oauth2 v0.6.0
+	golang.org/x/oauth2 v0.21.0
 	golang.org/x/sync v0.1.0
 	golang.org/x/text v0.8.0
 	google.golang.org/api v0.111.0
 )
 
 require (
-	cloud.google.com/go/compute v1.18.0 // indirect
-	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-ini/ini v1.66.6 // indirect
