@@ -1,7 +1,12 @@
 name: Create Pull Request
-on: create
+on:
+  create:
+    branches-ignore:
+      - develop
+      - master
 jobs:
   create-pull-request:
+    if: startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
