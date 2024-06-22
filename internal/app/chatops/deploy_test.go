@@ -16,10 +16,10 @@ type mockPullRequestClient struct {
 }
 
 func (m *mockPullRequestClient) Get(
-	ctx context.Context,
-	owner string,
-	repo string,
-	number int,
+	_ context.Context,
+	_ string,
+	_ string,
+	_ int,
 ) (*github.PullRequest, *github.Response, error) {
 	return m.resp, nil, nil
 }
@@ -29,10 +29,10 @@ type mockBranchClient struct {
 }
 
 func (m *mockBranchClient) GetBranch(
-	ctx context.Context,
-	owner string,
-	repo string,
-	branch string,
+	_ context.Context,
+	_ string,
+	_ string,
+	_ string,
 ) (*github.Branch, *github.Response, error) {
 	return m.resp, nil, nil
 }

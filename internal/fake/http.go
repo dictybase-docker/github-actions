@@ -103,7 +103,7 @@ func routeTable() []*route {
 	return append(route, delRoute()...)
 }
 
-func handleNoContent(file string, w http.ResponseWriter, r *http.Request) {
+func handleNoContent(file string, w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 	if _, err := fmt.Fprint(w, file); err != nil {
 		http.Error(
@@ -114,7 +114,7 @@ func handleNoContent(file string, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleAccepted(file string, wrt http.ResponseWriter, r *http.Request) {
+func handleAccepted(file string, wrt http.ResponseWriter, _ *http.Request) {
 	bfl, err := payloadFile(file)
 	if err != nil {
 		http.Error(
@@ -129,7 +129,7 @@ func handleAccepted(file string, wrt http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(wrt, string(bfl))
 }
 
-func handleSuccess(file string, wrt http.ResponseWriter, r *http.Request) {
+func handleSuccess(file string, wrt http.ResponseWriter, _ *http.Request) {
 	bfl, err := payloadFile(file)
 	if err != nil {
 		http.Error(

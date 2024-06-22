@@ -31,7 +31,7 @@ func (b *ChangedFilesBuilder) FilterSuffix(suffix string) *ChangedFilesBuilder {
 }
 
 func (b *ChangedFilesBuilder) FilterDeleted(
-	isDeleted bool,
+	_ bool,
 ) *ChangedFilesBuilder {
 	if len(b.files) == 0 {
 		return b
