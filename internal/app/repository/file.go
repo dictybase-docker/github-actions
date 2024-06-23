@@ -9,7 +9,7 @@ import (
 
 	"github.com/dictyBase-docker/github-actions/internal/client"
 	"github.com/dictyBase-docker/github-actions/internal/logger"
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v62/github"
 	"github.com/urfave/cli"
 )
 

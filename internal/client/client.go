@@ -3,7 +3,7 @@ package client
 import (
 	"context"
 
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v62/github"
 	"golang.org/x/oauth2"
 )
 

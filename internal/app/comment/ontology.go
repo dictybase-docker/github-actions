@@ -10,7 +10,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v62/github"
 
 	"github.com/dictyBase-docker/github-actions/internal/client"
 	"github.com/dictyBase-docker/github-actions/internal/ontology"
