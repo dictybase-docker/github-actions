@@ -30,4 +30,4 @@ jobs:
       dockerfile: build/package/Dockerfile 
     secrets:
       dockeruser: ${{ secrets.DOCKERHUB_USER }}
-      dockerpass: ${{ secrets.DOKCER_PASS }}
+      dockerpass: ${{ secrets.DOCKER_PASS }}
