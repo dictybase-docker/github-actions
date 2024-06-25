@@ -38,7 +38,7 @@ func SetupDagger(clt *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
-	binFileName, err := fetchDaggerBinary(
+	binDir, err := fetchDaggerBinary(
 		clt.String("dagger-file"),
 		dver,
 		gclient,
@@ -47,8 +47,12 @@ func SetupDagger(clt *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
-	fmt.Println(checksum)
-	fmt.Println(binFileName)
+	gha := githubactions.New()
+	gha.SetOutput("dagger_bin_name", "dagger")
+	gha.SetOutput("dagger_version", dver)
+	gha.SetOutput("dagger_bin_checksum", checksum)
+	gha.SetOutput("dagger_bin_path", binDir)
+	gha.AddPath(binDir)
 	return nil
 }
 
