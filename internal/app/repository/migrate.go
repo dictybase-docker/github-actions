@@ -10,7 +10,7 @@ import (
 
 	"github.com/dictyBase-docker/github-actions/internal/client"
 	"github.com/dictyBase-docker/github-actions/internal/logger"
-	gh "github.com/google/go-github/v62/github"
+	gh "github.com/google/go-github/v32/github"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -158,7 +158,7 @@ func (m *migration) delRepo() error {
 }
 
 func MigrateRepositories(clt *cli.Context) error {
-	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
+	gclient, err := client.GetLegacyGithubClient(clt.GlobalString("token"))
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error in getting github client %s", err),

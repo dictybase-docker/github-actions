@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	gh "github.com/google/go-github/v62/github"
+	gh "github.com/google/go-github/v32/github"
 )
 
 const (
