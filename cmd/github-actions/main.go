@@ -53,6 +53,7 @@ func main() {
 		cmd.OntoReportOnPullComment(),
 		cmd.MigrateRepositories(),
 		cmd.AnalyticsReportCmd(),
+		cmd.SetupDaggerCmd(),
 	}
 	if err := app.Run(os.Args); err != nil {
 		log.Fatalf("error in running command %s", err)
