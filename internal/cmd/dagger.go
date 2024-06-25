@@ -17,6 +17,11 @@ func SetupDaggerChecksumCmd() cli.Command {
 				Usage: "The name of the checksum file for the dagger release",
 				Value: "checksums.txt",
 			},
+			cli.StringFlag{
+				Name:  "dagger-file",
+				Usage: "The suffix of the dagger tarball file which contains the binary",
+				Value: "linux_amd64.tar.gz",
+			},
 		},
 	}
 }
