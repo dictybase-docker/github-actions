@@ -153,11 +153,17 @@ func extractTarball(reader io.ReadCloser, binFileName string) error {
 				err,
 			)
 		}
-		if _, err := io.CopyN(writer, tarReader, 16); err != nil {
-			return handleError(
-				"error in writing dagger bin file in temp dir %s",
-				err,
-			)
+		for {
+			_, err := io.CopyN(writer, tarReader, 1024)
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				return handleError(
+					"error in writing dagger bin file in temp dir %s",
+					err,
+				)
+			}
 		}
 		defer writer.Close()
 	}
