@@ -1,8 +1,5 @@
 name: Lint Golang code
-on:
-  pull_request:
-    branches-ignore:
-      - master
+on: [pull_request]
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -16,4 +13,4 @@ jobs:
       - name: run linter
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.52.2
+          version: v1.58.2

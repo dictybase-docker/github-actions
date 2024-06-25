@@ -1,10 +1,11 @@
 module github.com/dictyBase-docker/github-actions
 
-go 1.18
+go 1.22
 
 require (
 	github.com/Jeffail/gabs/v2 v2.7.0
 	github.com/google/go-github/v32 v32.1.0
+	github.com/google/go-github/v62 v62.0.0
 	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/repeale/fp-go v0.11.1
 	github.com/sethvargo/go-githubactions v1.2.0
@@ -30,7 +31,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
-	github.com/google/go-querystring v1.0.0 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
