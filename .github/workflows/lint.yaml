@@ -1,8 +1,5 @@
 name: Lint Golang code
-on:
-  pull_request:
-    branches-ignore:
-      - master
+on: [pull_request]
 jobs:
   lint:
     runs-on: ubuntu-latest
