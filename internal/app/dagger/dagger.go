@@ -34,7 +34,12 @@ func SetupDaggerCheckSum(clt *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
-	checksum, err := fetchDaggerCheckSum(clt, gclient, rel)
+	checksum, err := fetchDaggerCheckSum(
+		clt.String("checksum-file"),
+		clt.String("dagger-file"),
+		gclient,
+		rel,
+	)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
@@ -186,16 +191,16 @@ func extractTarball(reader io.ReadCloser, binFileName string) error {
 }
 
 func fetchDaggerCheckSum(
-	clt *cli.Context,
+	checksumFileName, daggerFileName string,
 	gclient *github.Client,
 	rel *github.RepositoryRelease,
 ) (string, error) {
 	idx := slices.IndexFunc(rel.Assets, func(ast *github.ReleaseAsset) bool {
-		return ast.GetName() == clt.String("checksum-file")
+		return ast.GetName() == checksumFileName
 	})
 	if idx == -1 {
 		return "", handleError(
-			clt.String("checksum-file"),
+			checksumFileName,
 			errors.New("could not find checksum file"),
 		)
 	}
@@ -211,9 +216,8 @@ func fetchDaggerCheckSum(
 	var line string
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), clt.String("dagger-file")) {
+		if strings.Contains(scanner.Text(), daggerFileName) {
 			line = scanner.Text()
-
 			break
 		}
 	}
