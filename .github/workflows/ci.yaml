@@ -22,10 +22,12 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
   call-docker-build:
     needs: test
-    uses: dictyBase/workflows/.github/workflows/docker-publish.yaml@main
-    secrets: inherit
+    uses: dictyBase/workflows/.github/workflows/docker-cross-publish.yaml@develop
     with:
       repository: ${{ github.repository }}
       ref: ${{ github.ref_name }}
       image: github-actions
       dockerfile: build/package/Dockerfile 
+    secrets:
+      dockeruser: ${{ secrets.DOCKERHUB_USER }}
+      dockerpass: ${{ secrets.DOKCER_PASS }}
