@@ -89,7 +89,7 @@ func fetchDaggerBinary(
 	if err := extractTarball(reader, binFileName); err != nil {
 		return "", err
 	}
-	return binFileName, nil
+	return binDir, nil
 }
 
 func findTarballIndex(
