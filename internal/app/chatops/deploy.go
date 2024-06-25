@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/dictyBase-docker/github-actions/internal/logger"
-	"github.com/google/go-github/v62/github"
+	"github.com/google/go-github/v32/github"
 	"github.com/sethvargo/go-githubactions"
 	"github.com/urfave/cli"
 )

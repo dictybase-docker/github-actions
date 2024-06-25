@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	gh "github.com/google/go-github/v62/github"
+	gh "github.com/google/go-github/v32/github"
 )
 
 type CommittedFilesParams struct {
