@@ -92,7 +92,10 @@ func fetchDaggerBinary(
 	return binFileName, nil
 }
 
-func findTarballIndex(rel *github.RepositoryRelease, tarballName string) (int, error) {
+func findTarballIndex(
+	rel *github.RepositoryRelease,
+	tarballName string,
+) (int, error) {
 	idx := slices.IndexFunc(rel.Assets, func(ast *github.ReleaseAsset) bool {
 		return ast.GetName() == tarballName
 	})
@@ -105,7 +108,10 @@ func findTarballIndex(rel *github.RepositoryRelease, tarballName string) (int, e
 	return idx, nil
 }
 
-func downloadReleaseAsset(gclient *github.Client, assetID int64) (io.ReadCloser, error) {
+func downloadReleaseAsset(
+	gclient *github.Client,
+	assetID int64,
+) (io.ReadCloser, error) {
 	reader, _, err := gclient.Repositories.DownloadReleaseAsset(
 		context.Background(),
 		owner, repo,
@@ -147,7 +153,7 @@ func extractTarball(reader io.ReadCloser, binFileName string) error {
 				err,
 			)
 		}
-		if _, err := io.Copy(writer, tarReader); err != nil {
+		if _, err := io.CopyN(writer, tarReader, 16); err != nil {
 			return handleError(
 				"error in writing dagger bin file in temp dir %s",
 				err,
