@@ -24,7 +24,7 @@ const (
 	repo  = "dagger"
 )
 
-func SetupDagger(clt *cli.Context) error {
+func SetupDaggerCheckSum(clt *cli.Context) error {
 	dver, err := fetchDaggerVersion()
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
@@ -35,6 +35,19 @@ func SetupDagger(clt *cli.Context) error {
 		return cli.NewExitError(err.Error(), 2)
 	}
 	checksum, err := fetchDaggerCheckSum(clt, gclient, rel)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 2)
+	}
+	gha := githubactions.New()
+	gha.SetOutput("dagger_version", dver)
+	gha.SetOutput("dagger_bin_checksum", checksum)
+	return nil
+}
+
+func SetupDaggerBin(clt *cli.Context) error {
+	dver := clt.String("dagger-version")
+	gclient := github.NewClient(nil)
+	rel, err := fetchDaggerRelease(gclient, dver)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
@@ -49,8 +62,6 @@ func SetupDagger(clt *cli.Context) error {
 	}
 	gha := githubactions.New()
 	gha.SetOutput("dagger_bin_name", "dagger")
-	gha.SetOutput("dagger_version", dver)
-	gha.SetOutput("dagger_bin_checksum", checksum)
 	gha.SetOutput("dagger_bin_path", binDir)
 	gha.AddPath(binDir)
 	return nil
