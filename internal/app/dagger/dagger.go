@@ -93,23 +93,24 @@ func fetchDaggerBinary(
 	gclient *github.Client,
 	rel *github.RepositoryRelease,
 ) (string, error) {
+	var empty string
 	tarballName := fmt.Sprintf("dagger_%s_%s", ver, fileSuffix)
 	idx, err := findTarballIndex(rel, tarballName)
 	if err != nil {
-		return "", err
+		return empty, err
 	}
 	reader, err := downloadReleaseAsset(gclient, rel.Assets[idx].GetID())
 	if err != nil {
-		return "", err
+		return empty, err
 	}
 	defer reader.Close()
 	binDir, err := createDaggerBinDir()
 	if err != nil {
-		return "", err
+		return empty, err
 	}
 	binFileName := filepath.Join(binDir, "dagger")
 	if err := extractTarball(reader, binFileName); err != nil {
-		return "", err
+		return empty, err
 	}
 	return binDir, nil
 }
@@ -197,11 +198,12 @@ func fetchDaggerCheckSum(
 	gclient *github.Client,
 	rel *github.RepositoryRelease,
 ) (string, error) {
+	var empty string
 	idx := slices.IndexFunc(rel.Assets, func(ast *github.ReleaseAsset) bool {
 		return ast.GetName() == checksumFileName
 	})
 	if idx == -1 {
-		return "", handleError(
+		return empty, handleError(
 			checksumFileName,
 			errors.New("could not find checksum file"),
 		)
@@ -213,7 +215,7 @@ func fetchDaggerCheckSum(
 		http.DefaultClient,
 	)
 	if err != nil {
-		return "", handleError("error in downloading asset %s", err)
+		return empty, handleError("error in downloading asset %s", err)
 	}
 	var line string
 	scanner := bufio.NewScanner(reader)
@@ -224,26 +226,27 @@ func fetchDaggerCheckSum(
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		return "", handleError("error in reading checksum file %s", err)
+		return empty, handleError("error in reading checksum file %s", err)
 	}
 
 	return strings.Split(line, " ")[0], nil
 }
 
 func fetchDaggerVersion() (string, error) {
+	var empty string
 	resp, err := http.Get("https://dl.dagger.io/dagger/latest_version")
 	if err != nil {
-		return "", handleError("error in fetching dagger version %s", err)
+		return empty, handleError("error in fetching dagger version %s", err)
 	}
 	defer resp.Body.Close()
 	bcont, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", handleError("error in reading response body", err)
+		return empty, handleError("error in reading response body", err)
 	}
 
 	return fmt.Sprintf(
 		"v%s",
-		RemoveInvalidControlChars(strings.Trim(string(bcont), "")),
+		RemoveInvalidControlChars(strings.Trim(string(bcont), empty)),
 	), nil
 }
 
