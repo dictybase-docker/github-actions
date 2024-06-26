@@ -53,14 +53,16 @@ func SetupDaggerCheckSum(clt *cli.Context) error {
 // SetupDaggerBin sets up the Dagger binary and outputs its path to GitHub Actions.
 func SetupDaggerBin(clt *cli.Context) error {
 	dver := clt.String("dagger-version")
+	binDir := clt.String("dagger-bin-dir")
 	gclient := github.NewClient(nil)
 	rel, err := fetchDaggerRelease(gclient, dver)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
-	binDir, err := fetchDaggerBinary(
+	err = fetchDaggerBinary(
 		clt.String("dagger-file"),
 		dver,
+		binDir,
 		gclient,
 		rel,
 	)
@@ -69,7 +71,6 @@ func SetupDaggerBin(clt *cli.Context) error {
 	}
 	gha := githubactions.New()
 	gha.SetOutput("dagger_bin_name", "dagger")
-	gha.SetOutput("dagger_bin_path", binDir)
 	gha.AddPath(binDir)
 	return nil
 }
@@ -89,30 +90,21 @@ func fetchDaggerRelease(
 }
 
 func fetchDaggerBinary(
-	fileSuffix, ver string,
+	fileSuffix, ver, binDir string,
 	gclient *github.Client,
 	rel *github.RepositoryRelease,
-) (string, error) {
-	var empty string
+) error {
 	tarballName := fmt.Sprintf("dagger_%s_%s", ver, fileSuffix)
 	idx, err := findTarballIndex(rel, tarballName)
 	if err != nil {
-		return empty, err
+		return err
 	}
 	reader, err := downloadReleaseAsset(gclient, rel.Assets[idx].GetID())
 	if err != nil {
-		return empty, err
+		return err
 	}
 	defer reader.Close()
-	binDir, err := createDaggerBinDir()
-	if err != nil {
-		return empty, err
-	}
-	binFileName := filepath.Join(binDir, "dagger")
-	if err := extractTarball(reader, binFileName); err != nil {
-		return empty, err
-	}
-	return binDir, nil
+	return extractTarball(reader, filepath.Join(binDir, "dagger"))
 }
 
 func findTarballIndex(
