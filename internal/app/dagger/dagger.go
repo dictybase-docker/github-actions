@@ -24,6 +24,7 @@ const (
 	repo  = "dagger"
 )
 
+// SetupDaggerCheckSum sets up the Dagger checksum and outputs it to GitHub Actions.
 func SetupDaggerCheckSum(clt *cli.Context) error {
 	dver, err := fetchDaggerVersion()
 	if err != nil {
@@ -49,6 +50,7 @@ func SetupDaggerCheckSum(clt *cli.Context) error {
 	return nil
 }
 
+// SetupDaggerBin sets up the Dagger binary and outputs its path to GitHub Actions.
 func SetupDaggerBin(clt *cli.Context) error {
 	dver := clt.String("dagger-version")
 	gclient := github.NewClient(nil)
