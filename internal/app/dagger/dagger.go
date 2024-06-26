@@ -258,17 +258,3 @@ func RemoveInvalidControlChars(strc string) string {
 
 	return builder.String()
 }
-
-func createDaggerBinDir() (string, error) {
-	tempDir, err := os.MkdirTemp(os.TempDir(), "dagger-of-dcr")
-	if err != nil {
-		return "", handleError("failed to create temp dir: %w", err)
-	}
-	binDir := filepath.Join(tempDir, "bin")
-	err = os.Mkdir(binDir, 0755)
-	if err != nil {
-		os.RemoveAll(tempDir)
-		return "", handleError("failed to create bin subfolder: %w", err)
-	}
-	return binDir, nil
-}
