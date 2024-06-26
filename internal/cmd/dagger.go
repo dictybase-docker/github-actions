@@ -34,6 +34,11 @@ func SetupDaggerBinCmd() cli.Command {
 		Action:  dagger.SetupDaggerBin,
 		Flags: []cli.Flag{
 			cli.StringFlag{
+				Name:     "dagger-bin-dir",
+				Usage:    "The folder/directory where the dagger binary will be kept",
+				Required: true,
+			},
+			cli.StringFlag{
 				Name:  "dagger-file",
 				Usage: "The suffix of the dagger tarball file which contains the binary",
 				Value: "linux_amd64.tar.gz",
