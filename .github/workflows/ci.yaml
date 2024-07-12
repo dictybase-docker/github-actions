@@ -22,7 +22,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
   call-docker-build:
     needs: test
-    uses: dictyBase/workflows/.github/workflows/docker-cross-publish.yaml@main
+    uses: dictyBase/workflows/.github/workflows/docker-cross-publish.yaml@develop
     with:
       repository: ${{ github.repository }}
       ref: ${{ github.ref_name }}
