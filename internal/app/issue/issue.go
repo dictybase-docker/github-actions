@@ -16,9 +16,51 @@ import (
 )
 
 const (
-	layout     = "01/02/2006"
-	fileLayout = "01-02-2006-150405"
+	layout           = "01/02/2006"
+	dateFilterlayout = "2006-01-02"
+	fileLayout       = "01-02-2006-150405"
 )
+
+func CommentsCountByDate(clt *cli.Context) error {
+	parsedDate, err := time.Parse(dateFilterlayout, clt.String("since"))
+	if err != nil {
+		return cli.NewExitError(
+			fmt.Sprintf("error in parsing since parameter %s", err),
+			2,
+		)
+	}
+	gclient := github.NewClient(nil)
+	opt := &github.IssueListByRepoOptions{
+		Since:       parsedDate,
+		ListOptions: github.ListOptions{PerPage: 15},
+	}
+	var totalComments, totalIssues int
+	for {
+		issues, resp, err := gclient.Issues.ListByRepo(
+			context.Background(),
+			clt.GlobalString("owner"),
+			clt.GlobalString("repository"),
+			opt,
+		)
+		if err != nil {
+			return cli.NewExitError(
+				fmt.Sprintf("error in fetching issues %s", err),
+				2,
+			)
+		}
+		totalIssues += len(issues)
+		for _, iss := range issues {
+			totalComments += *iss.Comments
+		}
+		if resp.NextPage == 0 {
+			break
+		}
+		opt.Page = resp.NextPage
+	}
+	fmt.Printf("total no of issues %d\n", totalIssues)
+	fmt.Printf("total no of comments %d\n", totalComments)
+	return nil
+}
 
 func CommentsReport(clt *cli.Context) error {
 	var fname string
