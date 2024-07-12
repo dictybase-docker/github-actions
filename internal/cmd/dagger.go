@@ -22,6 +22,10 @@ func SetupDaggerChecksumCmd() cli.Command {
 				Usage: "The suffix of the dagger tarball file which contains the binary",
 				Value: "linux_amd64.tar.gz",
 			},
+			cli.StringFlag{
+				Name:  "version",
+				Usage: "dagger version",
+			},
 		},
 	}
 }
