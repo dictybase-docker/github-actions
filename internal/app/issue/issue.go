@@ -22,24 +22,27 @@ const (
 )
 
 func CommentsCountByDate(clt *cli.Context) error {
-	parsedDate, err := time.Parse(dateFilterlayout, clt.String("since"))
+	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
 	if err != nil {
 		return cli.NewExitError(
-			fmt.Sprintf("error in parsing since parameter %s", err),
+			fmt.Sprintf("error in getting github client %s", err),
 			2,
 		)
 	}
-	gclient := github.NewClient(nil)
-	opt := &github.IssueListByRepoOptions{
-		Since:       parsedDate,
+	opt := &github.SearchOptions{
 		ListOptions: github.ListOptions{PerPage: 15},
 	}
 	var totalComments, totalIssues int
+	query := fmt.Sprintf(
+		"repo:%s/%s created:>=%s",
+		clt.GlobalString("owner"),
+		clt.GlobalString("repository"),
+		clt.String("since"),
+	)
 	for {
-		issues, resp, err := gclient.Issues.ListByRepo(
+		result, resp, err := gclient.Search.Issues(
 			context.Background(),
-			clt.GlobalString("owner"),
-			clt.GlobalString("repository"),
+			query,
 			opt,
 		)
 		if err != nil {
@@ -48,8 +51,8 @@ func CommentsCountByDate(clt *cli.Context) error {
 				2,
 			)
 		}
-		totalIssues += len(issues)
-		for _, iss := range issues {
+		totalIssues += len(result.Issues)
+		for _, iss := range result.Issues {
 			totalComments += *iss.Comments
 		}
 		if resp.NextPage == 0 {
