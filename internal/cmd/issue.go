@@ -5,6 +5,21 @@ import (
 	"github.com/urfave/cli"
 )
 
+func CommentsCountByDateCmds() cli.Command {
+	return cli.Command{
+		Name:    "issue-comment-count",
+		Aliases: []string{"icc"},
+		Usage:   "reports total no of issues and comments since a particular date",
+		Action:  issue.CommentsCountByDate,
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "since",
+				Usage: "date value should be given in YYYY-MM-DD format",
+			},
+		},
+	}
+}
+
 func IssueCommentCmds() cli.Command {
 	return cli.Command{
 		Name:    "issue-comment-report",
