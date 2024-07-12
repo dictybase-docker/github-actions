@@ -26,9 +26,15 @@ const (
 
 // SetupDaggerCheckSum sets up the Dagger checksum and outputs it to GitHub Actions.
 func SetupDaggerCheckSum(clt *cli.Context) error {
-	dver, err := fetchDaggerVersion()
-	if err != nil {
-		return cli.NewExitError(err.Error(), 2)
+	var dver string
+	if len(clt.String("version")) == 0 {
+		ver, err := fetchDaggerVersion()
+		if err != nil {
+			return cli.NewExitError(err.Error(), 2)
+		}
+		dver = ver
+	} else {
+		dver = fmt.Sprintf("v%s", clt.String("version"))
 	}
 	gclient := github.NewClient(nil)
 	rel, err := fetchDaggerRelease(gclient, dver)
