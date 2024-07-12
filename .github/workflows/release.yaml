@@ -23,7 +23,7 @@ jobs:
           args: release --clean
   release-docker-build:
     needs: binary
-    uses: dictyBase/workflows/.github/workflows/docker-cross-publish.yaml@main
+    uses: dictyBase/workflows/.github/workflows/docker-cross-publish.yaml@develop
     with:
       repository: ${{ github.repository }}
       ref: ${{ github.ref }}
