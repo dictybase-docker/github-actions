@@ -75,9 +75,6 @@ func SetupDaggerBin(clt *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(err.Error(), 2)
 	}
-	gha := githubactions.New()
-	gha.SetOutput("dagger_bin_name", "dagger")
-	gha.AddPath(binDir)
 	return nil
 }
 
