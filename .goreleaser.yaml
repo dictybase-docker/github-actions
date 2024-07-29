@@ -21,6 +21,7 @@ builds:
       - darwin
     goarch:
       - amd64
+      - arm64
     main: ./cmd/github-actions/main.go
     binary: action
 archives:
