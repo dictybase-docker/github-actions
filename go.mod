@@ -10,7 +10,7 @@ require (
 	github.com/repeale/fp-go v0.11.1
 	github.com/sethvargo/go-githubactions v1.3.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/urfave/cli v1.22.16
 	golang.org/x/exp v0.0.0-20220613132600-b0d781184e0d
 	golang.org/x/oauth2 v0.24.0
