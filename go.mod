@@ -1,6 +1,7 @@
 module github.com/dictyBase-docker/github-actions
 
 go 1.22
+toolchain go1.23.7
 
 require (
 	github.com/Jeffail/gabs/v2 v2.7.0
@@ -13,7 +14,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/urfave/cli v1.22.16
 	golang.org/x/exp v0.0.0-20220613132600-b0d781184e0d
-	golang.org/x/oauth2 v0.26.0
+	golang.org/x/oauth2 v0.28.0
 	golang.org/x/sync v0.11.0
 	golang.org/x/text v0.22.0
 	google.golang.org/api v0.219.0
