@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/dictyBase-docker/github-actions/internal/client"
+	htmlparser "github.com/dictyBase-docker/github-actions/internal/html"
 	"github.com/dictyBase-docker/github-actions/internal/logger"
 	"github.com/google/go-github/v62/github"
-
-	"github.com/dictyBase-docker/github-actions/internal/client"
 	"github.com/urfave/cli"
 )
 
@@ -20,6 +21,11 @@ const (
 	dateFilterlayout = "2006-01-02"
 	fileLayout       = "01-02-2006-150405"
 )
+
+type OrderData struct {
+	orderID        string
+	recipientEmail string
+}
 
 func CommentsCountByDate(clt *cli.Context) error {
 	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
@@ -168,4 +174,55 @@ func issueOpts(c *cli.Context) *github.IssueListByRepoOptions {
 		Sort:        "comments",
 		ListOptions: github.ListOptions{PerPage: 30},
 	}
+}
+
+func IssueLabelEmail(c *cli.Context) error {
+	return nil
+}
+
+func getIssueBodyHTML(c *cli.Context) (string, error) {
+	// Get GitHub client
+	gclient, err := client.GetGithubClient(c.GlobalString("token"))
+	if err != nil {
+		return "", fmt.Errorf("error getting github client: %w", err)
+	}
+
+	// Get issue number from context
+	issueNumber := c.Int("issue")
+	if issueNumber == 0 {
+		return "", fmt.Errorf("issue number is required")
+	}
+
+	// Create custom request to get HTML format
+	url := fmt.Sprintf(
+		"repos/%s/%s/issues/%d",
+		c.GlobalString("owner"),
+		c.GlobalString("repository"),
+		issueNumber,
+	)
+	req, err := gclient.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", fmt.Errorf("error creating request: %w", err)
+	}
+
+	// Set Accept header to get HTML format
+	req.Header.Set("Accept", "application/vnd.github.html+json")
+
+	var issue github.Issue
+	_, err = gclient.Do(context.Background(), req, &issue)
+	if err != nil {
+		return "", fmt.Errorf("error fetching issue: %w", err)
+	}
+
+	// When Accept header is set to html+json, Body field contains HTML
+	bodyHTML := issue.GetBody()
+	if bodyHTML == "" {
+		return "", fmt.Errorf("issue body is empty")
+	}
+
+	return bodyHTML, nil
+}
+
+func getOrderDataFromIssueBody(c *cli.Context) (*OrderData, error) {
+	return &OrderData{}, nil
 }
