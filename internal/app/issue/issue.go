@@ -30,10 +30,10 @@ type IssueProcessor struct {
 	orderData OrderData
 }
 
-// ExtractOrderData parses the issueBody and populates the orderData field
+// extractOrderData parses the issueBody and populates the orderData field
 func (ip *IssueProcessor) extractOrderData() error {
 	// Use extraction logic to parse issueBody
-	orderID, email, err := extractWithRegex(ip.issueBody)
+	orderID, email, err := extractFromBody(ip.issueBody)
 	if err != nil {
 		return fmt.Errorf("failed to extract order data: %w", err)
 	}
