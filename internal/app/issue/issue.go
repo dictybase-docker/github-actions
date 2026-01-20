@@ -245,13 +245,12 @@ func getIssueBodyHTML(c *cli.Context) (string, error) {
 		return "", fmt.Errorf("issue number is required")
 	}
 
+	owner := c.GlobalString("owner")
+	repo := c.GlobalString("repository")
+
 	// Create custom request to get HTML format
-	url := fmt.Sprintf(
-		"repos/%s/%s/issues/%d",
-		c.GlobalString("owner"),
-		c.GlobalString("repository"),
-		issueNumber,
-	)
+	// Note: The standard Issues.Get() doesn't support HTML format via Accept headers
+	url := fmt.Sprintf("repos/%s/%s/issues/%d", owner, repo, issueNumber)
 	req, err := gclient.NewRequest("GET", url, nil)
 	if err != nil {
 		return "", fmt.Errorf("error creating request: %w", err)
