@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/dictyBase-docker/github-actions/internal/client"
-	htmlparser "github.com/dictyBase-docker/github-actions/internal/html"
 	"github.com/dictyBase-docker/github-actions/internal/logger"
 	"github.com/google/go-github/v62/github"
 	"github.com/urfave/cli"
@@ -25,6 +23,28 @@ const (
 type OrderData struct {
 	orderID        string
 	recipientEmail string
+}
+
+type IssueProcessor struct {
+	issueBody string
+	orderData OrderData
+}
+
+// ExtractOrderData parses the issueBody and populates the orderData field
+func (ip *IssueProcessor) extractOrderData() error {
+	// Use extraction logic to parse issueBody
+	orderID, email, err := extractWithRegex(ip.issueBody)
+	if err != nil {
+		return fmt.Errorf("failed to extract order data: %w", err)
+	}
+
+	// Write to the orderData field
+	ip.orderData = OrderData{
+		orderID:        orderID,
+		recipientEmail: email,
+	}
+
+	return nil
 }
 
 func CommentsCountByDate(clt *cli.Context) error {
@@ -178,6 +198,38 @@ func issueOpts(c *cli.Context) *github.IssueListByRepoOptions {
 
 func IssueLabelEmail(c *cli.Context) error {
 	return nil
+}
+
+func getIssueBody(c *cli.Context) (string, error) {
+	// Get GitHub client
+	gclient, err := client.GetGithubClient(c.GlobalString("token"))
+	if err != nil {
+		return "", fmt.Errorf("error getting github client: %w", err)
+	}
+
+	// Get issue number from context
+	issueNumber := c.Int("issue")
+	if issueNumber == 0 {
+		return "", fmt.Errorf("issue number is required")
+	}
+
+	// Get issue using the Issues API
+	issue, _, err := gclient.Issues.Get(
+		context.Background(),
+		c.GlobalString("owner"),
+		c.GlobalString("repository"),
+		issueNumber,
+	)
+	if err != nil {
+		return "", fmt.Errorf("error fetching issue: %w", err)
+	}
+
+	body := issue.GetBody()
+	if body == "" {
+		return "", fmt.Errorf("issue body is empty")
+	}
+
+	return body, nil
 }
 
 func getIssueBodyHTML(c *cli.Context) (string, error) {
