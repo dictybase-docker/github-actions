@@ -1,0 +1,88 @@
+{
+  "url": "https://api.github.com/repos/dictybase-playground/learn-github-action/issues/193",
+  "repository_url": "https://api.github.com/repos/dictybase-playground/learn-github-action",
+  "labels_url": "https://api.github.com/repos/dictybase-playground/learn-github-action/issues/193/labels{/name}",
+  "comments_url": "https://api.github.com/repos/dictybase-playground/learn-github-action/issues/193/comments",
+  "events_url": "https://api.github.com/repos/dictybase-playground/learn-github-action/issues/193/events",
+  "html_url": "https://github.com/dictybase-playground/learn-github-action/issues/193",
+  "id": 1056621442,
+  "node_id": "I_kwDODtS60c4--sOC",
+  "number": 193,
+  "title": "Order ID:37500885 art@vandelayindustries.com",
+  "user": {
+    "login": "dictybasebot",
+    "id": 17730815,
+    "node_id": "MDQ6VXNlcjE3NzMwODE1",
+    "avatar_url": "https://avatars.githubusercontent.com/u/17730815?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/dictybasebot",
+    "html_url": "https://github.com/dictybasebot",
+    "followers_url": "https://api.github.com/users/dictybasebot/followers",
+    "following_url": "https://api.github.com/users/dictybasebot/following{/other_user}",
+    "gists_url": "https://api.github.com/users/dictybasebot/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/dictybasebot/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/dictybasebot/subscriptions",
+    "organizations_url": "https://api.github.com/users/dictybasebot/orgs",
+    "repos_url": "https://api.github.com/users/dictybasebot/repos",
+    "events_url": "https://api.github.com/users/dictybasebot/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/dictybasebot/received_events",
+    "type": "User",
+    "user_view_type": "public",
+    "site_admin": false
+  },
+  "labels": [
+    {
+      "id": 2110418861,
+      "node_id": "MDU6TGFiZWwyMTEwNDE4ODYx",
+      "url": "https://api.github.com/repos/dictybase-playground/learn-github-action/labels/Strain",
+      "name": "Strain",
+      "color": "ededed",
+      "default": false,
+      "description": null
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "assignee": null,
+  "assignees": [
+
+  ],
+  "milestone": null,
+  "comments": 0,
+  "created_at": "2021-11-17T20:52:26Z",
+  "updated_at": "2021-11-17T20:52:26Z",
+  "closed_at": null,
+  "author_association": "MEMBER",
+  "type": null,
+  "active_lock_reason": null,
+  "sub_issues_summary": {
+    "total": 0,
+    "completed": 0,
+    "percent_completed": 0
+  },
+  "issue_dependencies_summary": {
+    "blocked_by": 0,
+    "total_blocked_by": 0,
+    "blocking": 0,
+    "total_blocking": 0
+  },
+  "body_html": "<p dir=\"auto\"><strong>Date:</strong> Nov 17, 2021</p>\n<p dir=\"auto\"><strong>Order ID:</strong> 37500885</p>\n<h1 dir=\"auto\">Shipping and billing information</h1>\n<markdown-accessiblity-table><table role=\"table\">\n<thead>\n<tr>\n<th>Shipping address</th>\n<th></th>\n<th>Billing address</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>Art Vandelay <br> Vandelay Industries\t<br> 123 Fake St <br>  <br> Chicago IL 60601 <br> United States <br> Phone: 867-5309 <br> <a href=\"mailto:art@vandelayindustries.com\">art@vandelayindustries.com</a> <br> prepaid sending prepaid shipping label</td>\n<td></td>\n<td>Art Vandelay <br> Vandelay Industries\t<br> 123 Fake St <br>  <br> Chicago IL 60601 <br> United States <br> Phone: 867-5309 <br> <a href=\"mailto:art@vandelayindustries.com\">art@vandelayindustries.com</a> <br> prepaid sending prepaid shipping label <br> credit $N/A</td>\n</tr>\n</tbody>\n</table></markdown-accessiblity-table>\n<h1 dir=\"auto\">Stocks ordered</h1>\n<markdown-accessiblity-table><table role=\"table\">\n<thead>\n<tr>\n<th>Item</th>\n<th>Quantity</th>\n<th>Unit price($)</th>\n<th>Total($)</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>Strain</td>\n<td>2</td>\n<td>30</td>\n<td>60</td>\n</tr>\n<tr>\n<td>Plasmid</td>\n<td>0</td>\n<td>15</td>\n<td>0</td>\n</tr>\n<tr>\n<td></td>\n<td></td>\n<td></td>\n<td>60</td>\n</tr>\n</tbody>\n</table></markdown-accessiblity-table>\n<h1 dir=\"auto\">Strain information</h1>\n<markdown-accessiblity-table><table role=\"table\">\n<thead>\n<tr>\n<th>ID</th>\n<th>Descriptor</th>\n<th>Name(s)</th>\n<th>Systematic Name</th>\n<th>Characteristics</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>DBS0351365</td>\n<td>HL501/X55</td>\n<td></td>\n<td>DL66</td>\n<td></td>\n</tr>\n<tr>\n<td>DBS0351365</td>\n<td>HL501/X55</td>\n<td></td>\n<td>DL66</td>\n<td></td>\n</tr>\n</tbody>\n</table></markdown-accessiblity-table>\n<h1 dir=\"auto\">Strain storage</h1>\n<markdown-accessiblity-table><table role=\"table\">\n<thead>\n<tr>\n<th>Name</th>\n<th>Stored as</th>\n<th>Location</th>\n<th>No. of vials</th>\n<th>Color</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>HL501/X55</td>\n<td>cells</td>\n<td>4-47(46)</td>\n<td>2</td>\n<td>Blue</td>\n</tr>\n<tr>\n<td>HL501/X55</td>\n<td>cells</td>\n<td>4-47(46)</td>\n<td>2</td>\n<td>Blue</td>\n</tr>\n</tbody>\n</table></markdown-accessiblity-table>",
+  "body_text": "Date: Nov 17, 2021\nOrder ID: 37500885\nShipping and billing information\n\n\n\nShipping address\n\nBilling address\n\n\n\n\nArt Vandelay  Vandelay Industries\t 123 Fake St    Chicago IL 60601  United States  Phone: 867-5309  art@vandelayindustries.com  prepaid sending prepaid shipping label\n\nArt Vandelay  Vandelay Industries\t 123 Fake St    Chicago IL 60601  United States  Phone: 867-5309  art@vandelayindustries.com  prepaid sending prepaid shipping label  credit $N/A\n\n\n\nStocks ordered\n\n\n\nItem\nQuantity\nUnit price($)\nTotal($)\n\n\n\n\nStrain\n2\n30\n60\n\n\nPlasmid\n0\n15\n0\n\n\n\n\n\n60\n\n\n\nStrain information\n\n\n\nID\nDescriptor\nName(s)\nSystematic Name\nCharacteristics\n\n\n\n\nDBS0351365\nHL501/X55\n\nDL66\n\n\n\nDBS0351365\nHL501/X55\n\nDL66\n\n\n\n\nStrain storage\n\n\n\nName\nStored as\nLocation\nNo. of vials\nColor\n\n\n\n\nHL501/X55\ncells\n4-47(46)\n2\nBlue\n\n\nHL501/X55\ncells\n4-47(46)\n2\nBlue",
+  "body": "**Date:** Nov 17, 2021   \n\n**Order ID:** 37500885   \n\n\n\n# Shipping and billing information   \n\n|\tShipping address |\t  | Billing address\t |\n| -------------------|----|------------------|\n|   Art Vandelay <br/> Vandelay Industries\t<br/> 123 Fake St <br/>  <br/> Chicago IL 60601 <br/> United States <br/> Phone: 867-5309 <br/> art@vandelayindustries.com <br/> prepaid sending prepaid shipping label |          | Art Vandelay <br/> Vandelay Industries\t<br/> 123 Fake St <br/>  <br/> Chicago IL 60601 <br/> United States <br/> Phone: 867-5309 <br/> art@vandelayindustries.com <br/> prepaid sending prepaid shipping label <br/> credit $N/A |\n\n\n# Stocks ordered\n\n|\tItem\t|\tQuantity \t     |\tUnit price($)\t  |\tTotal($)\t       |\n|-----------|--------------------|--------------------|--------------------|\n|\tStrain\t| 2   | 30   |  60   |\n|\tPlasmid\t| 0  | 15  |  0  |\n|\t\t\t|\t\t\t\t\t |\t\t\t\t\t  |\t 60    |\n\n\n# Strain information\n\n|ID\t|  Descriptor |\tName(s)  |\tSystematic Name  |\tCharacteristics |\n|-------|---------------|-----------|--------------------|-----------------|\n| DBS0351365  | HL501/X55  |  | DL66 |  |\n| DBS0351365  | HL501/X55  |  | DL66 |  |\n\n\t\n\n\n# Strain storage\n\n|\tName |\tStored as |\tLocation |\tNo. of vials |\tColor   |\n|--------|------------|----------|---------------|----------|\n| HL501/X55 | cells | 4-47(46) |  2 | Blue |\n| HL501/X55 | cells | 4-47(46) |  2 | Blue |\n\n\n\n\n\n\n\n",
+  "closed_by": null,
+  "reactions": {
+    "url": "https://api.github.com/repos/dictybase-playground/learn-github-action/issues/193/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/dictybase-playground/learn-github-action/issues/193/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}
