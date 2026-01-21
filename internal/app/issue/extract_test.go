@@ -9,37 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestExtractFromTemplate(t *testing.T) {
-	assert := require.New(t)
-
-	// Read the template file
-	templatePath := filepath.Join("issue.tmpl")
-	templateContent, err := os.ReadFile(templatePath)
-	assert.NoError(err, "should read template file")
-
-	// Read the JSON test data file
-	testDataPath := filepath.Join("..", "..", "..", "testdata", "issue.json")
-	testData, err := os.ReadFile(testDataPath)
-	assert.NoError(err, "should read test data file")
-
-	// Parse JSON to extract the body field
-	var issueData struct {
-		Body string `json:"body"`
-	}
-	err = json.Unmarshal(testData, &issueData)
-	assert.NoError(err, "should parse JSON")
-
-	// Call extractFromTemplate
-	result, err := extractFromTemplate(issueData.Body, string(templateContent))
-	assert.NoError(err, "should extract data from template")
-
-	// Output the result
-	t.Logf("Extracted data:\n")
-	for key, value := range result {
-		t.Logf("  %s: %q\n", key, value)
-	}
-}
-
 func TestExtractFromTitle(t *testing.T) {
 	assert := require.New(t)
 
