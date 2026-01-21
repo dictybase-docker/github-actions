@@ -36,7 +36,7 @@ func ParseTables(htmlContent string) ([]TableData, error) {
 	return tables, nil
 }
 
-// parseTable extracts data from a single table node
+// parseTable extracts data from a single table node.
 func parseTable(tableNode *html.Node) TableData {
 	var table TableData
 
@@ -64,7 +64,7 @@ func parseTable(tableNode *html.Node) TableData {
 	return table
 }
 
-// parseTableHead extracts header cells from thead
+// parseTableHead extracts header cells from thead.
 func parseTableHead(theadNode *html.Node) []string {
 	for row := theadNode.FirstChild; row != nil; row = row.NextSibling {
 		if row.Type == html.ElementNode && row.Data == "tr" {
@@ -74,7 +74,7 @@ func parseTableHead(theadNode *html.Node) []string {
 	return nil
 }
 
-// parseTableBody extracts all rows from tbody
+// parseTableBody extracts all rows from tbody.
 func parseTableBody(tbodyNode *html.Node) [][]string {
 	var rows [][]string
 	for row := tbodyNode.FirstChild; row != nil; row = row.NextSibling {
@@ -85,7 +85,7 @@ func parseTableBody(tbodyNode *html.Node) [][]string {
 	return rows
 }
 
-// parseTableRow extracts cells from a table row
+// parseTableRow extracts cells from a table row.
 func parseTableRow(rowNode *html.Node) []string {
 	var cells []string
 	for cell := rowNode.FirstChild; cell != nil; cell = cell.NextSibling {
@@ -96,7 +96,7 @@ func parseTableRow(rowNode *html.Node) []string {
 	return cells
 }
 
-// getTextContent recursively extracts all text from a node
+// getTextContent recursively extracts all text from a node.
 func getTextContent(n *html.Node) string {
 	if n.Type == html.TextNode {
 		return n.Data
