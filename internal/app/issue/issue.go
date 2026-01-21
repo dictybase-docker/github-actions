@@ -169,21 +169,11 @@ func issueOpts(c *cli.Context) *github.IssueListByRepoOptions {
 	}
 }
 
-func IssueLabelEmail(c *cli.Context) error {
-	return nil
-}
-
-func getIssueBody(c *cli.Context) (string, error) {
-	// Get GitHub client
-	gclient, err := client.GetGithubClient(c.GlobalString("token"))
-	if err != nil {
-		return "", fmt.Errorf("error getting github client: %w", err)
-	}
-
+func getIssue(gclient *github.Client, c *cli.Context) (*github.Issue, error) {
 	// Get issue number from context
 	issueNumber := c.Int("issue")
 	if issueNumber == 0 {
-		return "", fmt.Errorf("issue number is required")
+		return nil, fmt.Errorf("issue number is required")
 	}
 
 	// Get issue using the Issues API
@@ -194,9 +184,13 @@ func getIssueBody(c *cli.Context) (string, error) {
 		issueNumber,
 	)
 	if err != nil {
-		return "", fmt.Errorf("error fetching issue: %w", err)
+		return nil, fmt.Errorf("error fetching issue: %w", err)
 	}
 
+	return issue, nil
+}
+
+func getIssueBody(issue *github.Issue) (string, error) {
 	body := issue.GetBody()
 	if body == "" {
 		return "", fmt.Errorf("issue body is empty")
@@ -204,6 +198,7 @@ func getIssueBody(c *cli.Context) (string, error) {
 
 	return body, nil
 }
+func IssueLabelEmail(c *cli.Context) error {}
 
 func getIssueBodyHTML(c *cli.Context) (string, error) {
 	// Get GitHub client
@@ -245,8 +240,4 @@ func getIssueBodyHTML(c *cli.Context) (string, error) {
 	}
 
 	return bodyHTML, nil
-}
-
-func getOrderDataFromIssueBody(c *cli.Context) (*OrderData, error) {
-	return &OrderData{}, nil
 }
