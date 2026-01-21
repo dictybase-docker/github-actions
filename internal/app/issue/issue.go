@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/dictyBase-docker/github-actions/internal/client"
+	htmlparser "github.com/dictyBase-docker/github-actions/internal/html"
 	"github.com/dictyBase-docker/github-actions/internal/logger"
 	"github.com/google/go-github/v62/github"
 	"github.com/urfave/cli"
@@ -198,7 +199,77 @@ func getIssueBody(issue *github.Issue) (string, error) {
 
 	return body, nil
 }
-func IssueLabelEmail(c *cli.Context) error {}
+
+func IssueLabelEmail(c *cli.Context) error {
+	// Get GitHub client
+	gclient, err := client.GetGithubClient(c.GlobalString("token"))
+	if err != nil {
+		return cli.NewExitError(
+			fmt.Sprintf("error getting github client: %s", err),
+			2,
+		)
+	}
+
+	// Fetch the issue
+	issue, err := getIssue(gclient, c)
+	if err != nil {
+		return cli.NewExitError(
+			fmt.Sprintf("error fetching issue: %s", err),
+			2,
+		)
+	}
+
+	// Get the markdown body
+	markdownBody, err := getIssueBody(issue)
+	if err != nil {
+		return cli.NewExitError(
+			fmt.Sprintf("error getting issue body: %s", err),
+			2,
+		)
+	}
+
+	// Convert markdown to HTML
+	htmlBody, err := htmlparser.MarkdownToHTML(markdownBody)
+	if err != nil {
+		return cli.NewExitError(
+			fmt.Sprintf("error converting markdown to HTML: %s", err),
+			2,
+		)
+	}
+
+	// Extract order ID from HTML
+	orderID, err := htmlparser.ExtractOrderID(htmlBody)
+	if err != nil {
+		return cli.NewExitError(
+			fmt.Sprintf("error extracting order ID: %s", err),
+			2,
+		)
+	}
+
+	// Extract billing email from HTML
+	email, err := htmlparser.ExtractBillingEmail(htmlBody)
+	if err != nil {
+		return cli.NewExitError(
+			fmt.Sprintf("error extracting billing email: %s", err),
+			2,
+		)
+	}
+
+	// Create OrderData struct
+	orderData := OrderData{
+		orderID:        orderID,
+		recipientEmail: email,
+	}
+
+	// Log the extracted data
+	logger.GetLogger(c).Infof(
+		"Extracted order data - Order ID: %s, Email: %s",
+		orderData.orderID,
+		orderData.recipientEmail,
+	)
+
+	return nil
+}
 
 func getIssueBodyHTML(c *cli.Context) (string, error) {
 	// Get GitHub client
