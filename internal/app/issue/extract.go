@@ -32,25 +32,8 @@ func (ip *IssueProcessor) extractOrderData() error {
 	return nil
 }
 
-func extractFromTemplate(text, templatePattern string) (map[string]string, error) {
-	// Replace {{.Field}} with named capture groups
-	regex := regexp.MustCompile(`\{\{\.(\w+)\}\}`)
-	pattern := regex.ReplaceAllString(templatePattern, `(?P<$1>.+?)`)
-
-	re := regexp.MustCompile(pattern)
-	matches := re.FindStringSubmatch(text)
-
-	result := make(map[string]string)
-	for i, name := range re.SubexpNames() {
-		if i > 0 && i <= len(matches) {
-			result[name] = matches[i]
-		}
-	}
-	return result, nil
-}
-
 // ExtractOrderID extracts the Order ID from markdown text
-// Pattern: Order ID: VALUE (with optional ** markdown bold)
+// Pattern: Order ID: VALUE (with optional ** markdown bold).
 func extractOrderIDFromTitle(text string) (string, error) {
 	// Match: Order ID: followed by optional whitespace and the ID value
 	// Handles both "**Order ID:**" and "Order ID:"
