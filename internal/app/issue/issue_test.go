@@ -4,80 +4,39 @@ import (
 	"flag"
 	"testing"
 
+	"github.com/dictyBase-docker/github-actions/internal/fake"
 	"github.com/stretchr/testify/require"
 	"github.com/urfave/cli"
 )
 
-func TestGetOrderDataFromIssueBodyBothFields(t *testing.T) {
+func TestGetIssue(t *testing.T) {
 	t.Parallel()
 	assert := require.New(t)
+
+	// Set up fake server and client
+	server, client := fake.GhServerClient()
+	defer server.Close()
+
+	// Create CLI context with required flags
 	app := cli.NewApp()
 	set := flag.NewFlagSet("test", 0)
-	set.String("order-id", "ORD-12345", "order id")
-	set.String("email", "user@example.com", "recipient email")
+	set.String("owner", "dictybase-playground", "repository owner")
+	set.String("repository", "learn-github-action", "repository name")
+	set.Int("issue", 193, "issue number")
 	set.Parse([]string{})
+
 	ctx := cli.NewContext(app, set, nil)
 
-	result, err := getOrderDataFromIssueBody(ctx)
-	assert.NoError(err, "should not return error when both fields are provided")
-	assert.NotNil(result, "should return a non-nil OrderData object")
-	assert.Equal("ORD-12345", result.orderID, "should extract order ID from context")
-	assert.Equal("user@example.com", result.recipientEmail, "should extract email from context")
-}
+	// Call getIssue
+	issue, err := getIssue(client, ctx)
+	assert.NoError(err, "should not return error when fetching issue")
+	assert.NotNil(issue, "should return a non-nil issue")
 
-func TestGetOrderDataFromIssueBodyDifferentValues(t *testing.T) {
-	t.Parallel()
-	assert := require.New(t)
-	app := cli.NewApp()
-	set := flag.NewFlagSet("test", 0)
-	set.String("order-id", "ORD-99999", "order id")
-	set.String("email", "admin@example.com", "recipient email")
-	set.Parse([]string{})
-	ctx := cli.NewContext(app, set, nil)
-
-	result, err := getOrderDataFromIssueBody(ctx)
-	assert.NoError(err, "should not return error when both fields are provided")
-	assert.NotNil(result, "should return a non-nil OrderData object")
-	assert.Equal("ORD-99999", result.orderID, "should extract order ID from context")
-	assert.Equal("admin@example.com", result.recipientEmail, "should extract email from context")
-}
-
-func TestGetOrderDataFromIssueBodyMissingOrderID(t *testing.T) {
-	t.Parallel()
-	assert := require.New(t)
-	app := cli.NewApp()
-	set := flag.NewFlagSet("test", 0)
-	set.String("email", "user@example.com", "recipient email")
-	set.Parse([]string{})
-	ctx := cli.NewContext(app, set, nil)
-
-	result, err := getOrderDataFromIssueBody(ctx)
-	assert.Error(err, "should return error when order-id is missing")
-	assert.Nil(result, "should return nil when order-id is missing")
-}
-
-func TestGetOrderDataFromIssueBodyMissingEmail(t *testing.T) {
-	t.Parallel()
-	assert := require.New(t)
-	app := cli.NewApp()
-	set := flag.NewFlagSet("test", 0)
-	set.String("order-id", "ORD-12345", "order id")
-	set.Parse([]string{})
-	ctx := cli.NewContext(app, set, nil)
-
-	result, err := getOrderDataFromIssueBody(ctx)
-	assert.Error(err, "should return error when email is missing")
-	assert.Nil(result, "should return nil when email is missing")
-}
-
-func TestGetOrderDataFromIssueBodyMissingBoth(t *testing.T) {
-	t.Parallel()
-	assert := require.New(t)
-	app := cli.NewApp()
-	set := flag.NewFlagSet("test", 0)
-	ctx := cli.NewContext(app, set, nil)
-
-	result, err := getOrderDataFromIssueBody(ctx)
-	assert.Error(err, "should return error when both fields are missing")
-	assert.Nil(result, "should return nil when both fields are missing")
+	// Assert that the issue data matches issue.json
+	assert.Equal(193, issue.GetNumber(), "should have correct issue number")
+	assert.Equal("Order ID:37500885 art@vandelayindustries.com", issue.GetTitle(), "should have correct title")
+	assert.Equal("open", issue.GetState(), "should have correct state")
+	assert.NotEmpty(issue.GetBody(), "should have non-empty body")
+	assert.Contains(issue.GetBody(), "**Order ID:** 37500885", "body should contain order ID")
+	assert.Contains(issue.GetBody(), "Billing address", "body should contain billing address")
 }
