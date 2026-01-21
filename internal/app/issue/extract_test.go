@@ -24,15 +24,11 @@ func TestExtractFromTitle(t *testing.T) {
 	err = json.Unmarshal(testData, &issueData)
 	assert.NoError(err, "should parse JSON")
 
-	// Call extractWithRegex on the title
-	// orderID, emailAddress, err := extractWithRegex(issueData.Title)
+	// Call extractFromTitle on the title
 	orderID, emailAddress, err := extractFromTitle(issueData.Title)
 	assert.NoError(err, "should extract data from title")
-
-	// Output the result
-	t.Logf("Extracted data:\n")
-	t.Logf("  %s: %q\n", "order id", orderID)
-	t.Logf("  %s: %q\n", "email address", emailAddress)
+	assert.Equal("37500885", orderID, "should extract correct order ID from title")
+	assert.Equal("art@vandelayindustries.com", emailAddress, "should extract correct email address from title")
 }
 
 func TestExtractFromBody(t *testing.T) {
@@ -53,9 +49,6 @@ func TestExtractFromBody(t *testing.T) {
 	// Call extractFromBody on the body
 	orderID, emailAddress, err := extractFromBody(issueData.Body)
 	assert.NoError(err, "should extract data from body")
-
-	// Output the result
-	t.Logf("Extracted data from body:\n")
-	t.Logf("  %s: %q\n", "order id", orderID)
-	t.Logf("  %s: %q\n", "billing email", emailAddress)
+	assert.Equal("37500885", orderID, "should extract correct order ID from body")
+	assert.Equal("art@vandelayindustries.com", emailAddress, "should extract correct billing email from body")
 }
