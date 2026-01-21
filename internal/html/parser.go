@@ -2,6 +2,7 @@ package html
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -105,4 +106,104 @@ func getTextContent(n *html.Node) string {
 		text.WriteString(getTextContent(c))
 	}
 	return strings.TrimSpace(text.String())
+}
+
+// ExtractBillingEmail finds a table with "Billing Address" header and extracts the email from that column.
+func ExtractBillingEmail(htmlContent string) (string, error) {
+	tables, err := ParseTables(htmlContent)
+	if err != nil {
+		return "", fmt.Errorf("error parsing tables: %w", err)
+	}
+
+	// Find table with "Billing Address" header
+	for _, table := range tables {
+		billingColIndex := -1
+
+		// Search for "Billing Address" header (case-insensitive)
+		for i, header := range table.Headers {
+			if strings.Contains(strings.ToLower(header), "billing") &&
+				strings.Contains(strings.ToLower(header), "address") {
+				billingColIndex = i
+				break
+			}
+		}
+
+		// If this table has the billing address column
+		if billingColIndex != -1 {
+			// Search all rows for an email in the billing address column
+			for _, row := range table.Rows {
+				if billingColIndex < len(row) {
+					email := extractEmailFromText(row[billingColIndex])
+					if email != "" {
+						return email, nil
+					}
+				}
+			}
+		}
+	}
+
+	return "", fmt.Errorf("billing address email not found")
+}
+
+// extractEmailFromText extracts an email address from a string using regex.
+func extractEmailFromText(text string) string {
+	emailPattern := `([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})`
+	emailRe := regexp.MustCompile(emailPattern)
+
+	matches := emailRe.FindStringSubmatch(text)
+	if len(matches) >= 2 {
+		return matches[1]
+	}
+
+	return ""
+}
+
+// ExtractOrderID finds a paragraph containing "Order ID" and extracts the order ID value.
+func ExtractOrderID(htmlContent string) (string, error) {
+	doc, err := html.Parse(strings.NewReader(htmlContent))
+	if err != nil {
+		return "", fmt.Errorf("error parsing HTML: %w", err)
+	}
+
+	var orderID string
+	var findOrderParagraph func(*html.Node)
+	findOrderParagraph = func(n *html.Node) {
+		if orderID != "" {
+			return // Already found
+		}
+
+		if n.Type == html.ElementNode && n.Data == "p" {
+			text := getTextContent(n)
+			extracted := extractOrderIDFromText(text)
+			if extracted != "" {
+				orderID = extracted
+			}
+		}
+
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			findOrderParagraph(c)
+		}
+	}
+	findOrderParagraph(doc)
+
+	if orderID == "" {
+		return "", fmt.Errorf("order ID not found in paragraphs")
+	}
+
+	return orderID, nil
+}
+
+// extractOrderIDFromText extracts an order ID from text using regex.
+func extractOrderIDFromText(text string) string {
+	// Match "Order ID:" followed by optional whitespace and the ID value
+	// Handles both with and without ** markdown bold
+	pattern := `Order\s*ID:\s*(\d+)`
+	re := regexp.MustCompile(pattern)
+
+	matches := re.FindStringSubmatch(text)
+	if len(matches) >= 2 {
+		return matches[1]
+	}
+
+	return ""
 }
