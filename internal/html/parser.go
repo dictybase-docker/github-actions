@@ -1,10 +1,13 @@
 package html
 
 import (
+	"bytes"
 	"fmt"
 	"regexp"
 	"strings"
 
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
 	"golang.org/x/net/html"
 )
 
@@ -206,4 +209,18 @@ func extractOrderIDFromText(text string) string {
 	}
 
 	return ""
+}
+
+// MarkdownToHTML converts markdown text to HTML using goldmark with GitHub Flavored Markdown extensions.
+func MarkdownToHTML(markdown string) (string, error) {
+	md := goldmark.New(
+		goldmark.WithExtensions(extension.GFM),
+	)
+
+	var buf bytes.Buffer
+	if err := md.Convert([]byte(markdown), &buf); err != nil {
+		return "", fmt.Errorf("error converting markdown: %w", err)
+	}
+
+	return buf.String(), nil
 }
