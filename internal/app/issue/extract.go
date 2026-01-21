@@ -5,6 +5,33 @@ import (
 	"regexp"
 )
 
+type OrderData struct {
+	orderID        string
+	recipientEmail string
+}
+
+type IssueProcessor struct {
+	issueBody string
+	orderData OrderData
+}
+
+// extractOrderData parses the issueBody and populates the orderData field
+func (ip *IssueProcessor) extractOrderData() error {
+	// Use extraction logic to parse issueBody
+	orderID, email, err := extractFromBody(ip.issueBody)
+	if err != nil {
+		return fmt.Errorf("failed to extract order data: %w", err)
+	}
+
+	// Write to the orderData field
+	ip.orderData = OrderData{
+		orderID:        orderID,
+		recipientEmail: email,
+	}
+
+	return nil
+}
+
 func extractFromTemplate(text, templatePattern string) (map[string]string, error) {
 	// Replace {{.Field}} with named capture groups
 	regex := regexp.MustCompile(`\{\{\.(\w+)\}\}`)

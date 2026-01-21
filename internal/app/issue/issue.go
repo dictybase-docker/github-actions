@@ -20,33 +20,6 @@ const (
 	fileLayout       = "01-02-2006-150405"
 )
 
-type OrderData struct {
-	orderID        string
-	recipientEmail string
-}
-
-type IssueProcessor struct {
-	issueBody string
-	orderData OrderData
-}
-
-// extractOrderData parses the issueBody and populates the orderData field
-func (ip *IssueProcessor) extractOrderData() error {
-	// Use extraction logic to parse issueBody
-	orderID, email, err := extractFromBody(ip.issueBody)
-	if err != nil {
-		return fmt.Errorf("failed to extract order data: %w", err)
-	}
-
-	// Write to the orderData field
-	ip.orderData = OrderData{
-		orderID:        orderID,
-		recipientEmail: email,
-	}
-
-	return nil
-}
-
 func CommentsCountByDate(clt *cli.Context) error {
 	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
 	if err != nil {
