@@ -49,6 +49,17 @@ func fetchRoute() []*route {
 					`/repos/([^/]+)/([^/]+)/compare/\w+\.\.\.\w+`,
 				)),
 		},
+		{
+			method: "GET",
+			file:   "../../../testdata/issue.json",
+			fn:     handleSuccess,
+			regexp: regexp.MustCompile(
+				fmt.Sprintf(
+					"^%s%s$",
+					baseURLPath,
+					`/repos/([^/]+)/([^/]+)/issues/(\d+)`,
+				)),
+		},
 	}
 }
 
