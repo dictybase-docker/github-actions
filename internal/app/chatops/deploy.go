@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/dictyBase-docker/github-actions/internal/logger"
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v62/github"
 	"github.com/sethvargo/go-githubactions"
 	"github.com/urfave/cli"
 )
@@ -35,6 +35,7 @@ type branchGetter interface {
 		owner string,
 		repo string,
 		branch string,
+		maxRedirects int,
 	) (*github.Branch, *github.Response, error)
 }
 
@@ -221,6 +222,7 @@ func (bc *branchClient) getHeadCommitFromBranch(
 		owner,
 		name,
 		branch,
+		0,
 	)
 	if err != nil {
 		return "", fmt.Errorf("error getting pull request info %s", err)

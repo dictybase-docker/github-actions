@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/dictyBase-docker/github-actions/internal/fake"
-	gh "github.com/google/go-github/v32/github"
+	gh "github.com/google/go-github/v62/github"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
