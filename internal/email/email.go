@@ -25,16 +25,16 @@ type MailgunConfig struct {
 	From   string // Sender email address
 }
 
-// EmailClient wraps the Mailgun client.
-type EmailClient struct {
+// MailgunClient wraps the Mailgun client.
+type MailgunClient struct {
 	mg     *mailgun.MailgunImpl
 	config MailgunConfig
 }
 
 // NewEmailClient creates a new email client with Mailgun configuration.
-func NewEmailClient(domain, apiKey, from string) *EmailClient {
+func NewEmailClient(domain, apiKey, from string) *MailgunClient {
 	mg := mailgun.NewMailgun(domain, apiKey)
-	return &EmailClient{
+	return &MailgunClient{
 		mg: mg,
 		config: MailgunConfig{
 			Domain: domain,
@@ -44,25 +44,8 @@ func NewEmailClient(domain, apiKey, from string) *EmailClient {
 	}
 }
 
-// RenderTemplate renders the order update email template with provided data.
-func RenderTemplate(templatePath string, data OrderEmailData) (string, error) {
-	// Parse the template file
-	tmpl, err := template.ParseFiles(templatePath)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse template %s: %w", templatePath, err)
-	}
-
-	// Execute template with data
-	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, data); err != nil {
-		return "", fmt.Errorf("failed to execute template: %w", err)
-	}
-
-	return buf.String(), nil
-}
-
 // SendOrderUpdateEmail sends an order update email to the recipient.
-func (ec *EmailClient) SendOrderUpdateEmail(
+func (ec *MailgunClient) SendOrderUpdateEmail(
 	ctx context.Context,
 	recipient string,
 	subject string,
@@ -96,7 +79,7 @@ func (ec *EmailClient) SendOrderUpdateEmail(
 }
 
 // SendOrderUpdateFromTemplate sends an order update email using the template.
-func (ec *EmailClient) SendOrderUpdateFromTemplate(
+func (ec *MailgunClient) SendOrderUpdateFromTemplate(
 	ctx context.Context,
 	recipient string,
 	data OrderEmailData,
@@ -104,17 +87,23 @@ func (ec *EmailClient) SendOrderUpdateFromTemplate(
 	// Get the template path (relative to the email package)
 	templatePath := filepath.Join("internal", "email", "order_update.tmpl")
 
-	// Render the template
-	htmlBody, err := RenderTemplate(templatePath, data)
+	// Parse the template file
+	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
-		return fmt.Errorf("failed to render email template: %w", err)
+		return fmt.Errorf("failed to parse template %s: %w", templatePath, err)
+	}
+
+	// Execute template with data
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return fmt.Errorf("failed to execute template: %w", err)
 	}
 
 	// Create subject line
 	subject := fmt.Sprintf("Dicty Stock Center - Order Update #%s", data.OrderID)
 
 	// Send the email
-	if err := ec.SendOrderUpdateEmail(ctx, recipient, subject, htmlBody); err != nil {
+	if err := ec.SendOrderUpdateEmail(ctx, recipient, subject, buf.String()); err != nil {
 		return fmt.Errorf("failed to send order update email: %w", err)
 	}
 
