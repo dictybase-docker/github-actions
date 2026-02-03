@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/dictyBase-docker/github-actions/internal/client"
-	htmlparser "github.com/dictyBase-docker/github-actions/internal/html"
 	"github.com/dictyBase-docker/github-actions/internal/logger"
+	parser "github.com/dictyBase-docker/github-actions/internal/parser"
 	"github.com/google/go-github/v62/github"
 	"github.com/urfave/cli"
 )
@@ -229,7 +229,7 @@ func IssueLabelEmail(c *cli.Context) error {
 	}
 
 	// Convert markdown to HTML
-	htmlBody, err := htmlparser.MarkdownToHTML(markdownBody)
+	htmlBody, err := parser.MarkdownToHTML(markdownBody)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error converting markdown to HTML: %s", err),
@@ -238,7 +238,7 @@ func IssueLabelEmail(c *cli.Context) error {
 	}
 
 	// Extract order ID from HTML
-	orderID, err := htmlparser.ExtractOrderID(htmlBody)
+	orderID, err := parser.ExtractOrderID(htmlBody)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error extracting order ID: %s", err),
@@ -247,7 +247,7 @@ func IssueLabelEmail(c *cli.Context) error {
 	}
 
 	// Extract billing email from HTML
-	email, err := htmlparser.ExtractBillingEmail(htmlBody)
+	email, err := parser.ExtractBillingEmail(htmlBody)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error extracting billing email: %s", err),
@@ -257,58 +257,60 @@ func IssueLabelEmail(c *cli.Context) error {
 
 	// Create OrderData struct
 	orderData := OrderData{
-		orderID:        orderID,
-		recipientEmail: email,
+		OrderID:        orderID,
+		RecipientEmail: email,
+		Label:          c.String("label"),
+		IssueID:        c.String("issueid"),
+		User:           "Customer", // Default greeting, could extract from issue if needed
 	}
 
+	log := logger.GetLogger(c)
+
 	// Log the extracted data
-	logger.GetLogger(c).Infof(
-		"Extracted order data - Order ID: %s, Email: %s",
-		orderData.orderID,
-		orderData.recipientEmail,
+	log.Infof(
+		"Extracted order data - Order ID: %s, Email: %s, Label: %s",
+		orderData.OrderID,
+		orderData.RecipientEmail,
+		orderData.Label,
+	)
+
+	// Get Mailgun configuration from flags
+	domain := c.String("domain")
+	apiKey := c.String("apiKey")
+
+	if domain == "" || apiKey == "" {
+		return cli.NewExitError(
+			"Mailgun domain and apiKey are required",
+			2,
+		)
+	}
+
+	// Create email client
+	fromEmail := "dictystocks@northwestern.edu" // Default sender
+	emailClient := email.NewEmailClient(domain, apiKey, fromEmail)
+
+	// Prepare email data
+	emailData := email.OrderEmailData{
+		IssueID: orderData.IssueID,
+		OrderID: orderData.OrderID,
+		User:    orderData.User,
+		Label:   orderData.Label,
+	}
+
+	// Send the email
+	ctx := context.Background()
+	if err := emailClient.SendOrderUpdateFromTemplate(ctx, orderData.RecipientEmail, emailData); err != nil {
+		return cli.NewExitError(
+			fmt.Sprintf("error sending email: %s", err),
+			2,
+		)
+	}
+
+	log.Infof(
+		"Successfully sent order update email to %s for order #%s",
+		orderData.RecipientEmail,
+		orderData.OrderID,
 	)
 
 	return nil
-}
-
-func getIssueBodyHTML(c *cli.Context) (string, error) {
-	// Get GitHub client
-	gclient, err := client.GetGithubClient(c.GlobalString("token"))
-	if err != nil {
-		return "", fmt.Errorf("error getting github client: %w", err)
-	}
-
-	// Get issue number from context
-	issueNumber := c.Int("issue")
-	if issueNumber == 0 {
-		return "", fmt.Errorf("issue number is required")
-	}
-
-	owner := c.GlobalString("owner")
-	repo := c.GlobalString("repository")
-
-	// Create custom request to get HTML format
-	// Note: The standard Issues.Get() doesn't support HTML format via Accept headers
-	url := fmt.Sprintf("repos/%s/%s/issues/%d", owner, repo, issueNumber)
-	req, err := gclient.NewRequest("GET", url, nil)
-	if err != nil {
-		return "", fmt.Errorf("error creating request: %w", err)
-	}
-
-	// Set Accept header to get HTML format
-	req.Header.Set("Accept", "application/vnd.github.html+json")
-
-	var issue github.Issue
-	_, err = gclient.Do(context.Background(), req, &issue)
-	if err != nil {
-		return "", fmt.Errorf("error fetching issue: %w", err)
-	}
-
-	// When Accept header is set to html+json, Body field contains HTML
-	bodyHTML := issue.GetBody()
-	if bodyHTML == "" {
-		return "", fmt.Errorf("issue body is empty")
-	}
-
-	return bodyHTML, nil
 }
