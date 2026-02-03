@@ -171,9 +171,9 @@ func issueOpts(c *cli.Context) *github.IssueListByRepoOptions {
 	}
 }
 
-func getIssue(gclient *github.Client, c *cli.Context) (*github.Issue, error) {
+func getIssue(gclient *github.Client, clt *cli.Context) (*github.Issue, error) {
 	// Get issue number from context
-	issueNumber := c.Int("issueid")
+	issueNumber := clt.Int("issueid")
 	if issueNumber == 0 {
 		return nil, fmt.Errorf("issue number is required")
 	}
@@ -181,8 +181,8 @@ func getIssue(gclient *github.Client, c *cli.Context) (*github.Issue, error) {
 	// Get issue using the Issues API
 	issue, _, err := gclient.Issues.Get(
 		context.Background(),
-		c.GlobalString("owner"),
-		c.GlobalString("repository"),
+		clt.GlobalString("owner"),
+		clt.GlobalString("repository"),
 		issueNumber,
 	)
 	if err != nil {
@@ -201,9 +201,9 @@ func getIssueBody(issue *github.Issue) (string, error) {
 	return body, nil
 }
 
-func IssueLabelEmail(c *cli.Context) error {
+func SendIssueLabelEmail(clt *cli.Context) error {
 	// Get GitHub client
-	gclient, err := client.GetGithubClient(c.GlobalString("token"))
+	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error getting github client: %s", err),
@@ -212,7 +212,7 @@ func IssueLabelEmail(c *cli.Context) error {
 	}
 
 	// Fetch the issue
-	issue, err := getIssue(gclient, c)
+	issue, err := getIssue(gclient, clt)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error fetching issue: %s", err),
@@ -251,16 +251,16 @@ func IssueLabelEmail(c *cli.Context) error {
 	emailData := email.OrderEmailData{
 		RecipientEmail: issueData.RecipientEmail,
 		OrderID:        issueData.OrderID,
-		Label:          c.String("label"),
+		Label:          clt.String("label"),
 	}
 
-	log := logger.GetLogger(c)
+	log := logger.GetLogger(clt)
 	log.Infof("Extracted: Order=%s, Email=%s, Label=%s",
 		emailData.OrderID, emailData.RecipientEmail, emailData.Label)
 
 	// Get Mailgun configuration from flags
-	domain := c.String("domain")
-	apiKey := c.String("apiKey")
+	domain := clt.String("domain")
+	apiKey := clt.String("apiKey")
 
 	if domain == "" || apiKey == "" {
 		return cli.NewExitError(
