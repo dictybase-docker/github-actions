@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"golang.org/x/net/html"
 )
 
 type IssueData struct {
@@ -27,8 +29,12 @@ func TestParseTables(t *testing.T) {
 	err = json.Unmarshal(data, &issue)
 	assert.NoError(err, "should be able to parse JSON")
 
-	// Parse tables from body_html
-	tables, err := ParseTables(issue.BodyHTML)
+	// Parse HTML string to *html.Node
+	doc, err := html.Parse(strings.NewReader(issue.BodyHTML))
+	assert.NoError(err, "should be able to parse HTML")
+
+	// Parse tables from HTML node
+	tables, err := ParseTables(doc)
 	assert.NoError(err, "should be able to parse tables from HTML")
 
 	// Verify we extracted 4 tables
@@ -55,8 +61,12 @@ func TestExtractBillingEmail(t *testing.T) {
 	err = json.Unmarshal(data, &issue)
 	assert.NoError(err, "should be able to parse JSON")
 
+	// Parse HTML string to *html.Node
+	doc, err := html.Parse(strings.NewReader(issue.BodyHTML))
+	assert.NoError(err, "should be able to parse HTML")
+
 	// Extract billing email
-	email, err := ExtractBillingEmail(issue.BodyHTML)
+	email, err := ExtractBillingEmail(doc)
 	assert.NoError(err, "should be able to extract billing email")
 	assert.Equal("art@vandelayindustries.com", email, "should extract the correct email from billing address column")
 }
@@ -75,8 +85,12 @@ func TestExtractOrderID(t *testing.T) {
 	err = json.Unmarshal(data, &issue)
 	assert.NoError(err, "should be able to parse JSON")
 
+	// Parse HTML string to *html.Node
+	doc, err := html.Parse(strings.NewReader(issue.BodyHTML))
+	assert.NoError(err, "should be able to parse HTML")
+
 	// Extract order ID
-	orderID, err := ExtractOrderID(issue.BodyHTML)
+	orderID, err := ExtractOrderID(doc)
 	assert.NoError(err, "should be able to extract order ID")
 	assert.Equal("37500885", orderID, "should extract the correct order ID from paragraph")
 }
