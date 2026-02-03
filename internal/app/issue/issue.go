@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/dictyBase-docker/github-actions/internal/client"
+	"github.com/dictyBase-docker/github-actions/internal/email"
 	"github.com/dictyBase-docker/github-actions/internal/logger"
 	parser "github.com/dictyBase-docker/github-actions/internal/parser"
 	"github.com/google/go-github/v62/github"
@@ -172,7 +173,7 @@ func issueOpts(c *cli.Context) *github.IssueListByRepoOptions {
 
 func getIssue(gclient *github.Client, c *cli.Context) (*github.Issue, error) {
 	// Get issue number from context
-	issueNumber := c.Int("issue")
+	issueNumber := c.Int("issueid")
 	if issueNumber == 0 {
 		return nil, fmt.Errorf("issue number is required")
 	}
@@ -228,8 +229,8 @@ func IssueLabelEmail(c *cli.Context) error {
 		)
 	}
 
-	// Convert markdown to HTML
-	htmlBody, err := parser.MarkdownToHTML(markdownBody)
+	// Convert markdown to HTML node
+	htmlNode, err := parser.MarkdownToHTML(markdownBody)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error converting markdown to HTML: %s", err),
@@ -237,42 +238,25 @@ func IssueLabelEmail(c *cli.Context) error {
 		)
 	}
 
-	// Extract order ID from HTML
-	orderID, err := parser.ExtractOrderID(htmlBody)
+	// Extract order data using parser
+	issueData, err := parser.ExtractOrderData(htmlNode)
 	if err != nil {
 		return cli.NewExitError(
-			fmt.Sprintf("error extracting order ID: %s", err),
+			fmt.Sprintf("error extracting order data: %s", err),
 			2,
 		)
 	}
 
-	// Extract billing email from HTML
-	email, err := parser.ExtractBillingEmail(htmlBody)
-	if err != nil {
-		return cli.NewExitError(
-			fmt.Sprintf("error extracting billing email: %s", err),
-			2,
-		)
-	}
-
-	// Create OrderData struct
-	orderData := OrderData{
-		OrderID:        orderID,
-		RecipientEmail: email,
+	// Convert to email data structure
+	emailData := email.OrderEmailData{
+		RecipientEmail: issueData.RecipientEmail,
+		OrderID:        issueData.OrderID,
 		Label:          c.String("label"),
-		IssueID:        c.String("issueid"),
-		User:           "Customer", // Default greeting, could extract from issue if needed
 	}
 
 	log := logger.GetLogger(c)
-
-	// Log the extracted data
-	log.Infof(
-		"Extracted order data - Order ID: %s, Email: %s, Label: %s",
-		orderData.OrderID,
-		orderData.RecipientEmail,
-		orderData.Label,
-	)
+	log.Infof("Extracted: Order=%s, Email=%s, Label=%s",
+		emailData.OrderID, emailData.RecipientEmail, emailData.Label)
 
 	// Get Mailgun configuration from flags
 	domain := c.String("domain")
@@ -285,32 +269,19 @@ func IssueLabelEmail(c *cli.Context) error {
 		)
 	}
 
-	// Create email client
-	fromEmail := "dictystocks@northwestern.edu" // Default sender
+	// Create email client and send email
+	fromEmail := "dictystocks@northwestern.edu"
 	emailClient := email.NewEmailClient(domain, apiKey, fromEmail)
 
-	// Prepare email data
-	emailData := email.OrderEmailData{
-		IssueID: orderData.IssueID,
-		OrderID: orderData.OrderID,
-		User:    orderData.User,
-		Label:   orderData.Label,
-	}
-
-	// Send the email
 	ctx := context.Background()
-	if err := emailClient.SendOrderUpdateFromTemplate(ctx, orderData.RecipientEmail, emailData); err != nil {
+	if err := emailClient.SendOrderUpdateFromTemplate(ctx, emailData.RecipientEmail, emailData); err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error sending email: %s", err),
 			2,
 		)
 	}
 
-	log.Infof(
-		"Successfully sent order update email to %s for order #%s",
-		orderData.RecipientEmail,
-		orderData.OrderID,
-	)
+	log.Infof("Sent email to %s for order %s", emailData.RecipientEmail, emailData.OrderID)
 
 	return nil
 }
