@@ -22,7 +22,7 @@ func TestGetIssue(t *testing.T) {
 	set := flag.NewFlagSet("test", 0)
 	set.String("owner", "dictybase-playground", "repository owner")
 	set.String("repository", "learn-github-action", "repository name")
-	set.Int("issue", 193, "issue number")
+	set.Int("issueid", 193, "issue number")
 	set.Parse([]string{})
 
 	ctx := cli.NewContext(app, set, nil)
