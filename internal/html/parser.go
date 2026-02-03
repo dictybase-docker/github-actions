@@ -17,13 +17,13 @@ type TableData struct {
 	Rows    [][]string
 }
 
-// ParseTables extracts all tables from HTML content.
-func ParseTables(htmlContent string) ([]TableData, error) {
-	doc, err := html.Parse(strings.NewReader(htmlContent))
-	if err != nil {
-		return nil, fmt.Errorf("error parsing HTML: %w", err)
-	}
+type IssueBodyData struct {
+	RecipientEmail string
+	OrderID        string
+}
 
+// ParseTables extracts all tables from HTML content.
+func ParseTables(doc *html.Node) ([]TableData, error) {
 	var tables []TableData
 	var findTables func(*html.Node)
 	findTables = func(n *html.Node) {
@@ -112,8 +112,8 @@ func getTextContent(n *html.Node) string {
 }
 
 // ExtractBillingEmail finds a table with "Billing Address" header and extracts the email from that column.
-func ExtractBillingEmail(htmlContent string) (string, error) {
-	tables, err := ParseTables(htmlContent)
+func ExtractBillingEmail(doc *html.Node) (string, error) {
+	tables, err := ParseTables(doc)
 	if err != nil {
 		return "", fmt.Errorf("error parsing tables: %w", err)
 	}
@@ -162,28 +162,23 @@ func extractEmailFromText(text string) string {
 }
 
 // ExtractOrderID finds a paragraph containing "Order ID" and extracts the order ID value.
-func ExtractOrderID(htmlContent string) (string, error) {
-	doc, err := html.Parse(strings.NewReader(htmlContent))
-	if err != nil {
-		return "", fmt.Errorf("error parsing HTML: %w", err)
-	}
-
+func ExtractOrderID(doc *html.Node) (string, error) {
 	var orderID string
 	var findOrderParagraph func(*html.Node)
-	findOrderParagraph = func(n *html.Node) {
+	findOrderParagraph = func(node *html.Node) {
 		if orderID != "" {
 			return // Already found
 		}
 
-		if n.Type == html.ElementNode && n.Data == "p" {
-			text := getTextContent(n)
+		if node.Type == html.ElementNode && node.Data == "p" {
+			text := getTextContent(node)
 			extracted := extractOrderIDFromText(text)
 			if extracted != "" {
 				orderID = extracted
 			}
 		}
 
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
+		for c := node.FirstChild; c != nil; c = c.NextSibling {
 			findOrderParagraph(c)
 		}
 	}
@@ -212,15 +207,37 @@ func extractOrderIDFromText(text string) string {
 }
 
 // MarkdownToHTML converts markdown text to HTML using goldmark with GitHub Flavored Markdown extensions.
-func MarkdownToHTML(markdown string) (string, error) {
+func MarkdownToHTML(markdown string) (*html.Node, error) {
 	md := goldmark.New(
 		goldmark.WithExtensions(extension.GFM),
 	)
 
 	var buf bytes.Buffer
 	if err := md.Convert([]byte(markdown), &buf); err != nil {
-		return "", fmt.Errorf("error converting markdown: %w", err)
+		return nil, fmt.Errorf("error converting markdown: %w", err)
 	}
 
-	return buf.String(), nil
+	doc, err := html.Parse(strings.NewReader(buf.String()))
+	if err != nil {
+		return nil, fmt.Errorf("error parsing HTML: %w", err)
+	}
+
+	return doc, nil
+}
+
+func extractOrderData(htmlNode *html.Node) (IssueBodyData, error) {
+	orderID, err := ExtractOrderID(htmlNode)
+	if err != nil {
+		return IssueBodyData{}, fmt.Errorf("failed to extract order ID: %w", err)
+	}
+
+	billingEmail, err := ExtractBillingEmail(htmlNode)
+	if err != nil {
+		return IssueBodyData{}, fmt.Errorf("failed to extract billing email: %w", err)
+	}
+
+	return IssueBodyData{
+		OrderID:        orderID,
+		RecipientEmail: billingEmail,
+	}, nil
 }
