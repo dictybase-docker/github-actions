@@ -225,7 +225,8 @@ func MarkdownToHTML(markdown string) (*html.Node, error) {
 	return doc, nil
 }
 
-func extractOrderData(htmlNode *html.Node) (IssueBodyData, error) {
+// ExtractOrderData extracts order ID and billing email from HTML and returns structured data
+func ExtractOrderData(htmlNode *html.Node) (IssueBodyData, error) {
 	orderID, err := ExtractOrderID(htmlNode)
 	if err != nil {
 		return IssueBodyData{}, fmt.Errorf("failed to extract order ID: %w", err)
