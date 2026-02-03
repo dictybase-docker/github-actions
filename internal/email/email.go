@@ -31,7 +31,7 @@ type EmailClient struct {
 	config MailgunConfig
 }
 
-// NewEmailClient creates a new email client with Mailgun configuration
+// NewEmailClient creates a new email client with Mailgun configuration.
 func NewEmailClient(domain, apiKey, from string) *EmailClient {
 	mg := mailgun.NewMailgun(domain, apiKey)
 	return &EmailClient{
@@ -44,7 +44,7 @@ func NewEmailClient(domain, apiKey, from string) *EmailClient {
 	}
 }
 
-// RenderTemplate renders the order update email template with provided data
+// RenderTemplate renders the order update email template with provided data.
 func RenderTemplate(templatePath string, data OrderEmailData) (string, error) {
 	// Parse the template file
 	tmpl, err := template.ParseFiles(templatePath)
@@ -61,15 +61,15 @@ func RenderTemplate(templatePath string, data OrderEmailData) (string, error) {
 	return buf.String(), nil
 }
 
-// SendOrderUpdateEmail sends an order update email to the recipient
+// SendOrderUpdateEmail sends an order update email to the recipient.
 func (ec *EmailClient) SendOrderUpdateEmail(
 	ctx context.Context,
 	recipient string,
 	subject string,
 	htmlBody string,
 ) error {
-	// Create a new message
-	message := ec.mg.NewMessage(
+	// Create a new message using the package function instead of method
+	message := mailgun.NewMessage(
 		ec.config.From,
 		subject,
 		"", // Plain text body (empty, using HTML only)
@@ -77,25 +77,25 @@ func (ec *EmailClient) SendOrderUpdateEmail(
 	)
 
 	// Set HTML body
-	message.SetHtml(htmlBody)
+	message.SetHTML(htmlBody)
 
 	// Send the message with a 10 second timeout
 	sendCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	resp, id, err := ec.mg.Send(sendCtx, message)
+	resp, messageID, err := ec.mg.Send(sendCtx, message)
 	if err != nil {
 		return fmt.Errorf("failed to send email via Mailgun: %w", err)
 	}
 
 	// Log success (could use logger here if needed)
-	_ = resp // Response body
-	_ = id   // Message ID
+	_ = resp      // Response body
+	_ = messageID // Message ID
 
 	return nil
 }
 
-// SendOrderUpdateFromTemplate sends an order update email using the template
+// SendOrderUpdateFromTemplate sends an order update email using the template.
 func (ec *EmailClient) SendOrderUpdateFromTemplate(
 	ctx context.Context,
 	recipient string,
