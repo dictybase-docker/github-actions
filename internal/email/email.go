@@ -3,13 +3,16 @@ package email
 import (
 	"bytes"
 	"context"
+	"embed"
 	"fmt"
 	"html/template"
-	"path/filepath"
 	"time"
 
-	"github.com/mailgun/mailgun-go/v4"
+	"github.com/mailgun/mailgun-go/v5"
 )
+
+//go:embed order_update.tmpl
+var templateFS embed.FS
 
 // OrderEmailData represents the data structure for order update emails.
 type OrderEmailData struct {
@@ -27,13 +30,13 @@ type MailgunConfig struct {
 
 // MailgunClient wraps the Mailgun client.
 type MailgunClient struct {
-	mg     *mailgun.MailgunImpl
+	mg     *mailgun.Client
 	config MailgunConfig
 }
 
 // NewEmailClient creates a new email client with Mailgun configuration.
 func NewEmailClient(domain, apiKey, from string) *MailgunClient {
-	mg := mailgun.NewMailgun(domain, apiKey)
+	mg := mailgun.NewMailgun(apiKey)
 	return &MailgunClient{
 		mg: mg,
 		config: MailgunConfig{
@@ -51,8 +54,9 @@ func (ec *MailgunClient) SendOrderUpdateEmail(
 	subject string,
 	htmlBody string,
 ) error {
-	// Create a new message using the package function instead of method
+	// Create a new message - domain is now passed to NewMessage in v5
 	message := mailgun.NewMessage(
+		ec.config.Domain,
 		ec.config.From,
 		subject,
 		"", // Plain text body (empty, using HTML only)
@@ -66,25 +70,22 @@ func (ec *MailgunClient) SendOrderUpdateEmail(
 	sendCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	resp, messageID, err := ec.mg.Send(sendCtx, message)
+	resp, err := ec.mg.Send(sendCtx, message)
 	if err != nil {
 		return fmt.Errorf("failed to send email via Mailgun: %w", err)
 	}
 
 	// Log success (could use logger here if needed)
-	_ = resp      // Response body
-	_ = messageID // Message ID
+	_ = resp // Response contains ID and message
 
 	return nil
 }
 
 func createEmailHTML(data OrderEmailData) (string, error) {
-	templatePath := filepath.Join("internal", "email", "order_update.tmpl")
-
-	// Parse the template file
-	tmpl, err := template.ParseFiles(templatePath)
+	// Parse the embedded template file
+	tmpl, err := template.ParseFS(templateFS, "order_update.tmpl")
 	if err != nil {
-		return "", fmt.Errorf("failed to parse template %s: %w", templatePath, err)
+		return "", fmt.Errorf("failed to parse template: %w", err)
 	}
 
 	// Execute template with data
