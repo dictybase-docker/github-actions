@@ -78,32 +78,40 @@ func (ec *MailgunClient) SendOrderUpdateEmail(
 	return nil
 }
 
+func createEmailHTML(data OrderEmailData) (string, error) {
+	templatePath := filepath.Join("internal", "email", "order_update.tmpl")
+
+	// Parse the template file
+	tmpl, err := template.ParseFiles(templatePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse template %s: %w", templatePath, err)
+	}
+
+	// Execute template with data
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return "", fmt.Errorf("failed to execute template: %w", err)
+	}
+	return buf.String(), nil
+}
+
 // SendOrderUpdateFromTemplate sends an order update email using the template.
 func (ec *MailgunClient) SendOrderUpdateFromTemplate(
 	ctx context.Context,
 	recipient string,
 	data OrderEmailData,
 ) error {
-	// Get the template path (relative to the email package)
-	templatePath := filepath.Join("internal", "email", "order_update.tmpl")
+	html, err := createEmailHTML(data)
 
-	// Parse the template file
-	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
-		return fmt.Errorf("failed to parse template %s: %w", templatePath, err)
-	}
-
-	// Execute template with data
-	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, data); err != nil {
-		return fmt.Errorf("failed to execute template: %w", err)
+		return fmt.Errorf("failed to create email HTML: %w", err)
 	}
 
 	// Create subject line
 	subject := fmt.Sprintf("Dicty Stock Center - Order Update #%s", data.OrderID)
 
 	// Send the email
-	if err := ec.SendOrderUpdateEmail(ctx, recipient, subject, buf.String()); err != nil {
+	if err := ec.SendOrderUpdateEmail(ctx, recipient, subject, html); err != nil {
 		return fmt.Errorf("failed to send order update email: %w", err)
 	}
 
