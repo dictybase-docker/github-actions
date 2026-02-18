@@ -17,7 +17,7 @@ func TestNewEmailClient(t *testing.T) {
 	apiKey := "test-api-key-123"
 	fromEmail := "test@example.com"
 
-	client := NewEmailClient(domain, apiKey, fromEmail)
+	client := NewEmailClient(domain, fromEmail, apiKey)
 
 	assert.NotNil(client, "client should not be nil")
 	assert.NotNil(client.mg, "mailgun client should not be nil")

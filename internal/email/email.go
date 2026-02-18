@@ -34,7 +34,7 @@ type MailgunClient struct {
 }
 
 // NewEmailClient creates a new email client with Mailgun configuration.
-func NewEmailClient(domain, apiKey, from string) *MailgunClient {
+func NewEmailClient(domain, from, apiKey string) *MailgunClient {
 	mg := mailgun.NewMailgun(apiKey)
 	return &MailgunClient{
 		mg: mg,
