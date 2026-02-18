@@ -202,6 +202,26 @@ func getIssueBody(issue *github.Issue) (string, error) {
 	return body, nil
 }
 
+func extractAndValidateOrderData(htmlNode *html.Node, label string) (email.OrderEmailData, error) {
+	issueData, err := parser.ExtractOrderData(htmlNode)
+	if err != nil {
+		return email.OrderEmailData{}, fmt.Errorf("error extracting order data: %w", err)
+	}
+
+	if issueData.RecipientEmail == "" {
+		return email.OrderEmailData{}, fmt.Errorf("no recipient email found in issue")
+	}
+	if issueData.OrderID == "" {
+		return email.OrderEmailData{}, fmt.Errorf("no order ID found in issue")
+	}
+
+	return email.OrderEmailData{
+		RecipientEmail: issueData.RecipientEmail,
+		OrderID:        issueData.OrderID,
+		Label:          label,
+	}, nil
+}
+
 func fetchAndParseIssue(clt *cli.Context) (*html.Node, error) {
 	// Get GitHub client
 	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
@@ -248,28 +268,9 @@ func SendIssueLabelEmail(clt *cli.Context) error {
 		return err
 	}
 
-	// Extract order data using parser
-	issueData, err := parser.ExtractOrderData(htmlNode)
+	emailData, err := extractAndValidateOrderData(htmlNode, clt.String("label"))
 	if err != nil {
-		return cli.NewExitError(
-			fmt.Sprintf("error extracting order data: %s", err),
-			2,
-		)
-	}
-
-	// Validate extracted data
-	if issueData.RecipientEmail == "" {
-		return cli.NewExitError("no recipient email found in issue", 2)
-	}
-	if issueData.OrderID == "" {
-		return cli.NewExitError("no order ID found in issue", 2)
-	}
-
-	// Convert to email data structure
-	emailData := email.OrderEmailData{
-		RecipientEmail: issueData.RecipientEmail,
-		OrderID:        issueData.OrderID,
-		Label:          clt.String("label"),
+		return cli.NewExitError(err.Error(), 2)
 	}
 
 	log := logger.GetLogger(clt)

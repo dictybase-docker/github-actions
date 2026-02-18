@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/dictyBase-docker/github-actions/internal/fake"
+	parser "github.com/dictyBase-docker/github-actions/internal/parser"
 	"github.com/google/go-github/v62/github"
 	"github.com/stretchr/testify/require"
 	"github.com/urfave/cli"
@@ -110,6 +111,110 @@ func TestGetIssueBody(t *testing.T) {
 
 			assert.NoError(err, "unexpected error for test case: %s", testCase.name)
 			assert.Equal(testCase.want, body, "body should match expected value")
+		})
+	}
+}
+
+var extractAndValidateOrderDataTests = []struct {
+	name        string
+	markdown    string
+	label       string
+	wantOrderID string
+	wantEmail   string
+	wantLabel   string
+	wantErr     bool
+	errContains string
+}{
+	{
+		name: "valid order data",
+		markdown: `**Order ID:** 12345
+
+| Shipping address | | Billing address |
+|-----------------|---|-----------------|
+| John Doe | | jane@example.com |
+| 123 Main St | | 456 Elm St |`,
+		label:       "shipped",
+		wantOrderID: "12345",
+		wantEmail:   "jane@example.com",
+		wantLabel:   "shipped",
+		wantErr:     false,
+	},
+	{
+		name: "missing order ID",
+		markdown: `Some text without order ID
+
+| Shipping address | | Billing address |
+|-----------------|---|-----------------|
+| John Doe | | jane@example.com |`,
+		label:       "processing",
+		wantErr:     true,
+		errContains: "error extracting order data",
+	},
+	{
+		name: "missing email",
+		markdown: `**Order ID:** 99999
+
+| Shipping address | | Billing address |
+|-----------------|---|-----------------|
+| John Doe | | No email here |`,
+		label:       "shipped",
+		wantErr:     true,
+		errContains: "error extracting order data",
+	},
+	{
+		name: "empty order ID after extraction",
+		markdown: `**Order ID:**
+
+| Shipping address | | Billing address |
+|-----------------|---|-----------------|
+| John Doe | | test@example.com |`,
+		label:       "shipped",
+		wantErr:     true,
+		errContains: "error extracting order data",
+	},
+	{
+		name: "different label",
+		markdown: `**Order ID:** 54321
+
+| Shipping address | | Billing address |
+|-----------------|---|-----------------|
+| John Doe | | admin@test.com |`,
+		label:       "cancelled",
+		wantOrderID: "54321",
+		wantEmail:   "admin@test.com",
+		wantLabel:   "cancelled",
+		wantErr:     false,
+	},
+}
+
+func TestExtractAndValidateOrderData(t *testing.T) {
+	t.Parallel()
+
+	for _, testCase := range extractAndValidateOrderDataTests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			assert := require.New(t)
+
+			// Convert markdown to HTML
+			htmlNode, err := parser.MarkdownToHTML(testCase.markdown)
+			assert.NoError(err, "should convert markdown to HTML")
+
+			// Call the function under test
+			emailData, err := extractAndValidateOrderData(htmlNode, testCase.label)
+
+			if testCase.wantErr {
+				assert.Error(err, "expected error for test case: %s", testCase.name)
+				if testCase.errContains != "" {
+					assert.Contains(err.Error(), testCase.errContains,
+						"error should contain %q", testCase.errContains)
+				}
+				return
+			}
+
+			assert.NoError(err, "unexpected error for test case: %s", testCase.name)
+			assert.Equal(testCase.wantOrderID, emailData.OrderID, "order ID should match")
+			assert.Equal(testCase.wantEmail, emailData.RecipientEmail, "email should match")
+			assert.Equal(testCase.wantLabel, emailData.Label, "label should match")
 		})
 	}
 }
