@@ -70,13 +70,10 @@ func (ec *MailgunClient) SendOrderUpdateEmail(
 	sendCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	resp, err := ec.mg.Send(sendCtx, message)
+	_, err := ec.mg.Send(sendCtx, message)
 	if err != nil {
 		return fmt.Errorf("failed to send email via Mailgun: %w", err)
 	}
-
-	// Log success (could use logger here if needed)
-	_ = resp // Response contains ID and message
 
 	return nil
 }
