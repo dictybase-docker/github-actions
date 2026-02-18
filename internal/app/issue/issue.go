@@ -261,6 +261,7 @@ func SendIssueLabelEmail(clt *cli.Context) error {
 	// Get Mailgun configuration from flags
 	domain := clt.String("domain")
 	apiKey := clt.String("apiKey")
+	fromEmail := clt.String("fromEmail")
 
 	if domain == "" || apiKey == "" {
 		return cli.NewExitError(
@@ -270,7 +271,6 @@ func SendIssueLabelEmail(clt *cli.Context) error {
 	}
 
 	// Create email client and send email
-	fromEmail := "dictystocks@northwestern.edu"
 	emailClient := email.NewEmailClient(domain, apiKey, fromEmail)
 
 	ctx := context.Background()

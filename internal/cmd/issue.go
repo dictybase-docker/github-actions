@@ -63,6 +63,10 @@ func IssueLabelEmailCmds() cli.Command {
 				Name:  "apiKey",
 				Usage: "API key for mailgun",
 			},
+			cli.StringFlag{
+				Name:  "fromEmail",
+				Usage: "Email address of the sender",
+			},
 		},
 	}
 }
