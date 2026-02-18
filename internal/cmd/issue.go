@@ -45,7 +45,7 @@ func IssueLabelEmailCmds() cli.Command {
 		Name:    "issue-label-email",
 		Aliases: []string{"ile"},
 		Usage:   "sends an email to a recipient of an order when certain labels are added to the issue",
-		Action:  issue.IssueLabelEmail,
+		Action:  issue.SendIssueLabelEmail,
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "label",
