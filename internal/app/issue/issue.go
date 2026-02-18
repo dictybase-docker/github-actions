@@ -273,7 +273,9 @@ func SendIssueLabelEmail(clt *cli.Context) error {
 	// Create email client and send email
 	emailClient := email.NewEmailClient(domain, apiKey, fromEmail)
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
 	if err := emailClient.SendOrderUpdateFromTemplate(ctx, emailData.RecipientEmail, emailData); err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error sending email: %s", err),
