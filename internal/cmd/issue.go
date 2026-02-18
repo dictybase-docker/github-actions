@@ -51,13 +51,13 @@ func IssueLabelEmailCmds() cli.Command {
 				Name:  "apiKey",
 				Usage: "API key for mailgun",
 			},
-			cli.StringFlag{
-				Name:  "label",
-				Usage: "The label that was added to the issue",
-			},
 			cli.IntFlag{
 				Name:  "issueid",
 				Usage: "The id of the issue",
+			},
+			cli.StringFlag{
+				Name:  "label",
+				Usage: "The label that was added to the issue",
 			},
 			cli.StringFlag{
 				Name:  "domain",
