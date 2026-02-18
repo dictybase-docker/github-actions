@@ -273,8 +273,11 @@ func SendIssueLabelEmail(clt *cli.Context) error {
 	}
 
 	log := logger.GetLogger(clt)
-	log.Infof("Extracted: Order=%s, Email=%s, Label=%s",
-		emailData.OrderID, emailData.RecipientEmail, emailData.Label)
+	log.WithFields(map[string]any{
+		"order_id":  emailData.OrderID,
+		"recipient": emailData.RecipientEmail,
+		"label":     emailData.Label,
+	}).Info("Extracted order data from issue")
 
 	// Get Mailgun configuration from flags
 	domain := clt.String("domain")
@@ -295,13 +298,24 @@ func SendIssueLabelEmail(clt *cli.Context) error {
 	defer cancel()
 
 	if err := emailClient.SendOrderUpdateFromTemplate(ctx, emailData.RecipientEmail, emailData); err != nil {
+		log.WithFields(map[string]any{
+			"order_id":  emailData.OrderID,
+			"recipient": emailData.RecipientEmail,
+			"label":     emailData.Label,
+			"error":     err.Error(),
+		}).Error("Failed to send email")
 		return cli.NewExitError(
 			fmt.Sprintf("error sending email: %s", err),
 			2,
 		)
 	}
 
-	log.Infof("Sent email to %s for order %s", emailData.RecipientEmail, emailData.OrderID)
+	log.WithFields(map[string]any{
+		"order_id":  emailData.OrderID,
+		"recipient": emailData.RecipientEmail,
+		"label":     emailData.Label,
+		"status":    "sent",
+	}).Info("Successfully sent order update email")
 
 	return nil
 }
