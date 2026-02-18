@@ -51,7 +51,7 @@ func IssueLabelEmailCmds() cli.Command {
 				Name:  "label",
 				Usage: "The label that was added to the issue",
 			},
-			cli.StringFlag{
+			cli.IntFlag{
 				Name:  "issueid",
 				Usage: "The id of the issue",
 			},
