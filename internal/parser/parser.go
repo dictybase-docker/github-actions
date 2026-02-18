@@ -106,7 +106,7 @@ func getTextContent(n *html.Node) string {
 	}
 	var text strings.Builder
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		text.WriteString(getTextContent(c))
+		_, _ = text.WriteString(getTextContent(c))
 	}
 	return strings.TrimSpace(text.String())
 }
