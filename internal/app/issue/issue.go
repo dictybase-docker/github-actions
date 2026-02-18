@@ -14,6 +14,7 @@ import (
 	parser "github.com/dictyBase-docker/github-actions/internal/parser"
 	"github.com/google/go-github/v62/github"
 	"github.com/urfave/cli"
+	"golang.org/x/net/html"
 )
 
 const (
@@ -201,6 +202,37 @@ func getIssueBody(issue *github.Issue) (string, error) {
 	return body, nil
 }
 
+func fetchAndParseIssue(gclient *github.Client, clt *cli.Context) (*html.Node, error) {
+	// Fetch the issue
+	issue, err := getIssue(gclient, clt)
+	if err != nil {
+		return nil, cli.NewExitError(
+			fmt.Sprintf("error fetching issue: %s", err),
+			2,
+		)
+	}
+
+	// Get the markdown body
+	markdownBody, err := getIssueBody(issue)
+	if err != nil {
+		return nil, cli.NewExitError(
+			fmt.Sprintf("error getting issue body: %s", err),
+			2,
+		)
+	}
+
+	// Convert markdown to HTML node
+	htmlNode, err := parser.MarkdownToHTML(markdownBody)
+	if err != nil {
+		return nil, cli.NewExitError(
+			fmt.Sprintf("error converting markdown to HTML: %s", err),
+			2,
+		)
+	}
+
+	return htmlNode, nil
+}
+
 func SendIssueLabelEmail(clt *cli.Context) error {
 	// Get GitHub client
 	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
@@ -211,31 +243,9 @@ func SendIssueLabelEmail(clt *cli.Context) error {
 		)
 	}
 
-	// Fetch the issue
-	issue, err := getIssue(gclient, clt)
+	htmlNode, err := fetchAndParseIssue(gclient, clt)
 	if err != nil {
-		return cli.NewExitError(
-			fmt.Sprintf("error fetching issue: %s", err),
-			2,
-		)
-	}
-
-	// Get the markdown body
-	markdownBody, err := getIssueBody(issue)
-	if err != nil {
-		return cli.NewExitError(
-			fmt.Sprintf("error getting issue body: %s", err),
-			2,
-		)
-	}
-
-	// Convert markdown to HTML node
-	htmlNode, err := parser.MarkdownToHTML(markdownBody)
-	if err != nil {
-		return cli.NewExitError(
-			fmt.Sprintf("error converting markdown to HTML: %s", err),
-			2,
-		)
+		return err
 	}
 
 	// Extract order data using parser
