@@ -22,6 +22,11 @@ type IssueBodyData struct {
 	OrderID        string
 }
 
+var (
+	emailRe   = regexp.MustCompile(`([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})`)
+	orderIDRe = regexp.MustCompile(`Order\s*ID:\s*(\d+)`)
+)
+
 // ParseTables extracts all tables from HTML content.
 func ParseTables(doc *html.Node) ([]TableData, error) {
 	var tables []TableData
@@ -150,9 +155,6 @@ func ExtractBillingEmail(doc *html.Node) (string, error) {
 
 // extractEmailFromText extracts an email address from a string using regex.
 func extractEmailFromText(text string) string {
-	emailPattern := `([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})`
-	emailRe := regexp.MustCompile(emailPattern)
-
 	matches := emailRe.FindStringSubmatch(text)
 	if len(matches) >= 2 {
 		return matches[1]
@@ -193,12 +195,7 @@ func ExtractOrderID(doc *html.Node) (string, error) {
 
 // extractOrderIDFromText extracts an order ID from text using regex.
 func extractOrderIDFromText(text string) string {
-	// Match "Order ID:" followed by optional whitespace and the ID value
-	// Handles both with and without ** markdown bold
-	pattern := `Order\s*ID:\s*(\d+)`
-	re := regexp.MustCompile(pattern)
-
-	matches := re.FindStringSubmatch(text)
+	matches := orderIDRe.FindStringSubmatch(text)
 	if len(matches) >= 2 {
 		return matches[1]
 	}
