@@ -15,6 +15,81 @@ type IssueData struct {
 	BodyHTML string `json:"body_html"`
 }
 
+var markdownToHTMLTests = []struct {
+	name            string
+	markdown        string
+	wantErr         bool
+	containsHTML    []string
+	notContainsHTML []string
+}{
+	{
+		name:     "basic paragraph",
+		markdown: "This is a paragraph.",
+		wantErr:  false,
+		containsHTML: []string{
+			"<p>This is a paragraph.</p>",
+		},
+	},
+	{
+		name:     "headers",
+		markdown: "# Header 1\n## Header 2",
+		wantErr:  false,
+		containsHTML: []string{
+			"<h1>Header 1</h1>",
+			"<h2>Header 2</h2>",
+		},
+	},
+	{
+		name:     "bold text",
+		markdown: "**Order ID:** 12345",
+		wantErr:  false,
+		containsHTML: []string{
+			"<strong>Order ID:</strong>",
+			"12345",
+		},
+	},
+	{
+		name: "GFM table",
+		markdown: `| Column 1 | Column 2 |
+|----------|----------|
+| Value 1  | Value 2  |`,
+		wantErr: false,
+		containsHTML: []string{
+			"<table>",
+			"<thead>",
+			"<tbody>",
+			"<th>Column 1</th>",
+			"<th>Column 2</th>",
+			"<td>Value 1</td>",
+			"<td>Value 2</td>",
+		},
+	},
+	{
+		name:     "links",
+		markdown: "[GitHub](https://github.com)",
+		wantErr:  false,
+		containsHTML: []string{
+			"<a href=\"https://github.com\">GitHub</a>",
+		},
+	},
+	{
+		name:     "mixed content",
+		markdown: "**Order ID:** 37500885\n\nSome text with [link](http://example.com)",
+		wantErr:  false,
+		containsHTML: []string{
+			"<strong>Order ID:</strong>",
+			"37500885",
+			"<a href=\"http://example.com\">link</a>",
+		},
+	},
+	{
+		name:         "empty string",
+		markdown:     "",
+		wantErr:      false,
+		containsHTML: []string{},
+	},
+}
+
 func TestParseTables(t *testing.T) {
 	t.Parallel()
 	assert := require.New(t)
@@ -93,4 +168,49 @@ func TestExtractOrderID(t *testing.T) {
 	orderID, err := ExtractOrderID(doc)
 	assert.NoError(err, "should be able to extract order ID")
 	assert.Equal("37500885", orderID, "should extract the correct order ID from paragraph")
+}
+
+func verifyHTMLContent(t *testing.T, htmlNode *html.Node, containsHTML, notContainsHTML []string) {
+	t.Helper()
+	assert := require.New(t)
+
+	// Convert HTML node back to string for verification
+	var buf strings.Builder
+	err := html.Render(&buf, htmlNode)
+	assert.NoError(err, "should render HTML node to string")
+
+	htmlString := buf.String()
+
+	// Verify expected HTML is present
+	for _, expected := range containsHTML {
+		assert.Contains(htmlString, expected, "HTML should contain %q", expected)
+	}
+
+	// Verify unexpected HTML is not present
+	for _, notExpected := range notContainsHTML {
+		assert.NotContains(htmlString, notExpected, "HTML should not contain %q", notExpected)
+	}
+}
+
+func TestMarkdownToHTML(t *testing.T) {
+	t.Parallel()
+
+	for _, testCase := range markdownToHTMLTests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			assert := require.New(t)
+
+			htmlNode, err := MarkdownToHTML(testCase.markdown)
+
+			if testCase.wantErr {
+				assert.Error(err, "expected error for test case: %s", testCase.name)
+				return
+			}
+
+			assert.NoError(err, "unexpected error for test case: %s", testCase.name)
+			assert.NotNil(htmlNode, "HTML node should not be nil")
+
+			verifyHTMLContent(t, htmlNode, testCase.containsHTML, testCase.notContainsHTML)
+		})
+	}
 }
