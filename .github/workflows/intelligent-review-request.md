@@ -86,18 +86,32 @@ Track which items were recently completed by comparing against previous states.
 - Check if a repository maintainer already has a pending review request
 - Check when the last review was requested
 - Verify if previous review comments exist and if they've been addressed
+- For follow-up reviews, identify the commit SHA when the last review was submitted or requested
 
 ## Actions to Take
 
 ### When Conditions Are Met
 1. Add a repository maintainer as a reviewer to the pull request
 2. Add a comment explaining why the review is being requested:
+
+   **For initial reviews:**
    ```markdown
    [@username] Review requested because:
    - ✅ All checks are passing
-   - ✅ [Reason: Initial review | Follow-up | Task completed: <task name>]
+   - ✅ [Reason: Initial review | Task completed: <task name>]
    - 📊 Changes: +X/-Y lines in N files
    ```
+
+   **For follow-up reviews:**
+   ```markdown
+   [@username] Review requested because:
+   - ✅ All checks are passing
+   - ✅ [Reason: Follow-up | Task completed: <task name>]
+   - 📊 New changes: +X/-Y lines in N files (M commits since last review)
+   - 🔗 [View changes since last review](https://github.com/owner/repo/compare/lastReviewSHA...currentSHA)
+   ```
+
+   The comparison link should use the commit SHA from when the last review was submitted/requested to the current HEAD SHA.
 
 ### When Conditions Are NOT Met
 Do nothing. Wait for conditions to be satisfied.
@@ -108,6 +122,7 @@ If a repository maintainer already has a pending review request, do not request 
 - Only add a new comment if a significant new task is completed:
   ```markdown
   📋 Update: Completed task - [task description]
+  🔗 [View changes since last review](https://github.com/owner/repo/compare/lastReviewSHA...currentSHA)
   Ready for continued review.
   ```
 
@@ -138,7 +153,8 @@ If a repository maintainer already has a pending review request, do not request 
 - PR has 5 tasks, 2 completed
 - One task just changed from `[ ]` to `[x]`
 - All checks passing
-- Action: Request review mentioning completed task
+- Last review was at commit abc123, now at def456
+- Action: Request review mentioning completed task with comparison link to abc123...def456
 
 **Scenario 3 - Checks Failing**:
 - PR has changes but lint is failing
