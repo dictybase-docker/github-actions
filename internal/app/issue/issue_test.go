@@ -23,13 +23,14 @@ func TestGetIssue(t *testing.T) {
 	set.String("owner", "dictybase-playground", "repository owner")
 	set.String("repository", "learn-github-action", "repository name")
 	set.Int("issueid", 193, "issue number")
-	set.Parse([]string{})
+	err := set.Parse([]string{})
+	assert.NoError(err, "should parse flags without error")
 
 	ctx := cli.NewContext(app, set, nil)
 
 	// Call getIssue
-	issue, err := getIssue(client, ctx)
-	assert.NoError(err, "should not return error when fetching issue")
+	issue, issueErr := getIssue(client, ctx)
+	assert.NoError(issueErr, "should not return error when fetching issue")
 	assert.NotNil(issue, "should return a non-nil issue")
 
 	// Assert that the issue data matches issue.json
