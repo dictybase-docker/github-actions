@@ -24,7 +24,6 @@ type OrderEmailData struct {
 // MailgunConfig holds Mailgun configuration.
 type MailgunConfig struct {
 	Domain string
-	APIKey string
 	From   string // Sender email address
 }
 
@@ -41,7 +40,6 @@ func NewEmailClient(domain, apiKey, from string) *MailgunClient {
 		mg: mg,
 		config: MailgunConfig{
 			Domain: domain,
-			APIKey: apiKey,
 			From:   from,
 		},
 	}
