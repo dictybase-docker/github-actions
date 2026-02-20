@@ -214,3 +214,85 @@ func TestMarkdownToHTML(t *testing.T) {
 		})
 	}
 }
+
+func TestExtractStockData(t *testing.T) {
+	t.Parallel()
+	assert := require.New(t)
+
+	// Load the test data
+	testDataPath := filepath.Join("..", "..", "testdata", "issue.json")
+	data, err := os.ReadFile(testDataPath)
+	assert.NoError(err, "should be able to read testdata/issue.json")
+
+	// Parse JSON to extract body_html
+	var issue IssueData
+	err = json.Unmarshal(data, &issue)
+	assert.NoError(err, "should be able to parse JSON")
+
+	// Parse HTML string to *html.Node
+	doc, err := html.Parse(strings.NewReader(issue.BodyHTML))
+	assert.NoError(err, "should be able to parse HTML")
+
+	// Extract stock data
+	stockData, err := ExtractStockData(doc)
+	assert.NoError(err, "should be able to extract stock data")
+
+	// Verify strain information
+	assert.Len(stockData.StrainInfo, 2, "should extract 2 strain info entries")
+
+	// Verify first strain entry
+	assert.Equal("DBS0351362", stockData.StrainInfo[0].ID, "first strain should have correct ID")
+	assert.Equal("HL16/HL106", stockData.StrainInfo[0].Descriptor, "first strain should have correct descriptor")
+
+	// Verify second strain entry
+	assert.Equal("DBS0351363", stockData.StrainInfo[1].ID, "second strain should have correct ID")
+	assert.Equal("HL84/XM101", stockData.StrainInfo[1].Descriptor, "second strain should have correct descriptor")
+
+	// Verify plasmid information
+	assert.Len(stockData.PlasmidInfo, 4, "should extract 4 plasmid info entries")
+
+	// Verify all plasmid entries have the same ID and Name
+	for i, plasmid := range stockData.PlasmidInfo {
+		assert.Equal("DBP0001064", plasmid.ID, "plasmid %d should have correct ID", i)
+		assert.Equal("pDDB_G0279361/lacZ", plasmid.Name, "plasmid %d should have correct name", i)
+	}
+}
+
+func TestExtractOrderData(t *testing.T) {
+	t.Parallel()
+	assert := require.New(t)
+
+	// Load the test data
+	testDataPath := filepath.Join("..", "..", "testdata", "issue.json")
+	data, err := os.ReadFile(testDataPath)
+	assert.NoError(err, "should be able to read testdata/issue.json")
+
+	// Parse JSON to extract body_html
+	var issue IssueData
+	err = json.Unmarshal(data, &issue)
+	assert.NoError(err, "should be able to parse JSON")
+
+	// Parse HTML string to *html.Node
+	doc, err := html.Parse(strings.NewReader(issue.BodyHTML))
+	assert.NoError(err, "should be able to parse HTML")
+
+	// Extract all order data
+	orderData, err := ExtractOrderData(doc)
+	assert.NoError(err, "should be able to extract order data")
+
+	// Verify order ID
+	assert.Equal("10283618", orderData.OrderID, "should extract correct order ID")
+
+	// Verify recipient email
+	assert.Equal("kevin.tun@northwestern.edu", orderData.RecipientEmail, "should extract correct recipient email")
+
+	// Verify strain data
+	assert.Len(orderData.StockData.StrainInfo, 2, "should extract 2 strain info entries")
+	assert.Equal("DBS0351362", orderData.StockData.StrainInfo[0].ID, "first strain should have correct ID")
+	assert.Equal("HL16/HL106", orderData.StockData.StrainInfo[0].Descriptor, "first strain should have correct descriptor")
+
+	// Verify plasmid data
+	assert.Len(orderData.StockData.PlasmidInfo, 4, "should extract 4 plasmid info entries")
+	assert.Equal("DBP0001064", orderData.StockData.PlasmidInfo[0].ID, "first plasmid should have correct ID")
+	assert.Equal("pDDB_G0279361/lacZ", orderData.StockData.PlasmidInfo[0].Name, "first plasmid should have correct name")
+}

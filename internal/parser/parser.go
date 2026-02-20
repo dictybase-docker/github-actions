@@ -20,6 +20,25 @@ type TableData struct {
 type IssueBodyData struct {
 	RecipientEmail string
 	OrderID        string
+	StockData      StockData
+}
+
+// StrainInfo represents information about a strain from the order.
+type StrainInfo struct {
+	ID         string
+	Descriptor string
+}
+
+// PlasmidInfo represents information and storage details for a plasmid.
+type PlasmidInfo struct {
+	ID   string
+	Name string
+}
+
+// StockData represents all stock-related information extracted from an order.
+type StockData struct {
+	StrainInfo  []StrainInfo
+	PlasmidInfo []PlasmidInfo
 }
 
 var (
@@ -222,7 +241,138 @@ func MarkdownToHTML(markdown string) (*html.Node, error) {
 	return doc, nil
 }
 
-// ExtractOrderData extracts order ID and billing email from HTML and returns structured data.
+// containsIgnoreCase performs case-insensitive substring matching.
+func containsIgnoreCase(str, substr string) bool {
+	return strings.Contains(strings.ToLower(str), strings.ToLower(substr))
+}
+
+// matchesStrainInfoHeaders checks if headers match strain information table.
+func matchesStrainInfoHeaders(headers []string) bool {
+	if len(headers) < 5 {
+		return false
+	}
+
+	hasID := false
+	hasDescriptor := false
+	hasStored := false
+
+	for _, header := range headers {
+		if containsIgnoreCase(header, "ID") {
+			hasID = true
+		}
+		if containsIgnoreCase(header, "Descriptor") {
+			hasDescriptor = true
+		}
+		if containsIgnoreCase(header, "Stored") {
+			hasStored = true
+		}
+	}
+
+	// Must have ID and Descriptor, but NOT Stored (to distinguish from plasmid storage)
+	return hasID && hasDescriptor && !hasStored
+}
+
+// matchesPlasmidInfoHeaders checks if headers match plasmid information table.
+func matchesPlasmidInfoHeaders(headers []string) bool {
+	if len(headers) < 5 {
+		return false
+	}
+
+	hasID := false
+	hasName := false
+	hasStored := false
+
+	for _, header := range headers {
+		if containsIgnoreCase(header, "ID") {
+			hasID = true
+		}
+		if containsIgnoreCase(header, "Name") {
+			hasName = true
+		}
+		if containsIgnoreCase(header, "Stored") {
+			hasStored = true
+		}
+	}
+
+	// Must have ID, Name, AND Stored (to distinguish from strain info which lacks Stored)
+	return hasID && hasName && hasStored
+}
+
+// parseStrainInfoRow converts a table row to StrainInfo struct.
+func parseStrainInfoRow(row []string) StrainInfo {
+	strain := StrainInfo{}
+
+	if len(row) > 0 {
+		strain.ID = row[0]
+	}
+	if len(row) > 1 {
+		strain.Descriptor = row[1]
+	}
+
+	return strain
+}
+
+// parsePlasmidInfoRow converts a table row to PlasmidInfo struct.
+func parsePlasmidInfoRow(row []string) PlasmidInfo {
+	plasmid := PlasmidInfo{}
+
+	if len(row) > 0 {
+		plasmid.ID = row[0]
+	}
+	if len(row) > 1 {
+		plasmid.Name = row[1]
+	}
+	return plasmid
+}
+
+// isEmptyRow checks if a row contains only empty strings.
+func isEmptyRow(row []string) bool {
+	for _, cell := range row {
+		if strings.TrimSpace(cell) != "" {
+			return false
+		}
+	}
+	return true
+}
+
+// ExtractStockData extracts strain and plasmid information from HTML content.
+// It searches for tables with matching headers and parses stock-related data.
+// Returns StockData with empty slices if no matching tables are found.
+func ExtractStockData(doc *html.Node) (StockData, error) {
+	tables, err := ParseTables(doc)
+	if err != nil {
+		return StockData{}, fmt.Errorf("error parsing tables: %w", err)
+	}
+
+	data := StockData{
+		StrainInfo:  []StrainInfo{},
+		PlasmidInfo: []PlasmidInfo{},
+	}
+
+	for _, table := range tables {
+		// Check if this is a strain information table
+		if matchesStrainInfoHeaders(table.Headers) {
+			for _, row := range table.Rows {
+				if !isEmptyRow(row) {
+					data.StrainInfo = append(data.StrainInfo, parseStrainInfoRow(row))
+				}
+			}
+		}
+
+		// Check if this is a plasmid information table
+		if matchesPlasmidInfoHeaders(table.Headers) {
+			for _, row := range table.Rows {
+				if !isEmptyRow(row) {
+					data.PlasmidInfo = append(data.PlasmidInfo, parsePlasmidInfoRow(row))
+				}
+			}
+		}
+	}
+
+	return data, nil
+}
+
+// ExtractOrderData extracts order ID, billing email, and stock data from HTML and returns structured data.
 func ExtractOrderData(htmlNode *html.Node) (IssueBodyData, error) {
 	orderID, err := ExtractOrderID(htmlNode)
 	if err != nil {
@@ -234,8 +384,14 @@ func ExtractOrderData(htmlNode *html.Node) (IssueBodyData, error) {
 		return IssueBodyData{}, fmt.Errorf("failed to extract billing email: %w", err)
 	}
 
+	stockData, err := ExtractStockData(htmlNode)
+	if err != nil {
+		return IssueBodyData{}, fmt.Errorf("failed to extract stock data: %w", err)
+	}
+
 	return IssueBodyData{
 		OrderID:        orderID,
 		RecipientEmail: billingEmail,
+		StockData:      stockData,
 	}, nil
 }
