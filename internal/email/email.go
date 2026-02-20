@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"time"
 
+	"github.com/dictyBase-docker/github-actions/internal/parser"
 	"github.com/mailgun/mailgun-go/v5"
 )
 
@@ -19,6 +20,7 @@ type OrderEmailData struct {
 	RecipientEmail string
 	OrderID        string
 	Label          string
+	StockData      parser.StockData
 }
 
 // MailgunConfig holds Mailgun configuration.
@@ -94,7 +96,6 @@ func createEmailHTML(data OrderEmailData) (string, error) {
 // SendOrderUpdateFromTemplate sends an order update email using the template.
 func (ec *MailgunClient) SendOrderUpdateFromTemplate(
 	ctx context.Context,
-	recipient string,
 	data OrderEmailData,
 ) error {
 	html, err := createEmailHTML(data)
@@ -107,7 +108,7 @@ func (ec *MailgunClient) SendOrderUpdateFromTemplate(
 	subject := fmt.Sprintf("Dicty Stock Center - Order Update #%s", data.OrderID)
 
 	// Send the email
-	if err := ec.SendOrderUpdateEmail(ctx, recipient, subject, html); err != nil {
+	if err := ec.SendOrderUpdateEmail(ctx, data.RecipientEmail, subject, html); err != nil {
 		return fmt.Errorf("failed to send order update email: %w", err)
 	}
 

@@ -219,6 +219,7 @@ func extractAndValidateOrderData(htmlNode *html.Node, label string) (email.Order
 		RecipientEmail: issueData.RecipientEmail,
 		OrderID:        issueData.OrderID,
 		Label:          label,
+		StockData:      issueData.StockData,
 	}, nil
 }
 
@@ -298,7 +299,7 @@ func SendIssueLabelEmail(clt *cli.Context) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	if err := emailClient.SendOrderUpdateFromTemplate(ctx, emailData.RecipientEmail, emailData); err != nil {
+	if err := emailClient.SendOrderUpdateFromTemplate(ctx, emailData); err != nil {
 		log.WithFields(map[string]any{
 			"order_id":  emailData.OrderID,
 			"recipient": emailData.RecipientEmail,

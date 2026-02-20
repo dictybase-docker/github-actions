@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/dictyBase-docker/github-actions/internal/parser"
 	"github.com/stretchr/testify/require"
 )
 
@@ -37,14 +38,22 @@ func TestTemplateFieldsMatchStruct(t *testing.T) {
 	}
 	assert.NoError(err, "should read template file")
 
-	// Extract all template field references ({{.FieldName}})
-	fieldPatestCaseern := regexp.MustCompile(`\{\{\.(\w+)\}\}`)
-	matches := fieldPatestCaseern.FindAllStringSubmatch(string(templateContent), -1)
+	content := string(templateContent)
 
-	// Collect unique field names used in template
+	// Remove content within {{range}}...{{end}} blocks to exclude iteration-scoped fields
+	rangePattern := regexp.MustCompile(`(?s)\{\{range\s+[^}]+\}\}.*?\{\{end\}\}`)
+	contentWithoutRanges := rangePattern.ReplaceAllString(content, "")
+
+	// Extract all template field references from non-range content
+	// Matches {{.Field}}, {{.Field.Nested}}, {{if .Field}}, etc.
+	fieldPattern := regexp.MustCompile(`\{\{[^}]*?\.(\w+)(?:\.\w+)*[^}]*?\}\}`)
+	matches := fieldPattern.FindAllStringSubmatch(contentWithoutRanges, -1)
+
+	// Collect unique top-level field names used in template
 	templateFields := make(map[string]bool)
 	for _, match := range matches {
 		if len(match) > 1 {
+			// Extract only the first field name after the dot
 			templateFields[match[1]] = true
 		}
 	}
@@ -61,7 +70,7 @@ func TestTemplateFieldsMatchStruct(t *testing.T) {
 		}
 	}
 
-	// Verify every template field exists in the struct
+	// Verify every top-level template field exists in the struct
 	for templateField := range templateFields {
 		assert.True(structFields[templateField],
 			"template uses field %q which doesn't exist in OrderEmailData struct", templateField)
@@ -119,6 +128,78 @@ func TestCreateEmailHTML(t *testing.T) {
 			contains: []string{
 				"Order Update # ",
 				"Your order status: ",
+			},
+		},
+		{
+			name: "order with strain data",
+			data: OrderEmailData{
+				RecipientEmail: "test@example.com",
+				OrderID:        "ORD-11111",
+				Label:          "shipped",
+				StockData: parser.StockData{
+					StrainInfo: []parser.StrainInfo{
+						{ID: "DBS0351362", Descriptor: "HL16/HL106"},
+						{ID: "DBS0351363", Descriptor: "HL84/XM101"},
+					},
+				},
+			},
+			wantErr: false,
+			contains: []string{
+				"Order Update # ORD-11111",
+				"Your order status: shipped",
+				"Strains Ordered",
+				"DBS0351362",
+				"HL16/HL106",
+				"DBS0351363",
+				"HL84/XM101",
+			},
+		},
+		{
+			name: "order with plasmid data",
+			data: OrderEmailData{
+				RecipientEmail: "test@example.com",
+				OrderID:        "ORD-22222",
+				Label:          "processing",
+				StockData: parser.StockData{
+					PlasmidInfo: []parser.PlasmidInfo{
+						{ID: "DBP0001064", Name: "pDDB_G0279361/lacZ"},
+						{ID: "DBP0001065", Name: "pDDB_G0279362/lacZ"},
+					},
+				},
+			},
+			wantErr: false,
+			contains: []string{
+				"Order Update # ORD-22222",
+				"Your order status: processing",
+				"Plasmids Ordered",
+				"DBP0001064",
+				"pDDB_G0279361/lacZ",
+				"DBP0001065",
+				"pDDB_G0279362/lacZ",
+			},
+		},
+		{
+			name: "order with both strains and plasmids",
+			data: OrderEmailData{
+				RecipientEmail: "test@example.com",
+				OrderID:        "ORD-33333",
+				Label:          "shipped",
+				StockData: parser.StockData{
+					StrainInfo: []parser.StrainInfo{
+						{ID: "DBS0351362", Descriptor: "HL16/HL106"},
+					},
+					PlasmidInfo: []parser.PlasmidInfo{
+						{ID: "DBP0001064", Name: "pDDB_G0279361/lacZ"},
+					},
+				},
+			},
+			wantErr: false,
+			contains: []string{
+				"Order Update # ORD-33333",
+				"Strains Ordered",
+				"DBS0351362",
+				"Plasmids Ordered",
+				"DBP0001064",
 			},
 		},
 	}
