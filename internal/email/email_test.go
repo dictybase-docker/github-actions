@@ -80,10 +80,14 @@ func TestTemplateFieldsMatchStruct(t *testing.T) {
 	// as RecipientEmail is used for addressing but not in the email body
 }
 
-func TestCreateEmailHTML(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
+//nolint:funlen // Test cases table
+func getEmailHTMLTestCases() []struct {
+	name     string
+	data     OrderEmailData
+	wantErr  bool
+	contains []string
+} {
+	return []struct {
 		name     string
 		data     OrderEmailData
 		wantErr  bool
@@ -98,8 +102,9 @@ func TestCreateEmailHTML(t *testing.T) {
 			},
 			wantErr: false,
 			contains: []string{
-				"Order Update # ORD-12345",
-				"Your order status: shipped",
+				"Order Number: <span class=\"order-id-value\">ORD-12345</span>",
+				"Current Status",
+				"shipped",
 				"Dicty Stock Center",
 				"dictystocks@northwestern.edu",
 			},
@@ -113,8 +118,8 @@ func TestCreateEmailHTML(t *testing.T) {
 			},
 			wantErr: false,
 			contains: []string{
-				"Order Update # ORD-99999",
-				"Your order status: processing",
+				"Order Number: <span class=\"order-id-value\">ORD-99999</span>",
+				"processing",
 			},
 		},
 		{
@@ -126,8 +131,8 @@ func TestCreateEmailHTML(t *testing.T) {
 			},
 			wantErr: false,
 			contains: []string{
-				"Order Update # ",
-				"Your order status: ",
+				"Order Number:",
+				"Current Status",
 			},
 		},
 		{
@@ -145,8 +150,8 @@ func TestCreateEmailHTML(t *testing.T) {
 			},
 			wantErr: false,
 			contains: []string{
-				"Order Update # ORD-11111",
-				"Your order status: shipped",
+				"Order Number: <span class=\"order-id-value\">ORD-11111</span>",
+				"shipped",
 				"Strains Ordered",
 				"DBS0351362",
 				"HL16/HL106",
@@ -169,8 +174,8 @@ func TestCreateEmailHTML(t *testing.T) {
 			},
 			wantErr: false,
 			contains: []string{
-				"Order Update # ORD-22222",
-				"Your order status: processing",
+				"Order Number: <span class=\"order-id-value\">ORD-22222</span>",
+				"processing",
 				"Plasmids Ordered",
 				"DBP0001064",
 				"pDDB_G0279361/lacZ",
@@ -195,7 +200,7 @@ func TestCreateEmailHTML(t *testing.T) {
 			},
 			wantErr: false,
 			contains: []string{
-				"Order Update # ORD-33333",
+				"Order Number: <span class=\"order-id-value\">ORD-33333</span>",
 				"Strains Ordered",
 				"DBS0351362",
 				"Plasmids Ordered",
@@ -203,8 +208,12 @@ func TestCreateEmailHTML(t *testing.T) {
 			},
 		},
 	}
+}
 
-	for _, testCase := range tests {
+func TestCreateEmailHTML(t *testing.T) {
+	t.Parallel()
+
+	for _, testCase := range getEmailHTMLTestCases() {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 			assert := require.New(t)
