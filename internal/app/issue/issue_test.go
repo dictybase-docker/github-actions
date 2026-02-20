@@ -24,7 +24,7 @@ func TestGetIssue(t *testing.T) {
 	set := flag.NewFlagSet("test", 0)
 	set.String("owner", "dictybase-playground", "repository owner")
 	set.String("repository", "learn-github-action", "repository name")
-	set.Int("issueid", 193, "issue number")
+	set.Int("issueid", 122, "issue number")
 	err := set.Parse([]string{})
 	assert.NoError(err, "should parse flags without error")
 
@@ -36,11 +36,11 @@ func TestGetIssue(t *testing.T) {
 	assert.NotNil(issue, "should return a non-nil issue")
 
 	// Assert that the issue data matches issue.json
-	assert.Equal(193, issue.GetNumber(), "should have correct issue number")
-	assert.Equal("Order ID:37500885 art@vandelayindustries.com", issue.GetTitle(), "should have correct title")
+	assert.Equal(122, issue.GetNumber(), "should have correct issue number")
+	assert.Equal("Order ID:10283618 kevin.tun@northwestern.edu", issue.GetTitle(), "should have correct title")
 	assert.Equal("open", issue.GetState(), "should have correct state")
 	assert.NotEmpty(issue.GetBody(), "should have non-empty body")
-	assert.Contains(issue.GetBody(), "**Order ID:** 37500885", "body should contain order ID")
+	assert.Contains(issue.GetBody(), "**Order ID:** 10283618", "body should contain order ID")
 	assert.Contains(issue.GetBody(), "Billing address", "body should contain billing address")
 }
 

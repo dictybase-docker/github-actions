@@ -113,7 +113,7 @@ func TestParseTables(t *testing.T) {
 	assert.NoError(err, "should be able to parse tables from HTML")
 
 	// Verify we extracted 4 tables
-	assert.Len(tables, 4, "should extract 4 tables from body_html")
+	assert.Len(tables, 5, "should extract 5 tables from body_html")
 
 	// Verify the table headers
 	assert.Equal([]string{"Shipping address", "", "Billing address"}, tables[0].Headers, "first table should be shipping and billing information")
@@ -143,7 +143,7 @@ func TestExtractBillingEmail(t *testing.T) {
 	// Extract billing email
 	email, err := ExtractBillingEmail(doc)
 	assert.NoError(err, "should be able to extract billing email")
-	assert.Equal("art@vandelayindustries.com", email, "should extract the correct email from billing address column")
+	assert.Equal("kevin.tun@northwestern.edu", email, "should extract the correct email from billing address column")
 }
 
 func TestExtractOrderID(t *testing.T) {
@@ -167,7 +167,7 @@ func TestExtractOrderID(t *testing.T) {
 	// Extract order ID
 	orderID, err := ExtractOrderID(doc)
 	assert.NoError(err, "should be able to extract order ID")
-	assert.Equal("37500885", orderID, "should extract the correct order ID from paragraph")
+	assert.Equal("10283618", orderID, "should extract the correct order ID from paragraph")
 }
 
 func verifyHTMLContent(t *testing.T, htmlNode *html.Node, containsHTML, notContainsHTML []string) {
