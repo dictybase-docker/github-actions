@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	gh "github.com/google/go-github/v32/github"
+	gh "github.com/google/go-github/v62/github"
 )
 
 const (
@@ -47,6 +47,17 @@ func fetchRoute() []*route {
 					"^%s%s$",
 					baseURLPath,
 					`/repos/([^/]+)/([^/]+)/compare/\w+\.\.\.\w+`,
+				)),
+		},
+		{
+			method: "GET",
+			file:   "../../../testdata/issue.json",
+			fn:     handleSuccess,
+			regexp: regexp.MustCompile(
+				fmt.Sprintf(
+					"^%s%s$",
+					baseURLPath,
+					`/repos/([^/]+)/([^/]+)/issues/(\d+)`,
 				)),
 		},
 	}
