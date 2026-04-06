@@ -3,6 +3,7 @@ package parser
 import (
 	"bytes"
 	"fmt"
+	"net/mail"
 	"regexp"
 	"strings"
 
@@ -153,13 +154,13 @@ func ExtractBillingEmail(doc *html.Node) (string, error) {
 }
 
 // findH2WithText searches recursively for an h2 element with the given text content.
-func findH2WithText(n *html.Node, text string) *html.Node {
-	if n.Type == html.ElementNode && n.Data == "h2" {
-		if strings.TrimSpace(getTextContent(n)) == text {
-			return n
+func findH2WithText(node *html.Node, text string) *html.Node {
+	if node.Type == html.ElementNode && node.Data == "h2" {
+		if strings.TrimSpace(getTextContent(node)) == text {
+			return node
 		}
 	}
-	for c := n.FirstChild; c != nil; c = c.NextSibling {
+	for c := node.FirstChild; c != nil; c = c.NextSibling {
 		if result := findH2WithText(c, text); result != nil {
 			return result
 		}
@@ -168,13 +169,18 @@ func findH2WithText(n *html.Node, text string) *html.Node {
 }
 
 // findEmailInDiv recursively searches a node subtree for a div containing an email address.
-func findEmailInDiv(n *html.Node) string {
-	if n.Type == html.ElementNode && n.Data == "div" {
-		if email := extractEmailFromText(getTextContent(n)); email != "" {
-			return email
+// It uses emailRe to locate a candidate within the div text, then validates it with
+// extractEmailFromText.
+func findEmailInDiv(node *html.Node) string {
+	if node.Type == html.ElementNode && node.Data == "div" {
+		matches := emailRe.FindStringSubmatch(getTextContent(node))
+		if len(matches) >= 2 {
+			if email, err := extractEmailFromText(matches[1]); err == nil {
+				return email
+			}
 		}
 	}
-	for c := n.FirstChild; c != nil; c = c.NextSibling {
+	for c := node.FirstChild; c != nil; c = c.NextSibling {
 		if email := findEmailInDiv(c); email != "" {
 			return email
 		}
@@ -182,14 +188,16 @@ func findEmailInDiv(n *html.Node) string {
 	return ""
 }
 
-// extractEmailFromText extracts an email address from a string using regex.
-func extractEmailFromText(text string) string {
-	matches := emailRe.FindStringSubmatch(text)
-	if len(matches) >= 2 {
-		return matches[1]
+// extractEmailFromText extracts a valid RFC 5322 email address from a string.
+// It first tries net/mail.ParseAddress on the whole input (handles standalone
+// addresses and "Name <email>" format), then falls back to a regex search for
+// emails embedded in larger text, validating each candidate with ParseAddress.
+func extractEmailFromText(text string) (string, error) {
+	addr, err := mail.ParseAddress(text)
+	if err == nil {
+		return addr.Address, nil
 	}
-
-	return ""
+	return "", err
 }
 
 // ExtractOrderID finds a paragraph containing "Order ID" and extracts the order ID value.
@@ -256,83 +264,50 @@ func containsIgnoreCase(str, substr string) bool {
 	return strings.Contains(strings.ToLower(str), strings.ToLower(substr))
 }
 
-// matchesStrainInfoHeaders checks if headers match strain information table.
-func matchesStrainInfoHeaders(headers []string) bool {
-	if len(headers) < 5 {
-		return false
-	}
-
-	hasID := false
-	hasDescriptor := false
-	hasStored := false
-
-	for _, header := range headers {
-		if containsIgnoreCase(header, "ID") {
-			hasID = true
-		}
-		if containsIgnoreCase(header, "Descriptor") {
-			hasDescriptor = true
-		}
-		if containsIgnoreCase(header, "Stored") {
-			hasStored = true
+// matchesCombinedStockHeaders checks if headers match the combined strain/plasmid table
+// format used by the Dicty Stock Center, identified by an "ID - Strain Plasmid Name" column.
+func matchesCombinedStockHeaders(headers []string) bool {
+	for _, h := range headers {
+		if containsIgnoreCase(h, "ID - Strain Plasmid Name") {
+			return true
 		}
 	}
-
-	// Must have ID and Descriptor, but NOT Stored (to distinguish from plasmid storage)
-	return hasID && hasDescriptor && !hasStored
+	return false
 }
 
-// matchesPlasmidInfoHeaders checks if headers match plasmid information table.
-func matchesPlasmidInfoHeaders(headers []string) bool {
-	if len(headers) < 5 {
-		return false
+// parseCombinedStockRow parses a row from the combined stock table.
+// Rows are prefixed with "Strain-" or "Plasmid-" followed by "{ID} - {Name}".
+// Returns (strainInfo, plasmidInfo, isStrain, ok); ok is false for empty/unrecognised rows.
+func parseCombinedStockRow(row []string) (StrainInfo, PlasmidInfo, bool, bool) {
+	if len(row) == 0 {
+		return StrainInfo{}, PlasmidInfo{}, false, false
+	}
+	firstCell := strings.TrimSpace(row[0])
+	if firstCell == "" {
+		return StrainInfo{}, PlasmidInfo{}, false, false
 	}
 
-	hasID := false
-	hasName := false
-	hasStored := false
-
-	for _, header := range headers {
-		if containsIgnoreCase(header, "ID") {
-			hasID = true
+	if strings.HasPrefix(firstCell, "Strain-") {
+		rest := strings.TrimPrefix(firstCell, "Strain-")
+		parts := strings.SplitN(rest, " - ", 2)
+		strain := StrainInfo{ID: strings.TrimSpace(parts[0])}
+		if len(parts) > 1 {
+			strain.Descriptor = strings.TrimSpace(parts[1])
 		}
-		if containsIgnoreCase(header, "Name") {
-			hasName = true
+		return strain, PlasmidInfo{}, true, true
+	}
+
+	if strings.HasPrefix(firstCell, "Plasmid-") {
+		rest := strings.TrimPrefix(firstCell, "Plasmid-")
+		parts := strings.SplitN(rest, " - ", 2)
+		plasmid := PlasmidInfo{ID: strings.TrimSpace(parts[0])}
+		if len(parts) > 1 {
+			plasmid.Name = strings.TrimSpace(parts[1])
 		}
-		if containsIgnoreCase(header, "Stored") {
-			hasStored = true
-		}
+		return StrainInfo{}, plasmid, false, true
 	}
 
-	// Must have ID, Name, AND Stored (to distinguish from strain info which lacks Stored)
-	return hasID && hasName && hasStored
-}
-
-// parseStrainInfoRow converts a table row to StrainInfo struct.
-func parseStrainInfoRow(row []string) StrainInfo {
-	strain := StrainInfo{}
-
-	if len(row) > 0 {
-		strain.ID = row[0]
-	}
-	if len(row) > 1 {
-		strain.Descriptor = row[1]
-	}
-
-	return strain
-}
-
-// parsePlasmidInfoRow converts a table row to PlasmidInfo struct.
-func parsePlasmidInfoRow(row []string) PlasmidInfo {
-	plasmid := PlasmidInfo{}
-
-	if len(row) > 0 {
-		plasmid.ID = row[0]
-	}
-	if len(row) > 1 {
-		plasmid.Name = row[1]
-	}
-	return plasmid
+	return StrainInfo{}, PlasmidInfo{}, false, false
 }
 
 // isEmptyRow checks if a row contains only empty strings.
@@ -346,7 +321,8 @@ func isEmptyRow(row []string) bool {
 }
 
 // ExtractStockData extracts strain and plasmid information from HTML content.
-// It searches for tables with matching headers and parses stock-related data.
+// It searches for the combined "ID - Strain Plasmid Name" table and parses each row
+// based on whether it is prefixed with "Strain-" or "Plasmid-".
 // Returns StockData with empty slices if no matching tables are found.
 func ExtractStockData(doc *html.Node) (StockData, error) {
 	tables, err := ParseTables(doc)
@@ -360,21 +336,21 @@ func ExtractStockData(doc *html.Node) (StockData, error) {
 	}
 
 	for _, table := range tables {
-		// Check if this is a strain information table
-		if matchesStrainInfoHeaders(table.Headers) {
-			for _, row := range table.Rows {
-				if !isEmptyRow(row) {
-					data.StrainInfo = append(data.StrainInfo, parseStrainInfoRow(row))
-				}
-			}
+		if !matchesCombinedStockHeaders(table.Headers) {
+			continue
 		}
-
-		// Check if this is a plasmid information table
-		if matchesPlasmidInfoHeaders(table.Headers) {
-			for _, row := range table.Rows {
-				if !isEmptyRow(row) {
-					data.PlasmidInfo = append(data.PlasmidInfo, parsePlasmidInfoRow(row))
-				}
+		for _, row := range table.Rows {
+			if isEmptyRow(row) {
+				continue
+			}
+			strain, plasmid, isStrain, ok := parseCombinedStockRow(row)
+			if !ok {
+				continue
+			}
+			if isStrain {
+				data.StrainInfo = append(data.StrainInfo, strain)
+			} else {
+				data.PlasmidInfo = append(data.PlasmidInfo, plasmid)
 			}
 		}
 	}

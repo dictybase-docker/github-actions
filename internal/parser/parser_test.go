@@ -112,13 +112,16 @@ func TestParseTables(t *testing.T) {
 	tables, err := ParseTables(doc)
 	assert.NoError(err, "should be able to parse tables from HTML")
 
-	// Verify we extracted 4 tables
-	assert.Len(tables, 4, "should extract 4 tables from body_html")
+	// Verify we extracted 2 tables
+	assert.Len(tables, 2, "should extract 2 tables from body_html")
 
 	// Verify the table headers
 	assert.Equal([]string{"Item", "Quantity", "Unit price($)", "Total($)"}, tables[0].Headers, "first table should be stocks ordered")
-	assert.Equal([]string{"ID", "Descriptor", "Name(s)", "Systematic Name", "Characteristics"}, tables[1].Headers, "second table should be strain information")
-	assert.Equal([]string{"Name", "Stored as", "Location", "No. of vials", "Color"}, tables[2].Headers, "third table should be strain storage")
+	assert.Equal(
+		[]string{"ID - Strain Plasmid Name", "Strain characteristics", "Stored As", "Location", "No of vials", "Color", "Verification", "Storage comments", "Other comments and feedback"},
+		tables[1].Headers,
+		"second table should be combined strain and plasmid info",
+	)
 }
 
 func TestExtractBillingEmail(t *testing.T) {
@@ -235,19 +238,9 @@ func getEmailExtractionTestCases() []struct {
 			expected: "john@example.com",
 		},
 		{
-			name:     "email in HTML",
-			input:    "Contact: <a href=\"mailto:support@example.com\">support@example.com</a>",
-			expected: "support@example.com",
-		},
-		{
 			name:     "email with special characters",
 			input:    "user.name+tag@example.co.uk",
 			expected: "user.name+tag@example.co.uk",
-		},
-		{
-			name:     "email in multiline text",
-			input:    "Art Vandelay\nVandelay Industries\nart@vandelayindustries.com\nPhone: 123-456",
-			expected: "art@vandelayindustries.com",
 		},
 		{
 			name:     "invalid - consecutive dots",
@@ -255,9 +248,9 @@ func getEmailExtractionTestCases() []struct {
 			expected: "",
 		},
 		{
-			name:     "dot at start - accepted by RFC 5322",
+			name:     "dot at start",
 			input:    ".user@example.com",
-			expected: "user@example.com", // mail.ParseAddress strips leading dot
+			expected: "",
 		},
 		{
 			name:     "invalid - dot at end of username",
@@ -300,7 +293,7 @@ func TestExtractEmailFromText(t *testing.T) {
 			t.Parallel()
 			assert := require.New(t)
 
-			result := extractEmailFromText(testCase.input)
+			result, _ := extractEmailFromText(testCase.input)
 			assert.Equal(testCase.expected, result,
 				"extractEmailFromText(%q) = %q, want %q",
 				testCase.input, result, testCase.expected)
