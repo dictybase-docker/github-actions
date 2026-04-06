@@ -135,41 +135,51 @@ func getTextContent(n *html.Node) string {
 	return strings.TrimSpace(text.String())
 }
 
-// ExtractBillingEmail finds a table with "Billing Address" header and extracts the email from that column.
+// ExtractBillingEmail finds an h2 element with text "Ship To:" and extracts the email
+// from a div element following it (at any nesting depth).
 func ExtractBillingEmail(doc *html.Node) (string, error) {
-	tables, err := ParseTables(doc)
-	if err != nil {
-		return "", fmt.Errorf("error parsing tables: %w", err)
+	shipToH2 := findH2WithText(doc, "Ship To:")
+	if shipToH2 == nil {
+		return "", fmt.Errorf("'Ship To:' heading not found")
 	}
 
-	// Find table with "Billing Address" header
-	for _, table := range tables {
-		billingColIndex := -1
-
-		// Search for "Billing Address" header (case-insensitive)
-		for i, header := range table.Headers {
-			if strings.Contains(strings.ToLower(header), "billing") &&
-				strings.Contains(strings.ToLower(header), "address") {
-				billingColIndex = i
-				break
-			}
-		}
-
-		// If this table has the billing address column
-		if billingColIndex != -1 {
-			// Search all rows for an email in the billing address column
-			for _, row := range table.Rows {
-				if billingColIndex < len(row) {
-					email := extractEmailFromText(row[billingColIndex])
-					if email != "" {
-						return email, nil
-					}
-				}
-			}
+	for sib := shipToH2.NextSibling; sib != nil; sib = sib.NextSibling {
+		if email := findEmailInDiv(sib); email != "" {
+			return email, nil
 		}
 	}
 
 	return "", fmt.Errorf("billing address email not found")
+}
+
+// findH2WithText searches recursively for an h2 element with the given text content.
+func findH2WithText(n *html.Node, text string) *html.Node {
+	if n.Type == html.ElementNode && n.Data == "h2" {
+		if strings.TrimSpace(getTextContent(n)) == text {
+			return n
+		}
+	}
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		if result := findH2WithText(c, text); result != nil {
+			return result
+		}
+	}
+	return nil
+}
+
+// findEmailInDiv recursively searches a node subtree for a div containing an email address.
+func findEmailInDiv(n *html.Node) string {
+	if n.Type == html.ElementNode && n.Data == "div" {
+		if email := extractEmailFromText(getTextContent(n)); email != "" {
+			return email
+		}
+	}
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		if email := findEmailInDiv(c); email != "" {
+			return email
+		}
+	}
+	return ""
 }
 
 // extractEmailFromText extracts an email address from a string using regex.

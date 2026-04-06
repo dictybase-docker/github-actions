@@ -113,13 +113,12 @@ func TestParseTables(t *testing.T) {
 	assert.NoError(err, "should be able to parse tables from HTML")
 
 	// Verify we extracted 4 tables
-	assert.Len(tables, 5, "should extract 5 tables from body_html")
+	assert.Len(tables, 4, "should extract 4 tables from body_html")
 
 	// Verify the table headers
-	assert.Equal([]string{"Shipping address", "", "Billing address"}, tables[0].Headers, "first table should be shipping and billing information")
-	assert.Equal([]string{"Item", "Quantity", "Unit price($)", "Total($)"}, tables[1].Headers, "second table should be stocks ordered")
-	assert.Equal([]string{"ID", "Descriptor", "Name(s)", "Systematic Name", "Characteristics"}, tables[2].Headers, "third table should be strain information")
-	assert.Equal([]string{"Name", "Stored as", "Location", "No. of vials", "Color"}, tables[3].Headers, "fourth table should be strain storage")
+	assert.Equal([]string{"Item", "Quantity", "Unit price($)", "Total($)"}, tables[0].Headers, "first table should be stocks ordered")
+	assert.Equal([]string{"ID", "Descriptor", "Name(s)", "Systematic Name", "Characteristics"}, tables[1].Headers, "second table should be strain information")
+	assert.Equal([]string{"Name", "Stored as", "Location", "No. of vials", "Color"}, tables[2].Headers, "third table should be strain storage")
 }
 
 func TestExtractBillingEmail(t *testing.T) {
@@ -211,6 +210,100 @@ func TestMarkdownToHTML(t *testing.T) {
 			assert.NotNil(htmlNode, "HTML node should not be nil")
 
 			verifyHTMLContent(t, htmlNode, testCase.containsHTML, testCase.notContainsHTML)
+		})
+	}
+}
+
+func getEmailExtractionTestCases() []struct {
+	name     string
+	input    string
+	expected string
+} {
+	return []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "simple email",
+			input:    "user@example.com",
+			expected: "user@example.com",
+		},
+		{
+			name:     "email with name",
+			input:    "John Doe <john@example.com>",
+			expected: "john@example.com",
+		},
+		{
+			name:     "email in HTML",
+			input:    "Contact: <a href=\"mailto:support@example.com\">support@example.com</a>",
+			expected: "support@example.com",
+		},
+		{
+			name:     "email with special characters",
+			input:    "user.name+tag@example.co.uk",
+			expected: "user.name+tag@example.co.uk",
+		},
+		{
+			name:     "email in multiline text",
+			input:    "Art Vandelay\nVandelay Industries\nart@vandelayindustries.com\nPhone: 123-456",
+			expected: "art@vandelayindustries.com",
+		},
+		{
+			name:     "invalid - consecutive dots",
+			input:    "user..name@example.com",
+			expected: "",
+		},
+		{
+			name:     "dot at start - accepted by RFC 5322",
+			input:    ".user@example.com",
+			expected: "user@example.com", // mail.ParseAddress strips leading dot
+		},
+		{
+			name:     "invalid - dot at end of username",
+			input:    "user.@example.com",
+			expected: "",
+		},
+		{
+			name:     "hyphen at domain start - accepted by RFC 5322 but invalid DNS",
+			input:    "user@-example.com",
+			expected: "user@-example.com", // mail.ParseAddress allows this
+		},
+		{
+			name:     "invalid - no domain",
+			input:    "user@",
+			expected: "",
+		},
+		{
+			name:     "no email present",
+			input:    "Just some text without an email",
+			expected: "",
+		},
+		{
+			name:     "empty string",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "email with subdomain",
+			input:    "admin@mail.example.com",
+			expected: "admin@mail.example.com",
+		},
+	}
+}
+
+func TestExtractEmailFromText(t *testing.T) {
+	t.Parallel()
+
+	for _, testCase := range getEmailExtractionTestCases() {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			assert := require.New(t)
+
+			result := extractEmailFromText(testCase.input)
+			assert.Equal(testCase.expected, result,
+				"extractEmailFromText(%q) = %q, want %q",
+				testCase.input, result, testCase.expected)
 		})
 	}
 }
