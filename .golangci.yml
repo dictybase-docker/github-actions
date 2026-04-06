@@ -1,17 +1,10 @@
-linters-settings:
-   lll:
-      line-length: 2380
-   funlen:
-      lines: 75
-   errcheck:
-      ignore : ""
+version: "2"
 linters:
-  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
-  disable-all: true
+  default: none
   enable:
     - asciicheck
     - bodyclose
-    - cyclop 
+    - cyclop
     - decorder
     - dogsled
     - dupl
@@ -19,16 +12,13 @@ linters:
     - errname
     - funlen
     - gochecknoinits
+    - gocognit
     - goconst
     - gocritic
     - gocyclo
     - godot
-    - gofmt
-    - goimports
     - gosec
-    - gosimple
     - govet
-    - gocognit
     - ineffassign
     - lll
     - maintidx
@@ -37,25 +27,45 @@ linters:
     - nestif
     - nilerr
     - nolintlint
-    - prealloc
     - paralleltest
+    - prealloc
     - revive
     - rowserrcheck
     - staticcheck
-    - stylecheck
-    - typecheck
-    - unconvert
     - thelper
     - tparallel
-    - unparam
-    - unused
     - unconvert
     - unparam
+    - unused
     - varnamelen
     - wastedassign
     - whitespace
     - wrapcheck
-
-  # don't enable:
-  # - godox - maligned,prealloc
-  # - gochecknoglobals
+  settings:
+    errcheck:
+      disable-default-exclusions: true
+    funlen:
+      lines: 75
+    lll:
+      line-length: 2380
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
