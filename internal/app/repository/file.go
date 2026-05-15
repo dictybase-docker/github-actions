@@ -21,16 +21,19 @@ func BatchMultiRepo(clt *cli.Context) error {
 	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
 	if err != nil {
 		return cli.NewExitError(
-			fmt.Sprintf("error in getting github client %s", err), 2)
+			fmt.Sprintf("error in getting github client %s", err), exitFailure)
 	}
+
 	rfl, wbc, err := readFiles(clt)
 	if err != nil {
-		return cli.NewExitError(err.Error(), 2)
+		return cli.NewExitError(err.Error(), exitFailure)
 	}
+
 	path := fmt.Sprintf(
 		"%s/%s", clt.String("repository-path"),
 		filepath.Base(clt.String("input-file")),
 	)
+
 	msg := github.String(
 		fmt.Sprintf("adding %s file",
 			filepath.Base(clt.String("input-file")),
@@ -51,9 +54,10 @@ func BatchMultiRepo(clt *cli.Context) error {
 				fmt.Sprintf("error in adding file %s to repository %s %s",
 					path, fmt.Sprintf("%s/%s", rpo.owner, rpo.name), err,
 				),
-				2,
+				exitFailure,
 			)
 		}
+
 		logger.GetLogger(clt).Debugf(
 			"uploaded file %s to repository %s", path,
 			fmt.Sprintf("%s/%s", rpo.owner, rpo.name),
@@ -65,6 +69,7 @@ func BatchMultiRepo(clt *cli.Context) error {
 
 func readFiles(clt *cli.Context) ([]byte, []byte, error) {
 	var byr []byte
+
 	rpl, err := os.ReadFile(clt.String("repository-list"))
 	if err != nil {
 		return rpl, byr, fmt.Errorf(
@@ -73,6 +78,7 @@ func readFiles(clt *cli.Context) ([]byte, []byte, error) {
 			err,
 		)
 	}
+
 	wnc, err := os.ReadFile(clt.String("input-file"))
 	if err != nil {
 		return rpl, wnc, fmt.Errorf(
@@ -87,7 +93,8 @@ func readFiles(clt *cli.Context) ([]byte, []byte, error) {
 
 func parseOwnerRepo(str string) []*repo {
 	rpo := make([]*repo, 0)
-	for _, f := range strings.Split(str, "\n") {
+
+	for f := range strings.SplitSeq(str, "\n") {
 		v := strings.Split(f, "/")
 		rpo = append(rpo, &repo{owner: v[0], name: v[1]})
 	}

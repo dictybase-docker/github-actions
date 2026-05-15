@@ -10,6 +10,7 @@ import (
 func GetLogger(clt *cli.Context) *logrus.Entry {
 	log := logrus.New()
 	log.Out = os.Stderr
+
 	switch clt.GlobalString("log-format") {
 	case "text":
 		log.Formatter = &logrus.TextFormatter{
@@ -20,6 +21,7 @@ func GetLogger(clt *cli.Context) *logrus.Entry {
 			TimestampFormat: "02/Jan/2006:15:04:05",
 		}
 	}
+
 	l := clt.GlobalString("log-level")
 	switch l {
 	case "debug":

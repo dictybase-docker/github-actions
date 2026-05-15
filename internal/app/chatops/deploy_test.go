@@ -39,13 +39,16 @@ func (m *mockBranchClient) GetBranch(
 
 func openTestJSON(filename string) (*os.File, error) {
 	file := &os.File{}
+
 	dir, err := os.Getwd()
 	if err != nil {
 		return file, fmt.Errorf("unable to get current dir %s", err)
 	}
+
 	path := filepath.Join(
 		filepath.Dir(dir), "../../testdata", filename,
 	)
+
 	r, err := os.Open(path)
 	if err != nil {
 		return file, fmt.Errorf("error in reading content from file %s", err)
@@ -65,21 +68,19 @@ func TestGetWorkflowInputsFromJSON(t *testing.T) {
 		err,
 		"should not receive error from extracting workflow inputs",
 	)
-	assert.Equal(input.Cluster, "erickube", "should match cluster")
+	assert.Equal("erickube", input.Cluster, "should match cluster")
 	assert.Equal(
-		input.URL,
 		"https://github.com/dictybase-playground/github-actions-experiments/pull/18#issuecomment-690700284",
+		input.URL,
 		"should match html-url",
 	)
-	assert.Equal(input.IssueNumber, "18", "should match issue number")
+	assert.Equal("18", input.IssueNumber, "should match issue number")
 	assert.Equal(
-		input.RepositoryName,
-		"github-actions-experiments",
+		"github-actions-experiments", input.RepositoryName,
 		"should match repository name",
 	)
 	assert.Equal(
-		input.RepositoryOwner,
-		"dictybase-playground",
+		"dictybase-playground", input.RepositoryOwner,
 		"should match repository owner",
 	)
 	assert.Empty(input.Commit, "should have empty commit value")
@@ -94,8 +95,7 @@ func TestGetWorkflowInputsFromJSON(t *testing.T) {
 	)
 	assert.Empty(ijson.Commit, "should have empty commit value")
 	assert.Equal(
-		ijson.Branch,
-		"feature/new-command",
+		"feature/new-command", ijson.Branch,
 		"should have empty branch value",
 	)
 	// check json payload for commits
@@ -108,8 +108,7 @@ func TestGetWorkflowInputsFromJSON(t *testing.T) {
 	)
 	assert.Empty(ijson3.Branch, "should have empty branch value")
 	assert.Equal(
-		ijson3.Commit,
-		"f85f132b3a986c12eb0c2a61d60a5c3dd8347bf3",
+		"f85f132b3a986c12eb0c2a61d60a5c3dd8347bf3", ijson3.Commit,
 		"should match commit value",
 	)
 }
@@ -136,7 +135,7 @@ func TestParsePR(t *testing.T) {
 	}
 	o, err := parsePR(prc, inp)
 	assert.NoError(err, "should not have error from parsing pr")
-	assert.Equal(o.ImageTag, "pr-9-f85f132", "should match pr image tag")
+	assert.Equal("pr-9-f85f132", o.ImageTag, "should match pr image tag")
 	assert.Equal(o.Ref, inp.Commit, "should match ref value")
 
 	// test output when not given a commit
@@ -145,7 +144,7 @@ func TestParsePR(t *testing.T) {
 	}
 	iss2, err := parsePR(prc, i2)
 	assert.NoError(err, "should not have error from parsing pr")
-	assert.Equal(iss2.ImageTag, "pr-9-17f9184", "should match pr image tag")
+	assert.Equal("pr-9-17f9184", iss2.ImageTag, "should match pr image tag")
 	assert.Equal(iss2.Ref, mockSHA, "should match ref value")
 }
 
@@ -171,7 +170,7 @@ func TestParseIssue(t *testing.T) {
 	}
 	o, err := parseIssue(bcl, inp)
 	assert.NoError(err, "should not have error from parsing issue")
-	assert.Equal(o.ImageTag, "f85f132", "should match commit image tag")
+	assert.Equal("f85f132", o.ImageTag, "should match commit image tag")
 	assert.Equal(o.Ref, inp.Commit, "should match ref value")
 	// test when given a branch
 	i2 := &Inputs{
@@ -181,8 +180,7 @@ func TestParseIssue(t *testing.T) {
 	iss2, err := parseIssue(bcl, i2)
 	assert.NoError(err, "should not have error from parsing issue")
 	assert.Equal(
-		iss2.ImageTag,
-		"feature-new-command-17f9184",
+		"feature-new-command-17f9184", iss2.ImageTag,
 		"should match branch image tag",
 	)
 	assert.Equal(iss2.Ref, mockSHA, "should match ref value")

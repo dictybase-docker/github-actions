@@ -3,7 +3,6 @@ package comment
 import (
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -116,6 +115,7 @@ func failAndPassData() map[string][]*reportContent {
 
 func TestMkdownOutput(t *testing.T) {
 	t.Parallel()
+
 	htmlStr := []string{
 		"Full report",
 		"bootstrap",
@@ -127,6 +127,7 @@ func TestMkdownOutput(t *testing.T) {
 	assert := require.New(t)
 	bout, err := mkdownOutput(failAndPassData())
 	assert.NoError(err, "should not produce any error from template execution")
+
 	subslice := []string{
 		"dicty_env",
 		"dicty_pheno",
@@ -135,13 +136,16 @@ func TestMkdownOutput(t *testing.T) {
 		"green is good",
 	}
 	for _, n := range subslice {
-		assert.True(strings.Contains(bout.String(), n))
+		assert.Contains(bout.String(), n)
 	}
+
 	for _, s := range htmlStr {
 		assert.Containsf(bout.String(), s, "should have the string %s", s)
 	}
+
 	bout, err = mkdownOutput(failData())
 	assert.NoError(err, "should not produce any error from template execution")
+
 	subslice = []string{
 		"dicty_env",
 		"dicty_pheno",
@@ -149,23 +153,29 @@ func TestMkdownOutput(t *testing.T) {
 		"green is good",
 	}
 	for _, n := range subslice {
-		assert.True(strings.Contains(bout.String(), n))
+		assert.Contains(bout.String(), n)
 	}
-	assert.False(strings.Contains(bout.String(), "dicty_assay"))
+
+	assert.NotContains(bout.String(), "dicty_assay")
+
 	for _, s := range htmlStr {
 		assert.Containsf(bout.String(), s, "should have the string %s", s)
 	}
+
 	bout, err = mkdownOutput(passData())
 	assert.NoError(err, "should not produce any error from template execution")
+
 	subslice = []string{
 		"dicty_assay",
 		"dicty_flower",
 	}
 	for _, n := range subslice {
-		assert.True(strings.Contains(bout.String(), n))
+		assert.Contains(bout.String(), n)
 	}
-	assert.False(strings.Contains(bout.String(), "dicty_pheno"))
-	assert.False(strings.Contains(bout.String(), "best of the best"))
+
+	assert.NotContains(bout.String(), "dicty_pheno")
+	assert.NotContains(bout.String(), "best of the best")
+
 	for _, s := range htmlStr {
 		assert.Containsf(bout.String(), s, "should have the string %s", s)
 	}
@@ -179,7 +189,9 @@ func TestListCommittedFiles(t *testing.T) {
 		err,
 		"should not throw error from creating a temp file",
 	)
+
 	defer os.Remove(tmpf.Name())
+
 	content := []string{"/onto/dicty_assay.obo", "/pronto/dicty_flower.obo"}
 	for _, line := range content {
 		if _, err := fmt.Fprintf(tmpf, "%s\n", line); err != nil {
@@ -189,6 +201,7 @@ func TestListCommittedFiles(t *testing.T) {
 			)
 		}
 	}
+
 	files, err := listCommittedFiles(tmpf.Name())
 	assert.NoError(err, "should not throw error from getting the list")
 	assert.ElementsMatch(

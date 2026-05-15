@@ -5,6 +5,11 @@ import (
 	"github.com/urfave/cli"
 )
 
+const (
+	defaultPollFor      = 60
+	defaultPollInterval = 2
+)
+
 func MigrateRepositories() cli.Command {
 	return cli.Command{
 		Name:    "migrate-repos",
@@ -25,12 +30,12 @@ func MigrateRepositories() cli.Command {
 			cli.Int64Flag{
 				Name:  "poll-for",
 				Usage: "threshold for polling forked repository(in seconds)",
-				Value: 60,
+				Value: defaultPollFor,
 			},
 			cli.Int64Flag{
 				Name:  "poll-interval",
 				Usage: "polling interval for forked repository(in seconds)",
-				Value: 2,
+				Value: defaultPollInterval,
 			},
 		},
 	}

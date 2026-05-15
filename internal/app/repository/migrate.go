@@ -27,6 +27,7 @@ type poll struct {
 func (p *poll) forRepo() error {
 	ticker := time.NewTicker(p.pollInterval)
 	defer ticker.Stop()
+
 OUTER:
 	for {
 		select {
@@ -38,6 +39,7 @@ OUTER:
 			)
 			if err == nil {
 				p.repoShare <- rpg
+
 				p.log.Debugf(
 					"polling finished for repo %s/%s",
 					rpg.GetName(), rpg.GetOwner().GetLogin(),
@@ -45,10 +47,12 @@ OUTER:
 
 				break OUTER
 			}
+
 			errResp, ok := err.(*gh.ErrorResponse)
 			if !ok {
 				return fmt.Errorf("unexpected github error %s", err)
 			}
+
 			if errResp.Response.StatusCode != http.StatusNotFound {
 				return fmt.Errorf("unexpected github error %s", err)
 			}
@@ -74,7 +78,9 @@ type migration struct {
 
 func (m *migration) createFork() error {
 	defer close(m.repoShare)
+
 	rgr := new(errgroup.Group)
+
 	for _, repo := range m.repositories {
 		rfc, _, err := m.client.Repositories.CreateFork(
 			context.Background(),
@@ -90,6 +96,7 @@ func (m *migration) createFork() error {
 				repo,
 			)
 		}
+
 		if _, ok := err.(*gh.AcceptedError); !ok {
 			return fmt.Errorf(
 				"error in creating fork for repo %s %v",
@@ -97,6 +104,7 @@ func (m *migration) createFork() error {
 				err,
 			)
 		}
+
 		m.log.Debugf(
 			"created fork for repo %s on organization %s\n",
 			repo, rfc.GetOwner().GetLogin(),
@@ -111,6 +119,7 @@ func (m *migration) createFork() error {
 		}
 		rgr.Go(pol.forRepo)
 	}
+
 	if err := rgr.Wait(); err != nil {
 		return fmt.Errorf("error after waiting %s", err)
 	}
@@ -120,8 +129,10 @@ func (m *migration) createFork() error {
 
 func (m *migration) makeArchive() error {
 	defer close(m.repoNameShare)
+
 	for repo := range m.repoShare {
 		repo.Archived = gh.Bool(true)
+
 		_, _, err := m.client.Repositories.Edit(
 			context.Background(),
 			repo.GetOwner().GetLogin(),
@@ -131,7 +142,9 @@ func (m *migration) makeArchive() error {
 		if err != nil {
 			return fmt.Errorf("error in setting archive status %s", err)
 		}
+
 		m.repoNameShare <- repo.GetName()
+
 		m.log.Debugf(
 			"created archive for repo %s/%s",
 			repo.GetName(), repo.GetOwner().GetLogin(),
@@ -151,6 +164,7 @@ func (m *migration) delRepo() error {
 		if err != nil {
 			return fmt.Errorf("error in deleting repo %s %s", repo, err)
 		}
+
 		m.log.Debugf("deleted repo %s", repo)
 	}
 
@@ -162,14 +176,17 @@ func MigrateRepositories(clt *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error in getting github client %s", err),
-			2,
+			exitFailure,
 		)
 	}
+
 	log := logger.GetLogger(clt)
 	deadline := time.Now().
 		Add(time.Duration(clt.Int64("poll-for")) * time.Second)
+
 	ctx, cancelFn := context.WithDeadline(context.Background(), deadline)
 	defer cancelFn()
+
 	mgn := &migration{
 		repositories:  clt.StringSlice("repo-to-move"),
 		from:          clt.GlobalString("owner"),
@@ -185,12 +202,14 @@ func MigrateRepositories(clt *cli.Context) error {
 	fgr.Go(mgn.createFork)
 	fgr.Go(mgn.makeArchive)
 	fgr.Go(mgn.delRepo)
+
 	if err := fgr.Wait(); err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error in migrating repository %s", err),
-			2,
+			exitFailure,
 		)
 	}
+
 	log.Infof("migrated %d repositories", len(clt.StringSlice("repo-to-move")))
 
 	return nil

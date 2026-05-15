@@ -43,6 +43,7 @@ func TestParseViolations(t *testing.T) {
 		"missing ontology title",
 		"should have missing ontology title violation",
 	)
+
 	_, err = ParseViolations(fhd, "FATAL")
 	assert.True(IsViolationNotFound(err), "should be violation not found error")
 }

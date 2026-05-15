@@ -16,6 +16,12 @@ import (
 )
 
 const (
+	issuesPerPage   = 15
+	commentsPerPage = 30
+	exitFailure     = 2
+)
+
+const (
 	layout           = "01/02/2006"
 	dateFilterlayout = "2006-01-02"
 	fileLayout       = "01-02-2006-150405"
@@ -26,13 +32,16 @@ func CommentsCountByDate(clt *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error in getting github client %s", err),
-			2,
+			exitFailure,
 		)
 	}
+
 	opt := &github.SearchOptions{
-		ListOptions: github.ListOptions{PerPage: 15},
+		ListOptions: github.ListOptions{PerPage: issuesPerPage},
 	}
+
 	var totalComments, totalIssues int
+
 	query := fmt.Sprintf(
 		"repo:%s/%s created:>=%s",
 		clt.GlobalString("owner"),
@@ -48,20 +57,25 @@ func CommentsCountByDate(clt *cli.Context) error {
 		if err != nil {
 			return cli.NewExitError(
 				fmt.Sprintf("error in fetching issues %s", err),
-				2,
+				exitFailure,
 			)
 		}
+
 		totalIssues += len(result.Issues)
 		for _, iss := range result.Issues {
 			totalComments += *iss.Comments
 		}
+
 		if resp.NextPage == 0 {
 			break
 		}
+
 		opt.Page = resp.NextPage
 	}
+
 	fmt.Printf("total no of issues %d\n", totalIssues)
 	fmt.Printf("total no of comments %d\n", totalComments)
+
 	return nil
 }
 
@@ -72,6 +86,7 @@ func CommentsReport(clt *cli.Context) error {
 	} else {
 		fname = fmt.Sprintf("%s-%s.csv", clt.String("output"), time.Now().Format(fileLayout))
 	}
+
 	output, err := os.Create(fname)
 	if err != nil {
 		return cli.NewExitError(
@@ -80,22 +95,26 @@ func CommentsReport(clt *cli.Context) error {
 				clt.String("output"),
 				err,
 			),
-			2,
+			exitFailure,
 		)
 	}
 	defer output.Close()
+
 	writer := csv.NewWriter(output)
+
 	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error in getting github client %s", err),
-			2,
+			exitFailure,
 		)
 	}
+
 	count, err := writeIssues(clt, gclient, writer)
 	if err != nil {
-		return cli.NewExitError(err.Error(), 2)
+		return cli.NewExitError(err.Error(), exitFailure)
 	}
+
 	logger.GetLogger(clt).Infof("wrote %d records in the report", count)
 
 	return nil
@@ -107,6 +126,7 @@ func writeIssues(
 	writer *csv.Writer,
 ) (int, error) {
 	count := 0
+
 	err := writer.Write([]string{
 		"Issue ID", "Title", "Total Comments",
 		"Status", "Created On", "Closed On",
@@ -114,6 +134,7 @@ func writeIssues(
 	if err != nil {
 		return count, fmt.Errorf("error in writing file header %s", err)
 	}
+
 	opt := issueOpts(clt)
 	for {
 		issues, resp, err := gclient.Issues.ListByRepo(
@@ -125,14 +146,17 @@ func writeIssues(
 		if err != nil {
 			return count, fmt.Errorf("error in fetching issues %s", err)
 		}
+
 		for _, iss := range issues {
 			if iss.IsPullRequest() {
 				continue
 			}
+
 			var closedStr string
 			if iss.GetState() == "closed" {
 				closedStr = iss.GetClosedAt().Format(layout)
 			}
+
 			err := writer.Write([]string{
 				strconv.Itoa(iss.GetNumber()),
 				iss.GetTitle(),
@@ -147,14 +171,19 @@ func writeIssues(
 					err,
 				)
 			}
+
 			count++
 		}
+
 		if resp.NextPage == 0 {
 			break
 		}
+
 		opt.Page = resp.NextPage
 	}
+
 	writer.Flush()
+
 	if err := writer.Error(); err != nil {
 		return count, fmt.Errorf("error in writing %s", err)
 	}
@@ -166,6 +195,6 @@ func issueOpts(c *cli.Context) *github.IssueListByRepoOptions {
 	return &github.IssueListByRepoOptions{
 		State:       c.String("state"),
 		Sort:        "comments",
-		ListOptions: github.ListOptions{PerPage: 30},
+		ListOptions: github.ListOptions{PerPage: commentsPerPage},
 	}
 }
