@@ -97,6 +97,7 @@ func delRoute() []*route {
 
 func routeTable() []*route {
 	var route []*route
+
 	route = append(route, fetchRoute()...)
 	route = append(route, postRoute()...)
 
@@ -105,6 +106,7 @@ func routeTable() []*route {
 
 func handleNoContent(file string, w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
+
 	if _, err := fmt.Fprint(w, file); err != nil {
 		http.Error(
 			w,
@@ -125,6 +127,7 @@ func handleAccepted(file string, wrt http.ResponseWriter, _ *http.Request) {
 
 		return
 	}
+
 	wrt.WriteHeader(http.StatusAccepted)
 	fmt.Fprint(wrt, string(bfl))
 }
@@ -140,6 +143,7 @@ func handleSuccess(file string, wrt http.ResponseWriter, _ *http.Request) {
 
 		return
 	}
+
 	if _, err := wrt.Write(bfl); err != nil {
 		http.Error(
 			wrt,
@@ -154,13 +158,16 @@ func router(wrt http.ResponseWriter, req *http.Request) {
 		if req.Method != rtbl.method {
 			continue
 		}
+
 		if !rtbl.regexp.MatchString(req.URL.Path) {
 			continue
 		}
+
 		rtbl.fn(rtbl.file, wrt, req)
 
 		return
 	}
+
 	http.NotFound(wrt, req)
 }
 
@@ -169,6 +176,7 @@ func payloadFile(file string) ([]byte, error) {
 	if err != nil {
 		return []byte(""), fmt.Errorf("unable to get current file %s", err)
 	}
+
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return []byte(""), fmt.Errorf("unable to read test file %s", path)

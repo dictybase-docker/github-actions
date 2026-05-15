@@ -23,8 +23,10 @@ func TestCommittedFilesInpush(t *testing.T) {
 	assert := require.New(t)
 	r, err := fake.PushPayload()
 	assert.NoError(err, "should not receive any error from reading push payload")
+
 	server, client := fake.GhServerClient()
 	defer server.Close()
+
 	b, err := NewGithubManager(client).CommittedFilesInPush(r)
 	assert.NoError(
 		err,
@@ -78,8 +80,10 @@ func testPull(t *testing.T, name string) {
 		err,
 		"should not receive any error from reading payload for push",
 	)
+
 	server, client := fake.GhServerClient()
 	defer server.Close()
+
 	b, err := NewGithubManager(client).CommittedFilesInPull(reqp)
 	assert.NoError(
 		err,

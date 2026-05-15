@@ -10,18 +10,23 @@ import (
 	"github.com/urfave/cli"
 )
 
+const exitFailure = 2
+
 func Status(clt *cli.Context) error {
 	logger := logger.GetLogger(clt)
+
 	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error in getting github client %s", err),
-			2,
+			exitFailure,
 		)
 	}
+
 	state := clt.String("state")
 	url := clt.String("url")
 	desc := fmt.Sprintf("setting deployment status %s", clt.String("state"))
+
 	dsp, _, err := gclient.Repositories.CreateDeploymentStatus(
 		context.Background(),
 		clt.GlobalString("owner"),
@@ -39,9 +44,10 @@ func Status(clt *cli.Context) error {
 				state,
 				err,
 			),
-			2,
+			exitFailure,
 		)
 	}
+
 	logger.Infof(
 		"created deployment status %s with id %d",
 		dsp.GetState(),

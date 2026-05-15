@@ -39,6 +39,7 @@ func main() {
 			Value: "dictyBase",
 		},
 	}
+
 	app.Commands = []cli.Command{
 		cmd.IssueCommentCmds(),
 		cmd.CommentsCountByDateCmds(),

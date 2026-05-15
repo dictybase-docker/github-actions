@@ -84,11 +84,13 @@ func (h *Helm) IsChartDeployed(name string) (bool, error) {
 		fmt.Sprintf("^%s$", name),
 		"--short",
 	)
+
 	output, err := cmd.Output()
 	if err != nil {
 		return false,
 			fmt.Errorf("error %s in running command %s", err, cmd.String())
 	}
+
 	trimmed := bytes.TrimSpace(output)
 	if name == string(trimmed) {
 		return true, nil
@@ -111,7 +113,9 @@ func (h *Helm) ServerVersion() (string, error) {
 		"--server",
 		"--short",
 	)
+
 	var out bytes.Buffer
+
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
 		return "", fmt.Errorf("error in getting helm version %s", err)
