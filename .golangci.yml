@@ -1,61 +1,74 @@
-linters-settings:
-   lll:
-      line-length: 2380
-   funlen:
-      lines: 75
-   errcheck:
-      ignore : ""
+version: "2"
+run:
+  allow-parallel-runners: true
 linters:
-  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
-  disable-all: true
+  default: none
   enable:
     - asciicheck
+    - bidichk
     - bodyclose
-    - cyclop 
+    - copyloopvar
+    - cyclop
     - decorder
     - dogsled
-    - dupl
-    - errcheck
-    - errname
     - funlen
-    - gochecknoinits
+    - funcorder
     - goconst
-    - gocritic
     - gocyclo
-    - godot
-    - gofmt
-    - goimports
     - gosec
-    - gosimple
     - govet
     - gocognit
+    - godoclint
+    - intrange
     - ineffassign
+    - importas
+    - inamedparam
+    - interfacebloat
     - lll
+    - loggercheck
     - maintidx
     - misspell
+    - mnd
+    - modernize
     - nakedret
     - nestif
-    - nilerr
-    - nolintlint
-    - prealloc
-    - paralleltest
+    - protogetter
     - revive
-    - rowserrcheck
+    - recvcheck
     - staticcheck
-    - stylecheck
-    - typecheck
+    - testifylint
+    - modernize
     - unconvert
-    - thelper
-    - tparallel
+    - usestdlibvars
     - unparam
     - unused
-    - unconvert
-    - unparam
-    - varnamelen
-    - wastedassign
     - whitespace
-    - wrapcheck
-
-  # don't enable:
-  # - godox - maligned,prealloc
-  # - gochecknoglobals
+    - wsl_v5
+  settings:
+    funlen:
+      lines: 120
+      statements: 50
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+      - internal/baserow/
+      - internal/k8s/
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+    - golines
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
