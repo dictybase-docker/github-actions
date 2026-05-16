@@ -21,14 +21,3 @@ jobs:
         with:
           version: latest 
           args: release --clean
-  release-docker-build:
-    needs: binary
-    uses: dictyBase/workflows/.github/workflows/docker-cross-publish.yaml@develop
-    with:
-      repository: ${{ github.repository }}
-      ref: ${{ github.ref }}
-      image: github-actions
-      dockerfile: build/package/Dockerfile 
-    secrets:
-      dockeruser: ${{ secrets.DOCKERHUB_USER }}
-      dockerpass: ${{ secrets.DOCKER_PASS }}
