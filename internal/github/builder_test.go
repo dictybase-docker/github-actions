@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/dictyBase-docker/github-actions/internal/fake"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -106,4 +107,30 @@ func TestFilterChain(t *testing.T) {
 		"GWDI_Strain_Annotation.txt",
 		"should have GWDI_Strain_Annotation.txt file",
 	)
+}
+
+func TestFilterSuffixEmpty(t *testing.T) {
+	t.Parallel()
+
+	b := &ChangedFilesBuilder{files: nil}
+	result := b.FilterSuffix("obo")
+	assert.Equal(t, b, result)
+}
+
+func TestFilterDeletedEmpty(t *testing.T) {
+	t.Parallel()
+
+	b := &ChangedFilesBuilder{files: nil}
+	result := b.FilterDeleted(true)
+	assert.Equal(t, b, result)
+}
+
+func TestFilterUniqueByNameSingleFile(t *testing.T) {
+	t.Parallel()
+
+	b := &ChangedFilesBuilder{
+		files: []*ChangedFiles{{Name: "foo.obo", Change: "modified"}},
+	}
+	result := b.FilterUniqueByName()
+	assert.Equal(t, b, result)
 }
