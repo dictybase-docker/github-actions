@@ -30,6 +30,12 @@ func TestReadHTMLContent(t *testing.T) {
 		require.NoError(t, err)
 		assert.Empty(t, result)
 	})
+
+	t.Run("directory instead of file", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		_, err := readHTMLContent(tmpDir)
+		assert.Error(t, err)
+	})
 }
 
 func TestReportStatusError(t *testing.T) {
@@ -161,5 +167,27 @@ func TestOntoReport(t *testing.T) {
 		assert.Contains(t, result, "fail")
 		assert.NotContains(t, result, "pass")
 		assert.Len(t, result["fail"], 1)
+	})
+
+	t.Run("with bad json returns error", func(t *testing.T) {
+		reportDir := t.TempDir()
+
+		require.NoError(t,
+			os.WriteFile(
+				filepath.Join(reportDir, "dicty_bad.json"),
+				[]byte("not-json"),
+				0o600,
+			),
+		)
+
+		flagSet := flag.NewFlagSet("test", flag.ContinueOnError)
+		flagSet.String("report-dir", reportDir, "")
+
+		app := cli.NewApp()
+		app.Flags = []cli.Flag{cli.StringFlag{Name: "report-dir"}}
+
+		ctx := cli.NewContext(app, flagSet, nil)
+		_, err := ontoReport(ctx, []string{"dicty_bad"})
+		assert.Error(t, err)
 	})
 }
