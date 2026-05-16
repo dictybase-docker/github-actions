@@ -2,11 +2,14 @@ package analytics
 
 import (
 	"flag"
+	"os"
+	"path/filepath"
 	"testing"
 
 	ga "google.golang.org/api/analyticsreporting/v4"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/urfave/cli"
 )
 
@@ -110,5 +113,71 @@ func TestGenerateReportRequest(t *testing.T) {
 		ctx := cli.NewContext(app, flagSet, nil)
 		req := generateReportRequest(ctx)
 		assert.Equal(t, "2024-06-30", req.DateRanges[0].EndDate)
+	})
+}
+
+func TestWriteOutput(t *testing.T) {
+	t.Parallel()
+
+	res := &ga.GetReportsResponse{
+		Reports: []*ga.Report{{
+			ColumnHeader: &ga.ColumnHeader{
+				Dimensions: []string{"ga:date"},
+				MetricHeader: &ga.MetricHeader{
+					MetricHeaderEntries: []*ga.MetricHeaderEntry{
+						{Name: "ga:sessions"},
+					},
+				},
+			},
+			Data: &ga.ReportData{
+				Rows: []*ga.ReportRow{
+					{
+						Dimensions: []string{"20240101"},
+						Metrics:    []*ga.DateRangeValues{{Values: []string{"100"}}},
+					},
+					{
+						Dimensions: []string{"20240102"},
+						Metrics:    []*ga.DateRangeValues{{Values: []string{"200"}}},
+					},
+				},
+			},
+		}},
+	}
+
+	t.Run("write to file", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		outFile := filepath.Join(tmpDir, "output.csv")
+
+		flagSet := flag.NewFlagSet("test", flag.ContinueOnError)
+		flagSet.String("output", outFile, "")
+
+		app := cli.NewApp()
+		app.Flags = []cli.Flag{cli.StringFlag{Name: "output"}}
+
+		ctx := cli.NewContext(app, flagSet, nil)
+		err := writeOutput(ctx, res)
+		require.NoError(t, err)
+
+		data, err := os.ReadFile(outFile)
+		require.NoError(t, err)
+		assert.Contains(t, string(data), "date,Sessions")
+		assert.Contains(t, string(data), "2024-01-01,100")
+		assert.Contains(t, string(data), "2024-01-02,200")
+	})
+
+	t.Run("write to tmp file", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		outFile := filepath.Join(tmpDir, "report.csv")
+
+		flagSet := flag.NewFlagSet("test", flag.ContinueOnError)
+		flagSet.String("output", outFile, "")
+
+		app := cli.NewApp()
+		app.Flags = []cli.Flag{cli.StringFlag{Name: "output"}}
+
+		ctx := cli.NewContext(app, flagSet, nil)
+		err := writeOutput(ctx, res)
+		require.NoError(t, err)
+		assert.FileExists(t, outFile)
 	})
 }

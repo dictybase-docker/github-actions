@@ -1,12 +1,14 @@
 package comment
 
 import (
+	"flag"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/urfave/cli"
 )
 
 func TestReadHTMLContent(t *testing.T) {
@@ -85,4 +87,79 @@ func TestBaseNoSuffix(t *testing.T) {
 			assert.Equal(t, tt.expected, baseNoSuffix(tt.input))
 		})
 	}
+}
+
+func TestOntoReport(t *testing.T) {
+	t.Parallel()
+
+	t.Run("with fail and pass", func(t *testing.T) {
+		reportDir := t.TempDir()
+
+		failJSON := `[{"level": "ERROR", "violations": [{"missing_title": [{"subject": "test"}]}]}]`
+		require.NoError(t,
+			os.WriteFile(
+				filepath.Join(reportDir, "dicty_pheno.json"),
+				[]byte(failJSON),
+				0o600,
+			),
+		)
+		require.NoError(t,
+			os.WriteFile(
+				filepath.Join(reportDir, "dicty_pheno.html"),
+				[]byte("<html>fail</html>"),
+				0o600,
+			),
+		)
+
+		passJSON := `[{"level": "WARN", "violations": [{"missing_label": [{"subject": "test"}]}]}]` //nolint:gosec
+		require.NoError(t,
+			os.WriteFile(
+				filepath.Join(reportDir, "dicty_assay.json"),
+				[]byte(passJSON),
+				0o600,
+			),
+		)
+
+		flagSet := flag.NewFlagSet("test", flag.ContinueOnError)
+		flagSet.String("report-dir", reportDir, "")
+
+		app := cli.NewApp()
+		app.Flags = []cli.Flag{cli.StringFlag{Name: "report-dir"}}
+
+		ctx := cli.NewContext(app, flagSet, nil)
+		result, err := ontoReport(ctx, []string{"dicty_pheno", "dicty_assay"})
+		require.NoError(t, err)
+		assert.Contains(t, result, "fail")
+		assert.Contains(t, result, "pass")
+		assert.Len(t, result["fail"], 1)
+		assert.Len(t, result["pass"], 1)
+		assert.Equal(t, "dicty_pheno.obo", result["fail"][0].Name)
+		assert.Equal(t, "dicty_assay.obo", result["pass"][0].Name)
+	})
+
+	t.Run("with only failures", func(t *testing.T) {
+		reportDir := t.TempDir()
+
+		failJSON := `[{"level": "ERROR", "violations": [{"missing_title": [{"subject": "test"}]}]}]`
+		require.NoError(t,
+			os.WriteFile(
+				filepath.Join(reportDir, "dicty_env.json"),
+				[]byte(failJSON),
+				0o600,
+			),
+		)
+
+		flagSet := flag.NewFlagSet("test", flag.ContinueOnError)
+		flagSet.String("report-dir", reportDir, "")
+
+		app := cli.NewApp()
+		app.Flags = []cli.Flag{cli.StringFlag{Name: "report-dir"}}
+
+		ctx := cli.NewContext(app, flagSet, nil)
+		result, err := ontoReport(ctx, []string{"dicty_env"})
+		require.NoError(t, err)
+		assert.Contains(t, result, "fail")
+		assert.NotContains(t, result, "pass")
+		assert.Len(t, result["fail"], 1)
+	})
 }
