@@ -1,10 +1,12 @@
 package github
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/dictyBase-docker/github-actions/internal/fake"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -90,4 +92,62 @@ func testPull(t *testing.T, name string) {
 		"should not receive any error from getting a list of committed files",
 	)
 	testCommitList(t, b)
+}
+
+func TestFilterCommittedFilesPush(t *testing.T) {
+	t.Parallel()
+	assert := require.New(t)
+	r, err := fake.PushPayload()
+	assert.NoError(err, "should not receive any error from reading push payload")
+
+	server, client := fake.GhServerClient()
+	defer server.Close()
+
+	files, err := FilterCommittedFiles(&CommittedFilesParams{
+		Client:      client,
+		Input:       r,
+		Event:       "push",
+		FileSuffix:  "obo",
+		SkipDeleted: false,
+	})
+	assert.NoError(err, "should not receive any error from filtering committed files")
+	assert.Len(files, 3, "should have 3 obo files")
+}
+
+func TestFilterCommittedFilesPullRequest(t *testing.T) {
+	t.Parallel()
+	assert := require.New(t)
+	r, err := fake.PullReqPayload("pull-request-sync.json")
+	assert.NoError(err, "should not receive any error from reading pull request payload")
+
+	server, client := fake.GhServerClient()
+	defer server.Close()
+
+	files, err := FilterCommittedFiles(&CommittedFilesParams{
+		Client:      client,
+		Input:       r,
+		Event:       "pull-request",
+		FileSuffix:  "",
+		SkipDeleted: true,
+	})
+	assert.NoError(err, "should not receive any error from filtering committed files")
+	assert.Len(files, 11, "should have 11 files after removing deleted ones")
+}
+
+func TestFilterCommittedFilesUnsupportedEvent(t *testing.T) {
+	t.Parallel()
+
+	server, client := fake.GhServerClient()
+	defer server.Close()
+
+	r := strings.NewReader(`{}`)
+	_, err := FilterCommittedFiles(&CommittedFilesParams{
+		Client:      client,
+		Input:       r,
+		Event:       "unknown-event",
+		FileSuffix:  "",
+		SkipDeleted: false,
+	})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not supported")
 }
