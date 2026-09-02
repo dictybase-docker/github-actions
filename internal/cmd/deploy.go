@@ -39,7 +39,7 @@ func ShareDeployPayloadCmd() cli.Command {
 		Action:  deploy.ShareDeployPayload,
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:     "payload-file,f",
+				Name:     payloadFileFlag,
 				Required: true,
 				Usage:    "Full path to the file that contain the deploy payload",
 			},

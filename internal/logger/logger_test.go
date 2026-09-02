@@ -9,12 +9,14 @@ import (
 	"github.com/urfave/cli"
 )
 
+const infoLevelName = "info"
+
 func newLoggerCtx(logFormat, logLevel string) *cli.Context {
 	flagSet := flag.NewFlagSet("test", flag.ContinueOnError)
 	app := cli.NewApp()
 	app.Flags = []cli.Flag{
-		cli.StringFlag{Name: "log-format", Value: "json"},
-		cli.StringFlag{Name: "log-level", Value: "info"},
+		cli.StringFlag{Name: "log-format", Value: jsonFormat},
+		cli.StringFlag{Name: "log-level", Value: infoLevelName},
 	}
 
 	flagSet.String("log-format", logFormat, "")
@@ -36,51 +38,51 @@ func TestGetLogger(t *testing.T) {
 	}{
 		{
 			name:          "default",
-			logFormat:     "json",
-			logLevel:      "info",
-			wantFormatter: &logrus.JSONFormatter{TimestampFormat: "02/Jan/2006:15:04:05"},
+			logFormat:     jsonFormat,
+			logLevel:      infoLevelName,
+			wantFormatter: &logrus.JSONFormatter{TimestampFormat: timeFormat},
 			wantLevel:     logrus.InfoLevel,
 		},
 		{
 			name:          "text formatter",
 			logFormat:     "text",
-			logLevel:      "info",
-			wantFormatter: &logrus.TextFormatter{TimestampFormat: "02/Jan/2006:15:04:05"},
+			logLevel:      infoLevelName,
+			wantFormatter: &logrus.TextFormatter{TimestampFormat: timeFormat},
 			wantLevel:     logrus.InfoLevel,
 		},
 		{
 			name:          "debug level",
-			logFormat:     "json",
+			logFormat:     jsonFormat,
 			logLevel:      "debug",
-			wantFormatter: &logrus.JSONFormatter{TimestampFormat: "02/Jan/2006:15:04:05"},
+			wantFormatter: &logrus.JSONFormatter{TimestampFormat: timeFormat},
 			wantLevel:     logrus.DebugLevel,
 		},
 		{
 			name:          "warn level",
-			logFormat:     "json",
+			logFormat:     jsonFormat,
 			logLevel:      "warn",
-			wantFormatter: &logrus.JSONFormatter{TimestampFormat: "02/Jan/2006:15:04:05"},
+			wantFormatter: &logrus.JSONFormatter{TimestampFormat: timeFormat},
 			wantLevel:     logrus.WarnLevel,
 		},
 		{
 			name:          "error level",
-			logFormat:     "json",
+			logFormat:     jsonFormat,
 			logLevel:      "error",
-			wantFormatter: &logrus.JSONFormatter{TimestampFormat: "02/Jan/2006:15:04:05"},
+			wantFormatter: &logrus.JSONFormatter{TimestampFormat: timeFormat},
 			wantLevel:     logrus.ErrorLevel,
 		},
 		{
 			name:          "fatal level",
-			logFormat:     "json",
+			logFormat:     jsonFormat,
 			logLevel:      "fatal",
-			wantFormatter: &logrus.JSONFormatter{TimestampFormat: "02/Jan/2006:15:04:05"},
+			wantFormatter: &logrus.JSONFormatter{TimestampFormat: timeFormat},
 			wantLevel:     logrus.FatalLevel,
 		},
 		{
 			name:          "panic level",
-			logFormat:     "json",
+			logFormat:     jsonFormat,
 			logLevel:      "panic",
-			wantFormatter: &logrus.JSONFormatter{TimestampFormat: "02/Jan/2006:15:04:05"},
+			wantFormatter: &logrus.JSONFormatter{TimestampFormat: timeFormat},
 			wantLevel:     logrus.PanicLevel,
 		},
 	}

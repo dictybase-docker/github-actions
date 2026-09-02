@@ -22,13 +22,13 @@ func TestInputOutput(t *testing.T) {
 		require.NoError(t, os.WriteFile(inpFile, []byte(`{"key":"value"}`), 0o600))
 
 		flagSet := flag.NewFlagSet("test", flag.ContinueOnError)
-		flagSet.String("payload-file", inpFile, "")
-		flagSet.String("output", outFile, "")
+		flagSet.String(payloadFileFlag, inpFile, "")
+		flagSet.String(outputFlag, outFile, "")
 
 		app := cli.NewApp()
 		app.Flags = []cli.Flag{
-			cli.StringFlag{Name: "payload-file"},
-			cli.StringFlag{Name: "output"},
+			cli.StringFlag{Name: payloadFileFlag},
+			cli.StringFlag{Name: outputFlag},
 		}
 
 		ctx := cli.NewContext(app, flagSet, nil)
@@ -49,13 +49,13 @@ func TestInputOutput(t *testing.T) {
 		require.NoError(t, os.WriteFile(inpFile, []byte(`{"key":"value"}`), 0o600))
 
 		flagSet := flag.NewFlagSet("test", flag.ContinueOnError)
-		flagSet.String("payload-file", inpFile, "")
-		flagSet.String("output", "", "")
+		flagSet.String(payloadFileFlag, inpFile, "")
+		flagSet.String(outputFlag, "", "")
 
 		app := cli.NewApp()
 		app.Flags = []cli.Flag{
-			cli.StringFlag{Name: "payload-file"},
-			cli.StringFlag{Name: "output"},
+			cli.StringFlag{Name: payloadFileFlag},
+			cli.StringFlag{Name: outputFlag},
 		}
 
 		ctx := cli.NewContext(app, flagSet, nil)
@@ -69,13 +69,13 @@ func TestInputOutput(t *testing.T) {
 
 	t.Run("nonexistent input file", func(t *testing.T) {
 		flagSet := flag.NewFlagSet("test", flag.ContinueOnError)
-		flagSet.String("payload-file", "/nonexistent/file.json", "")
-		flagSet.String("output", "", "")
+		flagSet.String(payloadFileFlag, "/nonexistent/file.json", "")
+		flagSet.String(outputFlag, "", "")
 
 		app := cli.NewApp()
 		app.Flags = []cli.Flag{
-			cli.StringFlag{Name: "payload-file"},
-			cli.StringFlag{Name: "output"},
+			cli.StringFlag{Name: payloadFileFlag},
+			cli.StringFlag{Name: outputFlag},
 		}
 
 		ctx := cli.NewContext(app, flagSet, nil)

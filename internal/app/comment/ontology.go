@@ -65,6 +65,8 @@ type reportContent struct {
 
 const exitFailure = 2
 
+const reportDirFlag = "report-dir"
+
 func OntoReportOnPullComment(clt *cli.Context) error {
 	cf, err := listCommittedFiles(clt.String("commit-list-file"))
 	if err != nil {
@@ -101,7 +103,7 @@ func ontoReport(
 		html, err := readHTMLContent(
 			fmt.Sprintf(
 				"%s.html",
-				filepath.Join(clt.String("report-dir"), folder),
+				filepath.Join(clt.String(reportDirFlag), folder),
 			),
 		)
 		if err != nil {
@@ -109,7 +111,7 @@ func ontoReport(
 		}
 
 		viol, err := ontology.ParseViolations(
-			fmt.Sprintf("%s/%s.json", clt.String("report-dir"), folder),
+			fmt.Sprintf("%s/%s.json", clt.String(reportDirFlag), folder),
 			"ERROR",
 		)
 		if err != nil {

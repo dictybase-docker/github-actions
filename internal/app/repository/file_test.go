@@ -6,6 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const ownerName = "dictybase"
+
 func TestParseOwnerRepo(t *testing.T) {
 	t.Parallel()
 
@@ -18,15 +20,15 @@ func TestParseOwnerRepo(t *testing.T) {
 			name:  "single repo",
 			input: "dictybase/foobar",
 			expected: []*repo{
-				{owner: "dictybase", name: "foobar"},
+				{owner: ownerName, name: "foobar"},
 			},
 		},
 		{
 			name:  "multiple repos",
 			input: "dictybase/foobar\ndictybase/baz",
 			expected: []*repo{
-				{owner: "dictybase", name: "foobar"},
-				{owner: "dictybase", name: "baz"},
+				{owner: ownerName, name: "foobar"},
+				{owner: ownerName, name: "baz"},
 			},
 		},
 	}

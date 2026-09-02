@@ -10,12 +10,13 @@ import (
 
 	gofn "github.com/repeale/fp-go"
 	"github.com/urfave/cli"
-	"golang.org/x/exp/slices"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	ga "google.golang.org/api/analyticsreporting/v4"
 	"google.golang.org/api/option"
 )
+
+const sessionsMetric = "ga:sessions"
 
 func generateReportRequest(clt *cli.Context) *ga.ReportRequest {
 	endDate := time.Now().Format("2006-01-02")
@@ -32,7 +33,7 @@ func generateReportRequest(clt *cli.Context) *ga.ReportRequest {
 			{Name: "ga:Date"},
 		},
 		Metrics: []*ga.Metric{
-			{Expression: "ga:sessions"},
+			{Expression: sessionsMetric},
 			{Expression: "ga:pageviews"},
 			{Expression: "ga:users"},
 		},
@@ -81,7 +82,7 @@ func writeOutput(clt *cli.Context, res *ga.GetReportsResponse) error {
 
 	for _, row := range res.Reports[0].Data.Rows {
 		for _, metric := range row.Metrics {
-			dataRow := slices.Insert(metric.Values, 0, fmtDate(row.Dimensions[0]))
+			dataRow := append([]string{fmtDate(row.Dimensions[0])}, metric.Values...)
 			if err = wrt.Write(dataRow); err != nil {
 				return fmt.Errorf("error in writing data %s", err)
 			}
@@ -108,7 +109,7 @@ func processReportHeader(res *ga.GetReportsResponse) []string {
 	dim := res.Reports[0].ColumnHeader.Dimensions[0]
 	pipeline := gofn.Pipe3(gofn.Map(metricName), gofn.Map(removeGAprefix), gofn.Map(ucFirst))
 
-	return slices.Insert(pipeline(hentries), 0, removeGAprefix(dim))
+	return append([]string{removeGAprefix(dim)}, pipeline(hentries)...)
 }
 
 func ucFirst(s string) string {
