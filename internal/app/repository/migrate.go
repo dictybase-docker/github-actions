@@ -131,7 +131,7 @@ func (m *migration) makeArchive() error {
 	defer close(m.repoNameShare)
 
 	for repo := range m.repoShare {
-		repo.Archived = gh.Bool(true)
+		repo.Archived = new(true)
 
 		_, _, err := m.client.Repositories.Edit(
 			context.Background(),
