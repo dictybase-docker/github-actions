@@ -6,7 +6,7 @@
 ![Last commit](https://badgen.net/github/last-commit/dictybase-docker/github-actions/develop)
 [![Funding](https://badgen.net/badge/Funding/Rex%20L%20Chisholm,dictyBase,DCR/yellow?list=|)](https://reporter.nih.gov/project-details/10024726)
 
-![Go](https://badgen.net/static/go/1.25/00ADD8)
+![Go](https://badgen.net/static/go/1.26/00ADD8)
 [![GitHub release](https://badgen.net/github/release/dictybase-docker/github-actions)](https://github.com/dictybase-docker/github-actions/releases)
 
 CLI to manage dictyBase GitHub actions, deployments, and repository operations.

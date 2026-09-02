@@ -192,7 +192,7 @@ func createCommentFromReport(args *reportParams) error {
 		args.repository,
 		args.prid,
 		&github.IssueComment{
-			Body: github.String(mkd.String()),
+			Body: new(mkd.String()),
 		})
 	if err != nil {
 		return fmt.Errorf("error in creating pull request comment %s", err)

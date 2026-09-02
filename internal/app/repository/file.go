@@ -34,7 +34,7 @@ func BatchMultiRepo(clt *cli.Context) error {
 		filepath.Base(clt.String("input-file")),
 	)
 
-	msg := github.String(
+	msg := new(
 		fmt.Sprintf("adding %s file",
 			filepath.Base(clt.String("input-file")),
 		),
@@ -46,7 +46,7 @@ func BatchMultiRepo(clt *cli.Context) error {
 			&github.RepositoryContentFileOptions{
 				Message: msg,
 				Content: wbc,
-				Branch:  github.String(clt.String("branch")),
+				Branch:  new(clt.String("branch")),
 			},
 		)
 		if err != nil {
