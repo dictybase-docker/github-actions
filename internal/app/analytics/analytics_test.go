@@ -41,15 +41,15 @@ func TestUcFirst(t *testing.T) {
 func TestRemoveGAprefix(t *testing.T) {
 	t.Parallel()
 	assert.Equal(t, "date", removeGAprefix("ga:date"))
-	assert.Equal(t, "sessions", removeGAprefix("ga:sessions"))
+	assert.Equal(t, "sessions", removeGAprefix(sessionsMetric))
 	assert.Equal(t, "noprefix", removeGAprefix("noprefix"))
 }
 
 func TestMetricName(t *testing.T) {
 	t.Parallel()
 
-	entry := &ga.MetricHeaderEntry{Name: "ga:sessions"}
-	assert.Equal(t, "ga:sessions", metricName(entry))
+	entry := &ga.MetricHeaderEntry{Name: sessionsMetric}
+	assert.Equal(t, sessionsMetric, metricName(entry))
 }
 
 func TestProcessReportHeader(t *testing.T) {
@@ -61,7 +61,7 @@ func TestProcessReportHeader(t *testing.T) {
 				Dimensions: []string{"ga:date"},
 				MetricHeader: &ga.MetricHeader{
 					MetricHeaderEntries: []*ga.MetricHeaderEntry{
-						{Name: "ga:sessions"},
+						{Name: sessionsMetric},
 						{Name: "ga:pageviews"},
 						{Name: "ga:users"},
 					},
@@ -125,7 +125,7 @@ func TestWriteOutput(t *testing.T) {
 				Dimensions: []string{"ga:date"},
 				MetricHeader: &ga.MetricHeader{
 					MetricHeaderEntries: []*ga.MetricHeaderEntry{
-						{Name: "ga:sessions"},
+						{Name: sessionsMetric},
 					},
 				},
 			},

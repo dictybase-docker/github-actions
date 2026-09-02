@@ -14,6 +14,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/dictyBase-docker/github-actions/internal/client"
 	"github.com/google/go-github/v62/github"
 	"github.com/sethvargo/go-githubactions"
 	"github.com/urfave/cli"
@@ -47,7 +48,10 @@ func SetupDaggerCheckSum(clt *cli.Context) error {
 		dver = fmt.Sprintf("v%s", clt.String("version"))
 	}
 
-	gclient := github.NewClient(nil)
+	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
+	if err != nil {
+		return cli.NewExitError(err.Error(), exitFailure)
+	}
 
 	rel, err := fetchDaggerRelease(gclient, dver)
 	if err != nil {
@@ -75,7 +79,11 @@ func SetupDaggerCheckSum(clt *cli.Context) error {
 func SetupDaggerBin(clt *cli.Context) error {
 	dver := clt.String("dagger-version")
 	binDir := clt.String("dagger-bin-dir")
-	gclient := github.NewClient(nil)
+
+	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
+	if err != nil {
+		return cli.NewExitError(err.Error(), exitFailure)
+	}
 
 	rel, err := fetchDaggerRelease(gclient, dver)
 	if err != nil {

@@ -50,13 +50,25 @@ const (
 `
 )
 
+const (
+	dictyPheno     = "dicty_pheno"
+	dictyAssay     = "dicty_assay"
+	dictyFlower    = "dicty_flower"
+	dictyEnv       = "dicty_env"
+	dictyPhenoObo  = "dicty_pheno.obo"
+	dictyAssayObo  = "dicty_assay.obo"
+	dictyFlowerObo = "dicty_flower.obo"
+	bestOfTheBest  = "best of the best"
+	greenIsGood    = "green is good"
+)
+
 func failData() map[string][]*reportContent {
 	data := make(map[string][]*reportContent)
 	data["fail"] = []*reportContent{
 		{
-			Name: "dicty_pheno.obo",
+			Name: dictyPhenoObo,
 			Violations: []string{
-				"best of the best",
+				bestOfTheBest,
 				"error in fun",
 				"exceptionally fun",
 			},
@@ -65,7 +77,7 @@ func failData() map[string][]*reportContent {
 			Name: "dicty_env.obo",
 			Violations: []string{
 				"no env",
-				"green is good",
+				greenIsGood,
 			},
 			HTML: fakeHTML,
 		},
@@ -77,8 +89,8 @@ func failData() map[string][]*reportContent {
 func passData() map[string][]*reportContent {
 	data := make(map[string][]*reportContent)
 	data["pass"] = []*reportContent{
-		{Name: "dicty_assay.obo"},
-		{Name: "dicty_flower.obo", HTML: fakeHTML},
+		{Name: dictyAssayObo},
+		{Name: dictyFlowerObo, HTML: fakeHTML},
 		{Name: "foobar.obo"},
 	}
 
@@ -88,15 +100,15 @@ func passData() map[string][]*reportContent {
 func failAndPassData() map[string][]*reportContent {
 	data := make(map[string][]*reportContent)
 	data["pass"] = []*reportContent{
-		{Name: "dicty_assay.obo", HTML: fakeHTML},
-		{Name: "dicty_flower.obo"},
+		{Name: dictyAssayObo, HTML: fakeHTML},
+		{Name: dictyFlowerObo},
 		{Name: "foobar.obo"},
 	}
 	data["fail"] = []*reportContent{
 		{
-			Name: "dicty_pheno.obo",
+			Name: dictyPhenoObo,
 			Violations: []string{
-				"best of the best",
+				bestOfTheBest,
 				"error in fun",
 				"exceptionally fun",
 			},
@@ -105,7 +117,7 @@ func failAndPassData() map[string][]*reportContent {
 			Name: "dicty_env.obo",
 			Violations: []string{
 				"no env",
-				"green is good",
+				greenIsGood,
 			},
 		},
 	}
@@ -129,11 +141,11 @@ func TestMkdownOutput(t *testing.T) {
 	assert.NoError(err, "should not produce any error from template execution")
 
 	subslice := []string{
-		"dicty_env",
-		"dicty_pheno",
-		"dicty_flower",
-		"best of the best",
-		"green is good",
+		dictyEnv,
+		dictyPheno,
+		dictyFlower,
+		bestOfTheBest,
+		greenIsGood,
 	}
 	for _, n := range subslice {
 		assert.Contains(bout.String(), n)
@@ -147,16 +159,16 @@ func TestMkdownOutput(t *testing.T) {
 	assert.NoError(err, "should not produce any error from template execution")
 
 	subslice = []string{
-		"dicty_env",
-		"dicty_pheno",
-		"best of the best",
-		"green is good",
+		dictyEnv,
+		dictyPheno,
+		bestOfTheBest,
+		greenIsGood,
 	}
 	for _, n := range subslice {
 		assert.Contains(bout.String(), n)
 	}
 
-	assert.NotContains(bout.String(), "dicty_assay")
+	assert.NotContains(bout.String(), dictyAssay)
 
 	for _, s := range htmlStr {
 		assert.Containsf(bout.String(), s, "should have the string %s", s)
@@ -166,15 +178,15 @@ func TestMkdownOutput(t *testing.T) {
 	assert.NoError(err, "should not produce any error from template execution")
 
 	subslice = []string{
-		"dicty_assay",
-		"dicty_flower",
+		dictyAssay,
+		dictyFlower,
 	}
 	for _, n := range subslice {
 		assert.Contains(bout.String(), n)
 	}
 
-	assert.NotContains(bout.String(), "dicty_pheno")
-	assert.NotContains(bout.String(), "best of the best")
+	assert.NotContains(bout.String(), dictyPheno)
+	assert.NotContains(bout.String(), bestOfTheBest)
 
 	for _, s := range htmlStr {
 		assert.Containsf(bout.String(), s, "should have the string %s", s)
@@ -206,7 +218,7 @@ func TestListCommittedFiles(t *testing.T) {
 	assert.NoError(err, "should not throw error from getting the list")
 	assert.ElementsMatch(
 		files,
-		[]string{"dicty_assay", "dicty_flower"},
+		[]string{dictyAssay, dictyFlower},
 		"should match the contents of test file",
 	)
 }

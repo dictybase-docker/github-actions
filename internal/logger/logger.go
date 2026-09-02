@@ -7,6 +7,11 @@ import (
 	"github.com/urfave/cli"
 )
 
+const (
+	jsonFormat = "json"
+	timeFormat = "02/Jan/2006:15:04:05"
+)
+
 func GetLogger(clt *cli.Context) *logrus.Entry {
 	log := logrus.New()
 	log.Out = os.Stderr
@@ -14,11 +19,11 @@ func GetLogger(clt *cli.Context) *logrus.Entry {
 	switch clt.GlobalString("log-format") {
 	case "text":
 		log.Formatter = &logrus.TextFormatter{
-			TimestampFormat: "02/Jan/2006:15:04:05",
+			TimestampFormat: timeFormat,
 		}
-	case "json":
+	case jsonFormat:
 		log.Formatter = &logrus.JSONFormatter{
-			TimestampFormat: "02/Jan/2006:15:04:05",
+			TimestampFormat: timeFormat,
 		}
 	}
 
