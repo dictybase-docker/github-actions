@@ -37,7 +37,7 @@ func CommentsCountByDate(clt *cli.Context) error {
 	}
 
 	opt := &github.SearchOptions{
-		ListOptions: github.ListOptions{PerPage: issuesPerPage},
+		PerPage: issuesPerPage,
 	}
 
 	var totalComments, totalIssues int
@@ -193,8 +193,8 @@ func writeIssues(
 
 func issueOpts(c *cli.Context) *github.IssueListByRepoOptions {
 	return &github.IssueListByRepoOptions{
-		State:       c.String("state"),
-		Sort:        "comments",
-		ListOptions: github.ListOptions{PerPage: commentsPerPage},
+		State:   c.String("state"),
+		Sort:    "comments",
+		PerPage: commentsPerPage,
 	}
 }
