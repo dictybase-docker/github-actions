@@ -168,6 +168,22 @@ func TestExtractBillingEmail(t *testing.T) {
 	)
 }
 
+func TestExtractBillingEmailStopsAtNextHeading(t *testing.T) {
+	t.Parallel()
+
+	for _, level := range []string{"#", "##", "###"} {
+		doc, err := MarkdownToHTML(
+			"## Ship To:\n\n<div>Address only</div>\n\n" + level +
+				" Other section\n\n<div>unrelated@example.com</div>\n",
+		)
+		require.NoError(t, err)
+
+		recipient, err := ExtractBillingEmail(doc)
+		require.Error(t, err, "heading %q must end the Ship To section", level)
+		require.Empty(t, recipient)
+	}
+}
+
 func TestExtractOrderID(t *testing.T) {
 	t.Parallel()
 	assert := require.New(t)

@@ -50,6 +50,15 @@ func NewEmailClient(domain, from, apiKey string) *MailgunClient {
 	}
 }
 
+// SetAPIBase overrides the Mailgun API base URL, e.g. mailgun.APIBaseEU or a test server.
+func (ec *MailgunClient) SetAPIBase(url string) error {
+	if err := ec.mg.SetAPIBase(url); err != nil {
+		return fmt.Errorf("failed to set Mailgun API base: %w", err)
+	}
+
+	return nil
+}
+
 // SendOrderUpdateEmail sends an order update email to the recipient.
 func (ec *MailgunClient) SendOrderUpdateEmail(
 	ctx context.Context,

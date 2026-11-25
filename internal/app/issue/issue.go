@@ -254,9 +254,10 @@ func extractAndValidateOrderData(htmlNode *html.Node, label string) (email.Order
 	}, nil
 }
 
-func fetchAndParseIssue(clt *cli.Context) (*html.Node, error) {
-	// Get GitHub client
-	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
+type githubClientFactory func(token string) (*github.Client, error)
+
+func fetchAndParseIssue(clt *cli.Context, newGithubClient githubClientFactory) (*html.Node, error) {
+	gclient, err := newGithubClient(clt.GlobalString("token"))
 	if err != nil {
 		return nil, cli.NewExitError(
 			fmt.Sprintf("error getting github client: %s", err),
@@ -295,7 +296,28 @@ func fetchAndParseIssue(clt *cli.Context) (*html.Node, error) {
 }
 
 func SendIssueLabelEmail(clt *cli.Context) error {
-	htmlNode, err := fetchAndParseIssue(clt)
+	return sendIssueLabelEmail(clt, client.GetGithubClient)
+}
+
+func sendIssueLabelEmail(clt *cli.Context, newGithubClient githubClientFactory) error {
+	domain := clt.String("domain")
+	apiKey := clt.String("apiKey")
+
+	if domain == "" || apiKey == "" {
+		return cli.NewExitError(
+			"Mailgun domain and apiKey are required",
+			exitFailure,
+		)
+	}
+
+	emailClient := email.NewEmailClient(domain, clt.String("fromEmail"), apiKey)
+	if apiBase := clt.String("apiBase"); apiBase != "" {
+		if err := emailClient.SetAPIBase(apiBase); err != nil {
+			return cli.NewExitError(err.Error(), exitFailure)
+		}
+	}
+
+	htmlNode, err := fetchAndParseIssue(clt, newGithubClient)
 	if err != nil {
 		return err
 	}
@@ -311,21 +333,6 @@ func SendIssueLabelEmail(clt *cli.Context) error {
 		"label":     emailData.Label,
 	})
 	log.Info("Extracted order data from issue")
-
-	// Get Mailgun configuration from flags
-	domain := clt.String("domain")
-	apiKey := clt.String("apiKey")
-	fromEmail := clt.String("fromEmail")
-
-	if domain == "" || apiKey == "" {
-		return cli.NewExitError(
-			"Mailgun domain and apiKey are required",
-			exitFailure,
-		)
-	}
-
-	// Create email client and send email
-	emailClient := email.NewEmailClient(domain, fromEmail, apiKey)
 
 	ctx, cancel := context.WithTimeout(context.Background(), emailTimeout)
 	defer cancel()

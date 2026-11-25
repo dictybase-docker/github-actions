@@ -159,13 +159,27 @@ func ExtractBillingEmail(doc *html.Node) (string, error) {
 		return extractBillingTableEmail(doc)
 	}
 
-	for sib := shipToH2.NextSibling; sib != nil; sib = sib.NextSibling {
+	// The section ends at the next heading so addresses from later sections are never used.
+	for sib := shipToH2.NextSibling; sib != nil && !isHeading(sib); sib = sib.NextSibling {
 		if email := findEmailInDiv(sib); email != "" {
 			return email, nil
 		}
 	}
 
 	return "", fmt.Errorf("billing address email not found")
+}
+
+func isHeading(node *html.Node) bool {
+	if node.Type != html.ElementNode {
+		return false
+	}
+
+	switch node.Data {
+	case "h1", "h2", "h3", "h4", "h5", "h6":
+		return true
+	default:
+		return false
+	}
 }
 
 func extractBillingTableEmail(doc *html.Node) (string, error) {

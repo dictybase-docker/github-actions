@@ -67,6 +67,10 @@ func IssueLabelEmailCmds() cli.Command {
 				Name:  "fromEmail",
 				Usage: "Email address of the sender",
 			},
+			cli.StringFlag{
+				Name:  "apiBase",
+				Usage: "Mailgun API base URL without version, e.g. https://api.eu.mailgun.net (default: US region)",
+			},
 		},
 	}
 }
