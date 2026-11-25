@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	gh "github.com/google/go-github/v32/github"
+	gh "github.com/google/go-github/v62/github"
 )
 
 type CommittedFilesParams struct {
@@ -52,6 +52,7 @@ func (g *Manager) CommittedFilesInPull(
 		pev.GetRepo().GetName(),
 		before,
 		after,
+		nil,
 	)
 	if err != nil {
 		return bcf, fmt.Errorf("error in comparing commits %s", err)
@@ -76,6 +77,7 @@ func (g *Manager) CommittedFilesInPush(
 		pev.GetRepo().GetName(),
 		pev.GetBefore(),
 		pev.GetAfter(),
+		nil,
 	)
 	if err != nil {
 		return bfl, fmt.Errorf("error in comparing commits %s", err)

@@ -303,7 +303,7 @@ func RemoveInvalidControlChars(strc string) string {
 
 	for _, rtc := range strc {
 		if rtc >= 32 && rtc != 127 {
-			builder.WriteRune(rtc)
+			_, _ = builder.WriteRune(rtc)
 		}
 	}
 

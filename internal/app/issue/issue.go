@@ -8,17 +8,20 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dictyBase-docker/github-actions/internal/logger"
-	"github.com/google/go-github/v62/github"
-
 	"github.com/dictyBase-docker/github-actions/internal/client"
+	"github.com/dictyBase-docker/github-actions/internal/email"
+	"github.com/dictyBase-docker/github-actions/internal/logger"
+	parser "github.com/dictyBase-docker/github-actions/internal/parser"
+	"github.com/google/go-github/v62/github"
 	"github.com/urfave/cli"
+	"golang.org/x/net/html"
 )
 
 const (
 	issuesPerPage   = 15
 	commentsPerPage = 30
 	exitFailure     = 2
+	emailTimeout    = 30 * time.Second
 )
 
 const (
@@ -197,4 +200,153 @@ func issueOpts(c *cli.Context) *github.IssueListByRepoOptions {
 		Sort:        "comments",
 		ListOptions: github.ListOptions{PerPage: commentsPerPage},
 	}
+}
+
+func getIssue(gclient *github.Client, clt *cli.Context) (*github.Issue, error) {
+	// Get issue number from context
+	issueNumber := clt.Int("issueid")
+	if issueNumber == 0 {
+		return nil, fmt.Errorf("issue number is required")
+	}
+
+	// Get issue using the Issues API
+	issue, _, err := gclient.Issues.Get(
+		context.Background(),
+		clt.GlobalString("owner"),
+		clt.GlobalString("repository"),
+		issueNumber,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching issue: %w", err)
+	}
+
+	return issue, nil
+}
+
+func getIssueBody(issue *github.Issue) (string, error) {
+	body := issue.GetBody()
+	if body == "" {
+		return "", fmt.Errorf("issue body is empty")
+	}
+
+	return body, nil
+}
+
+func extractAndValidateOrderData(htmlNode *html.Node, label string) (email.OrderEmailData, error) {
+	issueData, err := parser.ExtractOrderData(htmlNode)
+	if err != nil {
+		return email.OrderEmailData{}, fmt.Errorf("error extracting order data: %w", err)
+	}
+
+	if issueData.RecipientEmail == "" {
+		return email.OrderEmailData{}, fmt.Errorf("no recipient email found in issue")
+	}
+
+	if issueData.OrderID == "" {
+		return email.OrderEmailData{}, fmt.Errorf("no order ID found in issue")
+	}
+
+	return email.OrderEmailData{
+		RecipientEmail: issueData.RecipientEmail,
+		OrderID:        issueData.OrderID,
+		Label:          label,
+		StockData:      issueData.StockData,
+	}, nil
+}
+
+type githubClientFactory func(token string) (*github.Client, error)
+
+func fetchAndParseIssue(clt *cli.Context, newGithubClient githubClientFactory) (*html.Node, error) {
+	gclient, err := newGithubClient(clt.GlobalString("token"))
+	if err != nil {
+		return nil, cli.NewExitError(
+			fmt.Sprintf("error getting github client: %s", err),
+			exitFailure,
+		)
+	}
+
+	// Fetch the issue
+	issue, err := getIssue(gclient, clt)
+	if err != nil {
+		return nil, cli.NewExitError(
+			fmt.Sprintf("error fetching issue: %s", err),
+			exitFailure,
+		)
+	}
+
+	// Get the markdown body
+	markdownBody, err := getIssueBody(issue)
+	if err != nil {
+		return nil, cli.NewExitError(
+			fmt.Sprintf("error getting issue body: %s", err),
+			exitFailure,
+		)
+	}
+
+	// Convert markdown to HTML node
+	htmlNode, err := parser.MarkdownToHTML(markdownBody)
+	if err != nil {
+		return nil, cli.NewExitError(
+			fmt.Sprintf("error converting markdown to HTML: %s", err),
+			exitFailure,
+		)
+	}
+
+	return htmlNode, nil
+}
+
+func SendIssueLabelEmail(clt *cli.Context) error {
+	return sendIssueLabelEmail(clt, client.GetGithubClient)
+}
+
+func sendIssueLabelEmail(clt *cli.Context, newGithubClient githubClientFactory) error {
+	domain := clt.String("domain")
+	apiKey := clt.String("apiKey")
+
+	if domain == "" || apiKey == "" {
+		return cli.NewExitError(
+			"Mailgun domain and apiKey are required",
+			exitFailure,
+		)
+	}
+
+	emailClient := email.NewEmailClient(domain, clt.String("fromEmail"), apiKey)
+	if apiBase := clt.String("apiBase"); apiBase != "" {
+		if err := emailClient.SetAPIBase(apiBase); err != nil {
+			return cli.NewExitError(err.Error(), exitFailure)
+		}
+	}
+
+	htmlNode, err := fetchAndParseIssue(clt, newGithubClient)
+	if err != nil {
+		return err
+	}
+
+	emailData, err := extractAndValidateOrderData(htmlNode, clt.String("label"))
+	if err != nil {
+		return cli.NewExitError(err.Error(), exitFailure)
+	}
+
+	log := logger.GetLogger(clt).WithFields(map[string]any{
+		"order_id":  emailData.OrderID,
+		"recipient": emailData.RecipientEmail,
+		"label":     emailData.Label,
+	})
+	log.Info("Extracted order data from issue")
+
+	ctx, cancel := context.WithTimeout(context.Background(), emailTimeout)
+	defer cancel()
+
+	if err := emailClient.SendOrderUpdateFromTemplate(ctx, emailData); err != nil {
+		log.WithField("error", err.Error()).Error("Failed to send email")
+
+		return cli.NewExitError(
+			fmt.Sprintf("error sending email: %s", err),
+			exitFailure,
+		)
+	}
+
+	log.WithField("status", "sent").Info("Successfully sent order update email")
+
+	return nil
 }

@@ -39,3 +39,38 @@ func IssueCommentCmds() cli.Command {
 		},
 	}
 }
+
+func IssueLabelEmailCmds() cli.Command {
+	return cli.Command{
+		Name:    "issue-label-email",
+		Aliases: []string{"ile"},
+		Usage:   "sends an email to a recipient of an order when certain labels are added to the issue",
+		Action:  issue.SendIssueLabelEmail,
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "apiKey",
+				Usage: "API key for mailgun",
+			},
+			cli.IntFlag{
+				Name:  "issueid",
+				Usage: "The id of the issue",
+			},
+			cli.StringFlag{
+				Name:  "label",
+				Usage: "The label that was added to the issue",
+			},
+			cli.StringFlag{
+				Name:  "domain",
+				Usage: "Domain of mailgun endpoint",
+			},
+			cli.StringFlag{
+				Name:  "fromEmail",
+				Usage: "Email address of the sender",
+			},
+			cli.StringFlag{
+				Name:  "apiBase",
+				Usage: "Mailgun API base URL without version, e.g. https://api.eu.mailgun.net (default: US region)",
+			},
+		},
+	}
+}

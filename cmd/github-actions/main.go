@@ -43,6 +43,7 @@ func main() {
 	app.Commands = []cli.Command{
 		cmd.IssueCommentCmds(),
 		cmd.CommentsCountByDateCmds(),
+		cmd.IssueLabelEmailCmds(),
 		cmd.StoreReportCmd(),
 		cmd.DeployStatusCmd(),
 		cmd.ShareDeployPayloadCmd(),

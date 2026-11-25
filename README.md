@@ -17,6 +17,7 @@ CLI to manage dictyBase GitHub actions, deployments, and repository operations.
 - [Commands](#commands)
   - [issue-comment-report](#issue-comment-report)
   - [issue-comment-count](#issue-comment-count)
+  - [issue-label-email](#issue-label-email)
   - [store-report](#store-report)
   - [deploy-status](#deploy-status)
   - [share-deploy-payload](#share-deploy-payload)
@@ -47,6 +48,7 @@ VERSION:
 COMMANDS:
    issue-comment-report, icr      reports no of comments for every issue
    issue-comment-count, icc       reports total no of issues and comments since a particular date
+   issue-label-email, ile         sends an order status email when an issue label is added
    store-report, ur               save report to s3 storage
    deploy-status, ds              create a github deployment status
    share-deploy-payload, sdp      share deployment payload data in github workflow
@@ -100,6 +102,23 @@ gh-action issue-comment-count --date DATE [--output FILE]
 |------|---------|-------------|
 | `--date, -d` | *(required)* | Start date for counting (e.g. `2024-01-01`) |
 | `--output, -o` | `stdout` | Output file path |
+
+### issue-label-email
+
+Send an order status email through Mailgun using the order ID and recipient in an issue body.
+The recipient is read from the `Ship To:` section's HTML address block or, for older
+orders, the `Billing address` table column. The `Ship To:` section ends at the next
+heading; if it has no email, the command fails rather than using an address from another section. The email contains the order number and
+label, without stock tables.
+
+```
+gh-action --owner OWNER --repository REPO issue-label-email --issueid ID --label LABEL --domain DOMAIN --fromEmail SENDER --apiKey MAILGUN_API_KEY
+```
+
+Use `GITHUB_TOKEN` for GitHub authentication. Supply the Mailgun domain, API key, and
+sender address separately; the send operation has a 10-second timeout within the
+command's 30-second email deadline. For EU-region Mailgun domains, add
+`--apiBase https://api.eu.mailgun.net` (the default is the US API).
 
 ### store-report
 

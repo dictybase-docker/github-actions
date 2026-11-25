@@ -14,7 +14,7 @@ import (
 const exitFailure = 2
 
 func FilesCommited(clt *cli.Context) error {
-	gclient, err := client.GetLegacyGithubClient(clt.GlobalString("token"))
+	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error in getting github client %s", err),

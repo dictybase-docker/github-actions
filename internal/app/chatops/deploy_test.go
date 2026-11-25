@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v62/github"
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,6 +33,7 @@ func (m *mockBranchClient) GetBranch(
 	_ string,
 	_ string,
 	_ string,
+	_ int,
 ) (*github.Branch, *github.Response, error) {
 	return m.resp, nil, nil
 }
