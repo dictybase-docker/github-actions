@@ -1,6 +1,6 @@
 module github.com/dictyBase-docker/github-actions
 
-go 1.27.4
+go 1.26.11
 
 require (
 	github.com/Jeffail/gabs/v2 v2.7.0
