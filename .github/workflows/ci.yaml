@@ -8,11 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: set up golang
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
-          go-version: 1.22
+          go-version: 1.26
       - name: unit test
         run: go test -parallel 4 -covermode=atomic -coverprofile=profile.cov -v ./...
       - name: upload coverage to codecov
@@ -20,14 +20,3 @@ jobs:
         with:
           file: ./profile.cov
           token: ${{ secrets.CODECOV_TOKEN }}
-  call-docker-build:
-    needs: test
-    uses: dictyBase/workflows/.github/workflows/docker-cross-publish.yaml@develop
-    with:
-      repository: ${{ github.repository }}
-      ref: ${{ github.ref_name }}
-      image: github-actions
-      dockerfile: build/package/Dockerfile 
-    secrets:
-      dockeruser: ${{ secrets.DOCKERHUB_USER }}
-      dockerpass: ${{ secrets.DOCKER_PASS }}

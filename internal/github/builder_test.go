@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/dictyBase-docker/github-actions/internal/fake"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,6 +16,7 @@ func TestFilterUnique(t *testing.T) {
 		err,
 		"should not receive any error for parsing push event data",
 	)
+
 	files := CommittedFiles(cc).FilterUniqueByName().List()
 	assert.Len(files, 11, "should have committed 11 unique files")
 	assert.Contains(
@@ -32,6 +34,7 @@ func TestFilterDeleted(t *testing.T) {
 		err,
 		"should not receive any error for parsing push event data",
 	)
+
 	files := CommittedFiles(cc).FilterDeleted(true).List()
 	assert.Len(files, 14, "should have committed 14 unique files")
 	assert.Contains(
@@ -49,6 +52,7 @@ func TestFilterSuffix(t *testing.T) {
 		err,
 		"should not receive any error for parsing push event data",
 	)
+
 	files := CommittedFiles(cc).FilterSuffix("obo").List()
 	assert.Len(files, 3, "should have committed 3 unique files")
 	assert.Contains(
@@ -66,8 +70,8 @@ func TestCommitedFiles(t *testing.T) {
 		err,
 		"should not receive any error for parsing push event data",
 	)
-	assert.Equal(ccg.GetStatus(), "ahead", "should match the status")
-	assert.Equal(ccg.GetAheadBy(), 31, "should match ahead by value")
+	assert.Equal("ahead", ccg.GetStatus(), "should match the status")
+	assert.Equal(31, ccg.GetAheadBy(), "should match ahead by value")
 	assert.Equal(
 		ccg.GetTotalCommits(),
 		ccg.GetAheadBy(),
@@ -90,6 +94,7 @@ func TestFilterChain(t *testing.T) {
 		err,
 		"should not receive any error for parsing push event data",
 	)
+
 	files := CommittedFiles(
 		ccg,
 	).FilterSuffix("txt").
@@ -102,4 +107,30 @@ func TestFilterChain(t *testing.T) {
 		"GWDI_Strain_Annotation.txt",
 		"should have GWDI_Strain_Annotation.txt file",
 	)
+}
+
+func TestFilterSuffixEmpty(t *testing.T) {
+	t.Parallel()
+
+	b := &ChangedFilesBuilder{files: nil}
+	result := b.FilterSuffix("obo")
+	assert.Equal(t, b, result)
+}
+
+func TestFilterDeletedEmpty(t *testing.T) {
+	t.Parallel()
+
+	b := &ChangedFilesBuilder{files: nil}
+	result := b.FilterDeleted(true)
+	assert.Equal(t, b, result)
+}
+
+func TestFilterUniqueByNameSingleFile(t *testing.T) {
+	t.Parallel()
+
+	b := &ChangedFilesBuilder{
+		files: []*ChangedFiles{{Name: "foo.obo", Change: "modified"}},
+	}
+	result := b.FilterUniqueByName()
+	assert.Equal(t, b, result)
 }

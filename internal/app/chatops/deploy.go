@@ -57,7 +57,8 @@ type Inputs struct {
 // WorkflowDispatchEvent is triggered when someone triggers a workflow run on GitHub or
 // sends a POST request to the create a workflow dispatch event endpoint.
 //
-// GitHub API docs: https://docs.github.com/en/developers/webhooks-and-events/webhook-events-and-payloads#workflow_dispatch
+// GitHub API docs:
+// https://docs.github.com/en/developers/webhooks-and-events/webhook-events-and-payloads#workflow_dispatch
 type WorkflowDispatchEvent struct {
 	Inputs   json.RawMessage `json:"inputs,omitempty"`
 	Ref      *string         `json:"ref,omitempty"`
@@ -76,10 +77,12 @@ type Output struct {
 
 func getWorkflowInputsFromJSON(r io.Reader) (*Inputs, error) {
 	inp := &Inputs{}
+
 	w := &WorkflowDispatchEvent{}
 	if err := json.NewDecoder(r).Decode(w); err != nil {
 		return inp, fmt.Errorf("error in decoding json %s", err)
 	}
+
 	if err := json.Unmarshal(w.Inputs, &inp); err != nil {
 		return inp, fmt.Errorf("error in decoding json data to struct %s", err)
 	}
@@ -93,24 +96,30 @@ func ParseDeployCommand(clt *cli.Context) error {
 		return fmt.Errorf("error in reading content from file %s", err)
 	}
 	defer r.Close()
+
 	pjson, err := getWorkflowInputsFromJSON(r)
 	if err != nil {
 		return err
 	}
+
 	act := githubactions.New()
 	log := logger.GetLogger(clt)
+
 	oinput, err := parseWorkflowInputs(pjson)
 	if err != nil {
 		return fmt.Errorf("error in parsing workflow inputs %s", err)
 	}
+
 	imageTag := oinput.ImageTag
 	// add image tag prefixes for developers
 	if clt.Bool("frontend") && pjson.Cluster == "erickube" {
 		imageTag = fmt.Sprintf("ericdev-%s", oinput.ImageTag)
 	}
+
 	if clt.Bool("frontend") && pjson.Cluster == "siddkube" {
 		imageTag = fmt.Sprintf("devsidd-%s", oinput.ImageTag)
 	}
+
 	act.SetOutput("image_tag", imageTag)
 	act.SetOutput("ref", oinput.Ref)
 	log.Info("added all keys to the output")
@@ -129,6 +138,7 @@ func parseWorkflowInputs(param *Inputs) (*Output, error) {
 		ctx:          context.Background(),
 		branchClient: client.Repositories,
 	}
+
 	if strings.Contains(param.URL, "pull") {
 		o, err := parsePR(prc, param)
 		if err != nil {
@@ -137,6 +147,7 @@ func parseWorkflowInputs(param *Inputs) (*Output, error) {
 
 		return o, nil
 	}
+
 	o, err := parseIssue(bclient, param)
 	if err != nil {
 		return out, err
@@ -147,6 +158,7 @@ func parseWorkflowInputs(param *Inputs) (*Output, error) {
 
 func parsePR(prc *pullRequestClient, param *Inputs) (*Output, error) {
 	out := &Output{}
+
 	if param.Commit == "" {
 		ref, err := prc.getHeadCommitFromPR(
 			param.RepositoryName,
@@ -156,11 +168,13 @@ func parsePR(prc *pullRequestClient, param *Inputs) (*Output, error) {
 		if err != nil {
 			return out, err
 		}
+
 		out.ImageTag = fmt.Sprintf("pr-%s-%s", param.IssueNumber, ref[0:7])
 		out.Ref = ref
 
 		return out, nil
 	}
+
 	out.ImageTag = fmt.Sprintf("pr-%s-%s", param.IssueNumber, param.Commit[0:7])
 	out.Ref = param.Commit
 
@@ -174,6 +188,7 @@ func (prc *pullRequestClient) getHeadCommitFromPR(
 	if err != nil {
 		return "", fmt.Errorf("error converting string to int %s", err)
 	}
+
 	pgr, _, err := prc.pullRequestClient.Get(
 		context.Background(),
 		owner,
@@ -189,6 +204,7 @@ func (prc *pullRequestClient) getHeadCommitFromPR(
 
 func parseIssue(bc *branchClient, param *Inputs) (*Output, error) {
 	out := &Output{}
+
 	if param.Branch != "" {
 		ref, err := bc.getHeadCommitFromBranch(
 			param.RepositoryName,
@@ -198,12 +214,14 @@ func parseIssue(bc *branchClient, param *Inputs) (*Output, error) {
 		if err != nil {
 			return out, err
 		}
+
 		cb := strings.ReplaceAll(param.Branch, "/", "-")
 		out.ImageTag = fmt.Sprintf("%s-%s", cb, ref[0:7])
 		out.Ref = ref
 
 		return out, nil
 	}
+
 	if param.Commit != "" {
 		out.ImageTag = param.Commit[0:7]
 		out.Ref = param.Commit

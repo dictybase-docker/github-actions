@@ -13,7 +13,7 @@ func FilesCommited() cli.Command {
 		Action:  repository.FilesCommited,
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:     "payload-file,f",
+				Name:     payloadFileFlag,
 				Required: true,
 				Usage:    "Full path to the file that contain the event payload",
 			},

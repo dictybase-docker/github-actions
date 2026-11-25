@@ -8,6 +8,8 @@ import (
 	"github.com/urfave/cli"
 )
 
+const exitFailure = 2
+
 func getS3Host(clt *cli.Context) string {
 	if len(clt.String("s3-server-port")) > 0 {
 		return fmt.Sprintf(
@@ -30,15 +32,19 @@ func SaveInS3(clt *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error in getting minio client %s", err),
-			2,
+			exitFailure,
 		)
 	}
+
 	log := logger.GetLogger(clt)
+
 	path := clt.String("upload-path")
 	if len(path) == 0 {
 		path = clt.String("input")
 	}
+
 	log.Debugf("upload path %s", path)
+
 	_, err = s3Client.FPutObject(
 		clt.String("s3-bucket"),
 		path,
@@ -48,9 +54,10 @@ func SaveInS3(clt *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("unable to upload file %s", err),
-			2,
+			exitFailure,
 		)
 	}
+
 	log.Infof("save file %s to s3 storage", clt.String("input"))
 
 	return nil

@@ -18,6 +18,13 @@ import (
 )
 
 const (
+	issuesPerPage   = 15
+	commentsPerPage = 30
+	exitFailure     = 2
+	emailTimeout    = 30 * time.Second
+)
+
+const (
 	layout           = "01/02/2006"
 	dateFilterlayout = "2006-01-02"
 	fileLayout       = "01-02-2006-150405"
@@ -28,13 +35,16 @@ func CommentsCountByDate(clt *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error in getting github client %s", err),
-			2,
+			exitFailure,
 		)
 	}
+
 	opt := &github.SearchOptions{
-		ListOptions: github.ListOptions{PerPage: 15},
+		ListOptions: github.ListOptions{PerPage: issuesPerPage},
 	}
+
 	var totalComments, totalIssues int
+
 	query := fmt.Sprintf(
 		"repo:%s/%s created:>=%s",
 		clt.GlobalString("owner"),
@@ -50,20 +60,25 @@ func CommentsCountByDate(clt *cli.Context) error {
 		if err != nil {
 			return cli.NewExitError(
 				fmt.Sprintf("error in fetching issues %s", err),
-				2,
+				exitFailure,
 			)
 		}
+
 		totalIssues += len(result.Issues)
 		for _, iss := range result.Issues {
 			totalComments += *iss.Comments
 		}
+
 		if resp.NextPage == 0 {
 			break
 		}
+
 		opt.Page = resp.NextPage
 	}
+
 	fmt.Printf("total no of issues %d\n", totalIssues)
 	fmt.Printf("total no of comments %d\n", totalComments)
+
 	return nil
 }
 
@@ -74,6 +89,7 @@ func CommentsReport(clt *cli.Context) error {
 	} else {
 		fname = fmt.Sprintf("%s-%s.csv", clt.String("output"), time.Now().Format(fileLayout))
 	}
+
 	output, err := os.Create(fname)
 	if err != nil {
 		return cli.NewExitError(
@@ -82,22 +98,26 @@ func CommentsReport(clt *cli.Context) error {
 				clt.String("output"),
 				err,
 			),
-			2,
+			exitFailure,
 		)
 	}
 	defer output.Close()
+
 	writer := csv.NewWriter(output)
+
 	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("error in getting github client %s", err),
-			2,
+			exitFailure,
 		)
 	}
+
 	count, err := writeIssues(clt, gclient, writer)
 	if err != nil {
-		return cli.NewExitError(err.Error(), 2)
+		return cli.NewExitError(err.Error(), exitFailure)
 	}
+
 	logger.GetLogger(clt).Infof("wrote %d records in the report", count)
 
 	return nil
@@ -109,6 +129,7 @@ func writeIssues(
 	writer *csv.Writer,
 ) (int, error) {
 	count := 0
+
 	err := writer.Write([]string{
 		"Issue ID", "Title", "Total Comments",
 		"Status", "Created On", "Closed On",
@@ -116,6 +137,7 @@ func writeIssues(
 	if err != nil {
 		return count, fmt.Errorf("error in writing file header %s", err)
 	}
+
 	opt := issueOpts(clt)
 	for {
 		issues, resp, err := gclient.Issues.ListByRepo(
@@ -127,14 +149,17 @@ func writeIssues(
 		if err != nil {
 			return count, fmt.Errorf("error in fetching issues %s", err)
 		}
+
 		for _, iss := range issues {
 			if iss.IsPullRequest() {
 				continue
 			}
+
 			var closedStr string
 			if iss.GetState() == "closed" {
 				closedStr = iss.GetClosedAt().Format(layout)
 			}
+
 			err := writer.Write([]string{
 				strconv.Itoa(iss.GetNumber()),
 				iss.GetTitle(),
@@ -149,14 +174,19 @@ func writeIssues(
 					err,
 				)
 			}
+
 			count++
 		}
+
 		if resp.NextPage == 0 {
 			break
 		}
+
 		opt.Page = resp.NextPage
 	}
+
 	writer.Flush()
+
 	if err := writer.Error(); err != nil {
 		return count, fmt.Errorf("error in writing %s", err)
 	}
@@ -168,7 +198,7 @@ func issueOpts(c *cli.Context) *github.IssueListByRepoOptions {
 	return &github.IssueListByRepoOptions{
 		State:       c.String("state"),
 		Sort:        "comments",
-		ListOptions: github.ListOptions{PerPage: 30},
+		ListOptions: github.ListOptions{PerPage: commentsPerPage},
 	}
 }
 
@@ -211,6 +241,7 @@ func extractAndValidateOrderData(htmlNode *html.Node, label string) (email.Order
 	if issueData.RecipientEmail == "" {
 		return email.OrderEmailData{}, fmt.Errorf("no recipient email found in issue")
 	}
+
 	if issueData.OrderID == "" {
 		return email.OrderEmailData{}, fmt.Errorf("no order ID found in issue")
 	}
@@ -229,7 +260,7 @@ func fetchAndParseIssue(clt *cli.Context) (*html.Node, error) {
 	if err != nil {
 		return nil, cli.NewExitError(
 			fmt.Sprintf("error getting github client: %s", err),
-			2,
+			exitFailure,
 		)
 	}
 
@@ -238,7 +269,7 @@ func fetchAndParseIssue(clt *cli.Context) (*html.Node, error) {
 	if err != nil {
 		return nil, cli.NewExitError(
 			fmt.Sprintf("error fetching issue: %s", err),
-			2,
+			exitFailure,
 		)
 	}
 
@@ -247,7 +278,7 @@ func fetchAndParseIssue(clt *cli.Context) (*html.Node, error) {
 	if err != nil {
 		return nil, cli.NewExitError(
 			fmt.Sprintf("error getting issue body: %s", err),
-			2,
+			exitFailure,
 		)
 	}
 
@@ -256,7 +287,7 @@ func fetchAndParseIssue(clt *cli.Context) (*html.Node, error) {
 	if err != nil {
 		return nil, cli.NewExitError(
 			fmt.Sprintf("error converting markdown to HTML: %s", err),
-			2,
+			exitFailure,
 		)
 	}
 
@@ -271,15 +302,15 @@ func SendIssueLabelEmail(clt *cli.Context) error {
 
 	emailData, err := extractAndValidateOrderData(htmlNode, clt.String("label"))
 	if err != nil {
-		return cli.NewExitError(err.Error(), 2)
+		return cli.NewExitError(err.Error(), exitFailure)
 	}
 
-	log := logger.GetLogger(clt)
-	log.WithFields(map[string]any{
+	log := logger.GetLogger(clt).WithFields(map[string]any{
 		"order_id":  emailData.OrderID,
 		"recipient": emailData.RecipientEmail,
 		"label":     emailData.Label,
-	}).Info("Extracted order data from issue")
+	})
+	log.Info("Extracted order data from issue")
 
 	// Get Mailgun configuration from flags
 	domain := clt.String("domain")
@@ -289,35 +320,26 @@ func SendIssueLabelEmail(clt *cli.Context) error {
 	if domain == "" || apiKey == "" {
 		return cli.NewExitError(
 			"Mailgun domain and apiKey are required",
-			2,
+			exitFailure,
 		)
 	}
 
 	// Create email client and send email
-	emailClient := email.NewEmailClient(domain, apiKey, fromEmail)
+	emailClient := email.NewEmailClient(domain, fromEmail, apiKey)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), emailTimeout)
 	defer cancel()
 
 	if err := emailClient.SendOrderUpdateFromTemplate(ctx, emailData); err != nil {
-		log.WithFields(map[string]any{
-			"order_id":  emailData.OrderID,
-			"recipient": emailData.RecipientEmail,
-			"label":     emailData.Label,
-			"error":     err.Error(),
-		}).Error("Failed to send email")
+		log.WithField("error", err.Error()).Error("Failed to send email")
+
 		return cli.NewExitError(
 			fmt.Sprintf("error sending email: %s", err),
-			2,
+			exitFailure,
 		)
 	}
 
-	log.WithFields(map[string]any{
-		"order_id":  emailData.OrderID,
-		"recipient": emailData.RecipientEmail,
-		"label":     emailData.Label,
-		"status":    "sent",
-	}).Info("Successfully sent order update email")
+	log.WithField("status", "sent").Info("Successfully sent order update email")
 
 	return nil
 }

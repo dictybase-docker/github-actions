@@ -29,11 +29,14 @@ func (g *Manager) CommittedFilesInPull(
 	r io.Reader,
 ) (*ChangedFilesBuilder, error) {
 	var bcf *ChangedFilesBuilder
+
 	pev := &gh.PullRequestEvent{}
 	if err := json.NewDecoder(r).Decode(pev); err != nil {
 		return bcf, fmt.Errorf("error in decoding json %s", err)
 	}
+
 	var after, before string
+
 	switch pev.GetAction() {
 	case "synchronize":
 		before = pev.GetBefore()
@@ -42,6 +45,7 @@ func (g *Manager) CommittedFilesInPull(
 		before = pev.GetPullRequest().GetBase().GetSHA()
 		after = pev.GetPullRequest().GetHead().GetSHA()
 	}
+
 	comc, _, err := g.client.Repositories.CompareCommits(
 		context.Background(),
 		pev.GetRepo().GetOwner().GetLogin(),
@@ -61,10 +65,12 @@ func (g *Manager) CommittedFilesInPush(
 	r io.Reader,
 ) (*ChangedFilesBuilder, error) {
 	var bfl *ChangedFilesBuilder
+
 	pev := &gh.PushEvent{}
 	if err := json.NewDecoder(r).Decode(pev); err != nil {
 		return bfl, fmt.Errorf("error in decoding json %s", err)
 	}
+
 	comc, _, err := g.client.Repositories.CompareCommits(
 		context.Background(),
 		pev.GetRepo().GetOwner().GetLogin(),
@@ -93,8 +99,11 @@ func CommittedFiles(event *gh.CommitsComparison) *ChangedFilesBuilder {
 }
 
 func FilterCommittedFiles(args *CommittedFilesParams) ([]string, error) {
-	var fbl *ChangedFilesBuilder
-	var err error
+	var (
+		fbl *ChangedFilesBuilder
+		err error
+	)
+
 	switch args.Event {
 	case "push":
 		fbl, err = NewGithubManager(
@@ -107,6 +116,7 @@ func FilterCommittedFiles(args *CommittedFilesParams) ([]string, error) {
 	default:
 		err = fmt.Errorf("event type %s not supported", args.Event)
 	}
+
 	if err != nil {
 		return []string{}, err
 	}

@@ -101,6 +101,7 @@ func TestParseTables(t *testing.T) {
 
 	// Parse JSON to extract body_html
 	var issue IssueData
+
 	err = json.Unmarshal(data, &issue)
 	assert.NoError(err, "should be able to parse JSON")
 
@@ -116,9 +117,23 @@ func TestParseTables(t *testing.T) {
 	assert.Len(tables, 2, "should extract 2 tables from body_html")
 
 	// Verify the table headers
-	assert.Equal([]string{"Item", "Quantity", "Unit price($)", "Total($)"}, tables[0].Headers, "first table should be stocks ordered")
 	assert.Equal(
-		[]string{"ID - Strain Plasmid Name", "Strain characteristics", "Stored As", "Location", "No of vials", "Color", "Verification", "Storage comments", "Other comments and feedback"},
+		[]string{"Item", "Quantity", "Unit price($)", "Total($)"},
+		tables[0].Headers,
+		"first table should be stocks ordered",
+	)
+	assert.Equal(
+		[]string{
+			"ID - Strain Plasmid Name",
+			"Strain characteristics",
+			"Stored As",
+			"Location",
+			"No of vials",
+			"Color",
+			"Verification",
+			"Storage comments",
+			"Other comments and feedback",
+		},
 		tables[1].Headers,
 		"second table should be combined strain and plasmid info",
 	)
@@ -135,6 +150,7 @@ func TestExtractBillingEmail(t *testing.T) {
 
 	// Parse JSON to extract body_html
 	var issue IssueData
+
 	err = json.Unmarshal(data, &issue)
 	assert.NoError(err, "should be able to parse JSON")
 
@@ -145,7 +161,11 @@ func TestExtractBillingEmail(t *testing.T) {
 	// Extract billing email
 	email, err := ExtractBillingEmail(doc)
 	assert.NoError(err, "should be able to extract billing email")
-	assert.Equal("kevin.tun@northwestern.edu", email, "should extract the correct email from billing address column")
+	assert.Equal(
+		"kevin.tun@northwestern.edu",
+		email,
+		"should extract the correct email from billing address column",
+	)
 }
 
 func TestExtractOrderID(t *testing.T) {
@@ -159,6 +179,7 @@ func TestExtractOrderID(t *testing.T) {
 
 	// Parse JSON to extract body_html
 	var issue IssueData
+
 	err = json.Unmarshal(data, &issue)
 	assert.NoError(err, "should be able to parse JSON")
 
@@ -178,6 +199,7 @@ func verifyHTMLContent(t *testing.T, htmlNode *html.Node, containsHTML, notConta
 
 	// Convert HTML node back to string for verification
 	var buf strings.Builder
+
 	err := html.Render(&buf, htmlNode)
 	assert.NoError(err, "should render HTML node to string")
 
@@ -312,6 +334,7 @@ func TestExtractStockData(t *testing.T) {
 
 	// Parse JSON to extract body_html
 	var issue IssueData
+
 	err = json.Unmarshal(data, &issue)
 	assert.NoError(err, "should be able to parse JSON")
 
@@ -328,11 +351,19 @@ func TestExtractStockData(t *testing.T) {
 
 	// Verify first strain entry
 	assert.Equal("DBS0351362", stockData.StrainInfo[0].ID, "first strain should have correct ID")
-	assert.Equal("HL16/HL106", stockData.StrainInfo[0].Descriptor, "first strain should have correct descriptor")
+	assert.Equal(
+		"HL16/HL106",
+		stockData.StrainInfo[0].Descriptor,
+		"first strain should have correct descriptor",
+	)
 
 	// Verify second strain entry
 	assert.Equal("DBS0351363", stockData.StrainInfo[1].ID, "second strain should have correct ID")
-	assert.Equal("HL84/XM101", stockData.StrainInfo[1].Descriptor, "second strain should have correct descriptor")
+	assert.Equal(
+		"HL84/XM101",
+		stockData.StrainInfo[1].Descriptor,
+		"second strain should have correct descriptor",
+	)
 
 	// Verify plasmid information
 	assert.Len(stockData.PlasmidInfo, 4, "should extract 4 plasmid info entries")
@@ -355,6 +386,7 @@ func TestExtractOrderData(t *testing.T) {
 
 	// Parse JSON to extract body_html
 	var issue IssueData
+
 	err = json.Unmarshal(data, &issue)
 	assert.NoError(err, "should be able to parse JSON")
 
@@ -370,15 +402,35 @@ func TestExtractOrderData(t *testing.T) {
 	assert.Equal("10283618", orderData.OrderID, "should extract correct order ID")
 
 	// Verify recipient email
-	assert.Equal("kevin.tun@northwestern.edu", orderData.RecipientEmail, "should extract correct recipient email")
+	assert.Equal(
+		"kevin.tun@northwestern.edu",
+		orderData.RecipientEmail,
+		"should extract correct recipient email",
+	)
 
 	// Verify strain data
 	assert.Len(orderData.StockData.StrainInfo, 2, "should extract 2 strain info entries")
-	assert.Equal("DBS0351362", orderData.StockData.StrainInfo[0].ID, "first strain should have correct ID")
-	assert.Equal("HL16/HL106", orderData.StockData.StrainInfo[0].Descriptor, "first strain should have correct descriptor")
+	assert.Equal(
+		"DBS0351362",
+		orderData.StockData.StrainInfo[0].ID,
+		"first strain should have correct ID",
+	)
+	assert.Equal(
+		"HL16/HL106",
+		orderData.StockData.StrainInfo[0].Descriptor,
+		"first strain should have correct descriptor",
+	)
 
 	// Verify plasmid data
 	assert.Len(orderData.StockData.PlasmidInfo, 4, "should extract 4 plasmid info entries")
-	assert.Equal("DBP0001064", orderData.StockData.PlasmidInfo[0].ID, "first plasmid should have correct ID")
-	assert.Equal("pDDB_G0279361/lacZ", orderData.StockData.PlasmidInfo[0].Name, "first plasmid should have correct name")
+	assert.Equal(
+		"DBP0001064",
+		orderData.StockData.PlasmidInfo[0].ID,
+		"first plasmid should have correct ID",
+	)
+	assert.Equal(
+		"pDDB_G0279361/lacZ",
+		orderData.StockData.PlasmidInfo[0].Name,
+		"first plasmid should have correct name",
+	)
 }

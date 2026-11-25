@@ -1,53 +1,53 @@
 version: "2"
+run:
+  allow-parallel-runners: true
 linters:
   default: none
   enable:
     - asciicheck
+    - bidichk
     - bodyclose
+    - copyloopvar
     - cyclop
     - decorder
     - dogsled
-    - dupl
-    - errcheck
-    - errname
     - funlen
-    - gochecknoinits
-    - gocognit
+    - funcorder
     - goconst
-    - gocritic
     - gocyclo
-    - godot
     - gosec
     - govet
+    - gocognit
+    - godoclint
+    - intrange
     - ineffassign
+    - importas
+    - inamedparam
+    - interfacebloat
     - lll
+    - loggercheck
     - maintidx
     - misspell
+    - mnd
+    - modernize
     - nakedret
     - nestif
-    - nilerr
-    - nolintlint
-    - paralleltest
-    - prealloc
+    - protogetter
     - revive
-    - rowserrcheck
+    - recvcheck
     - staticcheck
-    - thelper
-    - tparallel
+    - testifylint
+    - modernize
     - unconvert
+    - usestdlibvars
     - unparam
     - unused
-    - varnamelen
-    - wastedassign
     - whitespace
-    - wrapcheck
+    - wsl_v5
   settings:
-    errcheck:
-      disable-default-exclusions: true
     funlen:
-      lines: 75
-    lll:
-      line-length: 2380
+      lines: 120
+      statements: 50
   exclusions:
     generated: lax
     presets:
@@ -59,10 +59,13 @@ linters:
       - third_party$
       - builtin$
       - examples$
+      - internal/baserow/
+      - internal/k8s/
 formatters:
   enable:
-    - gofmt
+    - gofumpt
     - goimports
+    - golines
   exclusions:
     generated: lax
     paths:

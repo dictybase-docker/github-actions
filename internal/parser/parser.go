@@ -9,6 +9,7 @@ import (
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
+	goldhtml "github.com/yuin/goldmark/renderer/html"
 	"golang.org/x/net/html"
 )
 
@@ -49,12 +50,16 @@ var (
 
 // ParseTables extracts all tables from HTML content.
 func ParseTables(doc *html.Node) ([]TableData, error) {
-	var tables []TableData
-	var findTables func(*html.Node)
+	var (
+		tables     []TableData
+		findTables func(*html.Node)
+	)
+
 	findTables = func(n *html.Node) {
 		if n.Type == html.ElementNode && n.Data == "table" {
 			tables = append(tables, parseTable(n))
 		}
+
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			findTables(c)
 		}
@@ -99,28 +104,33 @@ func parseTableHead(theadNode *html.Node) []string {
 			return parseTableRow(row)
 		}
 	}
+
 	return nil
 }
 
 // parseTableBody extracts all rows from tbody.
 func parseTableBody(tbodyNode *html.Node) [][]string {
 	var rows [][]string
+
 	for row := tbodyNode.FirstChild; row != nil; row = row.NextSibling {
 		if row.Type == html.ElementNode && row.Data == "tr" {
 			rows = append(rows, parseTableRow(row))
 		}
 	}
+
 	return rows
 }
 
 // parseTableRow extracts cells from a table row.
 func parseTableRow(rowNode *html.Node) []string {
 	var cells []string
+
 	for cell := rowNode.FirstChild; cell != nil; cell = cell.NextSibling {
 		if cell.Type == html.ElementNode && (cell.Data == "td" || cell.Data == "th") {
 			cells = append(cells, getTextContent(cell))
 		}
 	}
+
 	return cells
 }
 
@@ -129,24 +139,58 @@ func getTextContent(n *html.Node) string {
 	if n.Type == html.TextNode {
 		return n.Data
 	}
+
+	if n.Type == html.ElementNode && n.Data == "br" {
+		return "\n"
+	}
+
 	var text strings.Builder
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
 		_, _ = text.WriteString(getTextContent(c))
 	}
+
 	return strings.TrimSpace(text.String())
 }
 
-// ExtractBillingEmail finds an h2 element with text "Ship To:" and extracts the email
-// from a div element following it (at any nesting depth).
+// ExtractBillingEmail extracts the recipient from a "Ship To:" section or a legacy billing table.
 func ExtractBillingEmail(doc *html.Node) (string, error) {
 	shipToH2 := findH2WithText(doc, "Ship To:")
 	if shipToH2 == nil {
-		return "", fmt.Errorf("'Ship To:' heading not found")
+		return extractBillingTableEmail(doc)
 	}
 
 	for sib := shipToH2.NextSibling; sib != nil; sib = sib.NextSibling {
 		if email := findEmailInDiv(sib); email != "" {
 			return email, nil
+		}
+	}
+
+	return "", fmt.Errorf("billing address email not found")
+}
+
+func extractBillingTableEmail(doc *html.Node) (string, error) {
+	tables, err := ParseTables(doc)
+	if err != nil {
+		return "", fmt.Errorf("error parsing billing tables: %w", err)
+	}
+
+	for _, table := range tables {
+		for column, header := range table.Headers {
+			if !strings.EqualFold(strings.TrimSpace(header), "Billing address") {
+				continue
+			}
+
+			for _, row := range table.Rows {
+				if column >= len(row) {
+					continue
+				}
+
+				for _, candidate := range emailRe.FindAllString(row[column], -1) {
+					if address, err := extractEmailFromText(candidate); err == nil {
+						return address, nil
+					}
+				}
+			}
 		}
 	}
 
@@ -160,11 +204,13 @@ func findH2WithText(node *html.Node, text string) *html.Node {
 			return node
 		}
 	}
+
 	for c := node.FirstChild; c != nil; c = c.NextSibling {
 		if result := findH2WithText(c, text); result != nil {
 			return result
 		}
 	}
+
 	return nil
 }
 
@@ -174,17 +220,19 @@ func findH2WithText(node *html.Node, text string) *html.Node {
 func findEmailInDiv(node *html.Node) string {
 	if node.Type == html.ElementNode && node.Data == "div" {
 		matches := emailRe.FindStringSubmatch(getTextContent(node))
-		if len(matches) >= 2 {
+		if len(matches) > 1 {
 			if email, err := extractEmailFromText(matches[1]); err == nil {
 				return email
 			}
 		}
 	}
+
 	for c := node.FirstChild; c != nil; c = c.NextSibling {
 		if email := findEmailInDiv(c); email != "" {
 			return email
 		}
 	}
+
 	return ""
 }
 
@@ -197,13 +245,17 @@ func extractEmailFromText(text string) (string, error) {
 	if err == nil {
 		return addr.Address, nil
 	}
+
 	return "", err
 }
 
 // ExtractOrderID finds a paragraph containing "Order ID" and extracts the order ID value.
 func ExtractOrderID(doc *html.Node) (string, error) {
-	var orderID string
-	var findOrderParagraph func(*html.Node)
+	var (
+		orderID            string
+		findOrderParagraph func(*html.Node)
+	)
+
 	findOrderParagraph = func(node *html.Node) {
 		if orderID != "" {
 			return // Already found
@@ -211,6 +263,7 @@ func ExtractOrderID(doc *html.Node) (string, error) {
 
 		if node.Type == html.ElementNode && node.Data == "p" {
 			text := getTextContent(node)
+
 			extracted := extractOrderIDFromText(text)
 			if extracted != "" {
 				orderID = extracted
@@ -233,7 +286,7 @@ func ExtractOrderID(doc *html.Node) (string, error) {
 // extractOrderIDFromText extracts an order ID from text using regex.
 func extractOrderIDFromText(text string) string {
 	matches := orderIDRe.FindStringSubmatch(text)
-	if len(matches) >= 2 {
+	if len(matches) > 1 {
 		return matches[1]
 	}
 
@@ -244,6 +297,8 @@ func extractOrderIDFromText(text string) string {
 func MarkdownToHTML(markdown string) (*html.Node, error) {
 	md := goldmark.New(
 		goldmark.WithExtensions(extension.GFM),
+		// Preserve embedded address HTML for parsing; this HTML is never rendered to users.
+		goldmark.WithRendererOptions(goldhtml.WithUnsafe()),
 	)
 
 	var buf bytes.Buffer
@@ -272,6 +327,7 @@ func matchesCombinedStockHeaders(headers []string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -282,28 +338,29 @@ func parseCombinedStockRow(row []string) (StrainInfo, PlasmidInfo, bool, bool) {
 	if len(row) == 0 {
 		return StrainInfo{}, PlasmidInfo{}, false, false
 	}
+
 	firstCell := strings.TrimSpace(row[0])
 	if firstCell == "" {
 		return StrainInfo{}, PlasmidInfo{}, false, false
 	}
 
-	if strings.HasPrefix(firstCell, "Strain-") {
-		rest := strings.TrimPrefix(firstCell, "Strain-")
-		parts := strings.SplitN(rest, " - ", 2)
-		strain := StrainInfo{ID: strings.TrimSpace(parts[0])}
-		if len(parts) > 1 {
-			strain.Descriptor = strings.TrimSpace(parts[1])
+	if after, ok := strings.CutPrefix(firstCell, "Strain-"); ok {
+		id, descriptor, _ := strings.Cut(after, " - ")
+		strain := StrainInfo{
+			ID:         strings.TrimSpace(id),
+			Descriptor: strings.TrimSpace(descriptor),
 		}
+
 		return strain, PlasmidInfo{}, true, true
 	}
 
-	if strings.HasPrefix(firstCell, "Plasmid-") {
-		rest := strings.TrimPrefix(firstCell, "Plasmid-")
-		parts := strings.SplitN(rest, " - ", 2)
-		plasmid := PlasmidInfo{ID: strings.TrimSpace(parts[0])}
-		if len(parts) > 1 {
-			plasmid.Name = strings.TrimSpace(parts[1])
+	if after, ok := strings.CutPrefix(firstCell, "Plasmid-"); ok {
+		id, name, _ := strings.Cut(after, " - ")
+		plasmid := PlasmidInfo{
+			ID:   strings.TrimSpace(id),
+			Name: strings.TrimSpace(name),
 		}
+
 		return StrainInfo{}, plasmid, false, true
 	}
 
@@ -317,6 +374,7 @@ func isEmptyRow(row []string) bool {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -339,14 +397,17 @@ func ExtractStockData(doc *html.Node) (StockData, error) {
 		if !matchesCombinedStockHeaders(table.Headers) {
 			continue
 		}
+
 		for _, row := range table.Rows {
 			if isEmptyRow(row) {
 				continue
 			}
+
 			strain, plasmid, isStrain, ok := parseCombinedStockRow(row)
 			if !ok {
 				continue
 			}
+
 			if isStrain {
 				data.StrainInfo = append(data.StrainInfo, strain)
 			} else {

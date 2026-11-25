@@ -16,12 +16,16 @@ import (
 func TestMigrateRepositories(t *testing.T) {
 	t.Parallel()
 	assert := require.New(t)
+
 	server, client := fake.GhServerClient()
 	defer server.Close()
+
 	grp := new(errgroup.Group)
 	deadline := time.Now().Add(4 * time.Second)
+
 	ctx, cancelFn := context.WithDeadline(context.Background(), deadline)
 	defer cancelFn()
+
 	mgn := &migration{
 		repositories:  []string{"abc", "cde", "efg"},
 		from:          "vandeley",

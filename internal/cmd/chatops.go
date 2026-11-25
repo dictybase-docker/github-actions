@@ -5,6 +5,8 @@ import (
 	"github.com/urfave/cli"
 )
 
+const payloadFileFlag = "payload-file,f"
+
 func ParseChatOpsDeploy() cli.Command {
 	return cli.Command{
 		Name:    "parse-chatops-deploy",
@@ -13,7 +15,7 @@ func ParseChatOpsDeploy() cli.Command {
 		Action:  chatops.ParseDeployCommand,
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:     "payload-file,f",
+				Name:     payloadFileFlag,
 				Required: true,
 				Usage:    "path to JSON payload",
 			},

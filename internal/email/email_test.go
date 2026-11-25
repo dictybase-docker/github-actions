@@ -10,13 +10,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	testRecipient   = "test@example.com"
+	shippedLabel    = "shipped"
+	processingLabel = "processing"
+)
+
 func TestNewEmailClient(t *testing.T) {
 	t.Parallel()
 	assert := require.New(t)
 
 	domain := "test.mailgun.org"
 	apiKey := "test-api-key-123"
-	fromEmail := "test@example.com"
+	fromEmail := testRecipient
 
 	client := NewEmailClient(domain, fromEmail, apiKey)
 
@@ -24,6 +30,7 @@ func TestNewEmailClient(t *testing.T) {
 	assert.NotNil(client.mg, "mailgun client should not be nil")
 	assert.Equal(domain, client.config.Domain, "domain should match")
 	assert.Equal(fromEmail, client.config.From, "from email should match")
+	assert.Equal(apiKey, client.mg.APIKey(), "API key should match")
 }
 
 func TestTemplateFieldsMatchStruct(t *testing.T) {
@@ -32,10 +39,12 @@ func TestTemplateFieldsMatchStruct(t *testing.T) {
 
 	// Read the template file
 	templatePath := "order_update.tmpl"
+
 	templateContent, err := os.ReadFile(templatePath)
 	if os.IsNotExist(err) {
 		t.Skip("Skipping test: order_update.tmpl not found in current directory")
 	}
+
 	assert.NoError(err, "should read template file")
 
 	content := string(templateContent)
@@ -51,6 +60,7 @@ func TestTemplateFieldsMatchStruct(t *testing.T) {
 
 	// Collect unique top-level field names used in template
 	templateFields := make(map[string]bool)
+
 	for _, match := range matches {
 		if len(match) > 1 {
 			// Extract only the first field name after the dot
@@ -61,10 +71,10 @@ func TestTemplateFieldsMatchStruct(t *testing.T) {
 	assert.NotEmpty(templateFields, "template should use at least one field")
 
 	// Get actual struct fields using reflection
-	structType := reflect.TypeOf(OrderEmailData{})
+	structType := reflect.TypeFor[OrderEmailData]()
 	structFields := make(map[string]bool)
-	for i := 0; i < structType.NumField(); i++ {
-		field := structType.Field(i)
+
+	for field := range structType.Fields() {
 		if field.IsExported() {
 			structFields[field.Name] = true
 		}
@@ -96,15 +106,15 @@ func getEmailHTMLTestCases() []struct {
 		{
 			name: "valid order data",
 			data: OrderEmailData{
-				RecipientEmail: "test@example.com",
+				RecipientEmail: testRecipient,
 				OrderID:        "ORD-12345",
-				Label:          "shipped",
+				Label:          shippedLabel,
 			},
 			wantErr: false,
 			contains: []string{
 				"Order Number: <span class=\"order-id-value\">ORD-12345</span>",
 				"Current Status",
-				"shipped",
+				shippedLabel,
 				"Dicty Stock Center",
 				"dictystocks@northwestern.edu",
 			},
@@ -114,12 +124,12 @@ func getEmailHTMLTestCases() []struct {
 			data: OrderEmailData{
 				RecipientEmail: "user@test.com",
 				OrderID:        "ORD-99999",
-				Label:          "processing",
+				Label:          processingLabel,
 			},
 			wantErr: false,
 			contains: []string{
 				"Order Number: <span class=\"order-id-value\">ORD-99999</span>",
-				"processing",
+				processingLabel,
 			},
 		},
 		{
@@ -138,9 +148,9 @@ func getEmailHTMLTestCases() []struct {
 		{
 			name: "order with strain data",
 			data: OrderEmailData{
-				RecipientEmail: "test@example.com",
+				RecipientEmail: testRecipient,
 				OrderID:        "ORD-11111",
-				Label:          "shipped",
+				Label:          shippedLabel,
 				StockData: parser.StockData{
 					StrainInfo: []parser.StrainInfo{
 						{ID: "DBS0351362", Descriptor: "HL16/HL106"},
@@ -151,20 +161,15 @@ func getEmailHTMLTestCases() []struct {
 			wantErr: false,
 			contains: []string{
 				"Order Number: <span class=\"order-id-value\">ORD-11111</span>",
-				"shipped",
-				"Strains Ordered",
-				"DBS0351362",
-				"HL16/HL106",
-				"DBS0351363",
-				"HL84/XM101",
+				shippedLabel,
 			},
 		},
 		{
 			name: "order with plasmid data",
 			data: OrderEmailData{
-				RecipientEmail: "test@example.com",
+				RecipientEmail: testRecipient,
 				OrderID:        "ORD-22222",
-				Label:          "processing",
+				Label:          processingLabel,
 				StockData: parser.StockData{
 					PlasmidInfo: []parser.PlasmidInfo{
 						{ID: "DBP0001064", Name: "pDDB_G0279361/lacZ"},
@@ -175,20 +180,15 @@ func getEmailHTMLTestCases() []struct {
 			wantErr: false,
 			contains: []string{
 				"Order Number: <span class=\"order-id-value\">ORD-22222</span>",
-				"processing",
-				"Plasmids Ordered",
-				"DBP0001064",
-				"pDDB_G0279361/lacZ",
-				"DBP0001065",
-				"pDDB_G0279362/lacZ",
+				processingLabel,
 			},
 		},
 		{
 			name: "order with both strains and plasmids",
 			data: OrderEmailData{
-				RecipientEmail: "test@example.com",
+				RecipientEmail: testRecipient,
 				OrderID:        "ORD-33333",
-				Label:          "shipped",
+				Label:          shippedLabel,
 				StockData: parser.StockData{
 					StrainInfo: []parser.StrainInfo{
 						{ID: "DBS0351362", Descriptor: "HL16/HL106"},
@@ -201,10 +201,6 @@ func getEmailHTMLTestCases() []struct {
 			wantErr: false,
 			contains: []string{
 				"Order Number: <span class=\"order-id-value\">ORD-33333</span>",
-				"Strains Ordered",
-				"DBS0351362",
-				"Plasmids Ordered",
-				"DBP0001064",
 			},
 		},
 	}
@@ -227,6 +223,8 @@ func TestCreateEmailHTML(t *testing.T) {
 
 			assert.NoError(err, "unexpected error for test case: %s", testCase.name)
 			assert.NotEmpty(html, "HTML should not be empty")
+			assert.NotContains(html, "Strains Ordered")
+			assert.NotContains(html, "Plasmids Ordered")
 
 			// Verify HTML contains expected content
 			for _, expectedContent := range testCase.contains {

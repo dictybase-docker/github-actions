@@ -11,6 +11,27 @@ import (
 	"github.com/urfave/cli"
 )
 
+const (
+	shippedLabel       = "shipped"
+	orderDataErrorText = "error extracting order data"
+)
+
+func TestIssueOpts(t *testing.T) {
+	t.Parallel()
+
+	flagSet := flag.NewFlagSet("test", flag.ContinueOnError)
+	flagSet.String("state", "open", "")
+
+	app := cli.NewApp()
+	app.Flags = []cli.Flag{cli.StringFlag{Name: "state"}}
+	ctx := cli.NewContext(app, flagSet, nil)
+
+	opts := issueOpts(ctx)
+	require.Equal(t, "open", opts.State)
+	require.Equal(t, "comments", opts.Sort)
+	require.Equal(t, 30, opts.PerPage)
+}
+
 func TestGetIssue(t *testing.T) {
 	t.Parallel()
 	assert := require.New(t)
@@ -37,11 +58,22 @@ func TestGetIssue(t *testing.T) {
 
 	// Assert that the issue data matches issue.json
 	assert.Equal(122, issue.GetNumber(), "should have correct issue number")
-	assert.Equal("Order ID:10283618 kevin.tun@northwestern.edu", issue.GetTitle(), "should have correct title")
+	assert.Equal(
+		"Order ID:10283618 kevin.tun@northwestern.edu",
+		issue.GetTitle(),
+		"should have correct title",
+	)
 	assert.Equal("open", issue.GetState(), "should have correct state")
 	assert.NotEmpty(issue.GetBody(), "should have non-empty body")
 	assert.Contains(issue.GetBody(), "**Order ID:** 10283618", "body should contain order ID")
 	assert.Contains(issue.GetBody(), "Billing address", "body should contain billing address")
+
+	doc, err := parser.MarkdownToHTML(issue.GetBody())
+	assert.NoError(err)
+	order, err := extractAndValidateOrderData(doc, shippedLabel)
+	assert.NoError(err)
+	assert.Equal("10283618", order.OrderID)
+	assert.Equal("kevin.tun@northwestern.edu", order.RecipientEmail)
 }
 
 func TestGetIssueBody(t *testing.T) {
@@ -56,7 +88,7 @@ func TestGetIssueBody(t *testing.T) {
 		{
 			name: "valid body",
 			issue: &github.Issue{
-				Body: github.String("This is the issue body with **Order ID:** 12345"),
+				Body: new("This is the issue body with **Order ID:** 12345"),
 			},
 			want:    "This is the issue body with **Order ID:** 12345",
 			wantErr: false,
@@ -64,7 +96,7 @@ func TestGetIssueBody(t *testing.T) {
 		{
 			name: "empty body",
 			issue: &github.Issue{
-				Body: github.String(""),
+				Body: new(""),
 			},
 			want:    "",
 			wantErr: true,
@@ -80,7 +112,7 @@ func TestGetIssueBody(t *testing.T) {
 		{
 			name: "body with whitespace only",
 			issue: &github.Issue{
-				Body: github.String("   "),
+				Body: new("   "),
 			},
 			want:    "   ",
 			wantErr: false,
@@ -88,7 +120,7 @@ func TestGetIssueBody(t *testing.T) {
 		{
 			name: "multiline body",
 			issue: &github.Issue{
-				Body: github.String("Line 1\nLine 2\n**Order ID:** 99999"),
+				Body: new("Line 1\nLine 2\n**Order ID:** 99999"),
 			},
 			want:    "Line 1\nLine 2\n**Order ID:** 99999",
 			wantErr: false,
@@ -106,6 +138,7 @@ func TestGetIssueBody(t *testing.T) {
 				assert.Error(err, "expected error for test case: %s", testCase.name)
 				assert.Contains(err.Error(), "issue body is empty",
 					"error message should indicate empty body")
+
 				return
 			}
 
@@ -126,6 +159,30 @@ var extractAndValidateOrderDataTests = []struct {
 	errContains string
 }{
 	{
+		name: "embedded shipping HTML",
+		markdown: `**Order ID:** 12345
+
+## Ship To:
+
+<div>Jane Doe<br/>jane@example.com</div>`,
+		label:       shippedLabel,
+		wantOrderID: "12345",
+		wantEmail:   "jane@example.com",
+		wantLabel:   shippedLabel,
+	},
+	{
+		name: "billing email takes precedence over shipping column",
+		markdown: `**Order ID:** 12345
+
+| Shipping address | Billing address |
+|------------------|-----------------|
+| shipping@example.com | billing@example.com |`,
+		label:       shippedLabel,
+		wantOrderID: "12345",
+		wantEmail:   "billing@example.com",
+		wantLabel:   shippedLabel,
+	},
+	{
 		name: "valid order data",
 		markdown: `**Order ID:** 12345
 
@@ -133,10 +190,10 @@ var extractAndValidateOrderDataTests = []struct {
 |-----------------|---|-----------------|
 | John Doe | | jane@example.com |
 | 123 Main St | | 456 Elm St |`,
-		label:       "shipped",
+		label:       shippedLabel,
 		wantOrderID: "12345",
 		wantEmail:   "jane@example.com",
-		wantLabel:   "shipped",
+		wantLabel:   shippedLabel,
 		wantErr:     false,
 	},
 	{
@@ -148,7 +205,7 @@ var extractAndValidateOrderDataTests = []struct {
 | John Doe | | jane@example.com |`,
 		label:       "processing",
 		wantErr:     true,
-		errContains: "error extracting order data",
+		errContains: orderDataErrorText,
 	},
 	{
 		name: "missing email",
@@ -157,9 +214,9 @@ var extractAndValidateOrderDataTests = []struct {
 | Shipping address | | Billing address |
 |-----------------|---|-----------------|
 | John Doe | | No email here |`,
-		label:       "shipped",
+		label:       shippedLabel,
 		wantErr:     true,
-		errContains: "error extracting order data",
+		errContains: orderDataErrorText,
 	},
 	{
 		name: "empty order ID after extraction",
@@ -168,9 +225,9 @@ var extractAndValidateOrderDataTests = []struct {
 | Shipping address | | Billing address |
 |-----------------|---|-----------------|
 | John Doe | | test@example.com |`,
-		label:       "shipped",
+		label:       shippedLabel,
 		wantErr:     true,
-		errContains: "error extracting order data",
+		errContains: orderDataErrorText,
 	},
 	{
 		name: "different label",
@@ -204,10 +261,12 @@ func TestExtractAndValidateOrderData(t *testing.T) {
 
 			if testCase.wantErr {
 				assert.Error(err, "expected error for test case: %s", testCase.name)
+
 				if testCase.errContains != "" {
 					assert.Contains(err.Error(), testCase.errContains,
 						"error should contain %q", testCase.errContains)
 				}
+
 				return
 			}
 

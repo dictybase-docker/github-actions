@@ -3,7 +3,6 @@ package comment
 import (
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -51,13 +50,25 @@ const (
 `
 )
 
+const (
+	dictyPheno     = "dicty_pheno"
+	dictyAssay     = "dicty_assay"
+	dictyFlower    = "dicty_flower"
+	dictyEnv       = "dicty_env"
+	dictyPhenoObo  = "dicty_pheno.obo"
+	dictyAssayObo  = "dicty_assay.obo"
+	dictyFlowerObo = "dicty_flower.obo"
+	bestOfTheBest  = "best of the best"
+	greenIsGood    = "green is good"
+)
+
 func failData() map[string][]*reportContent {
 	data := make(map[string][]*reportContent)
 	data["fail"] = []*reportContent{
 		{
-			Name: "dicty_pheno.obo",
+			Name: dictyPhenoObo,
 			Violations: []string{
-				"best of the best",
+				bestOfTheBest,
 				"error in fun",
 				"exceptionally fun",
 			},
@@ -66,7 +77,7 @@ func failData() map[string][]*reportContent {
 			Name: "dicty_env.obo",
 			Violations: []string{
 				"no env",
-				"green is good",
+				greenIsGood,
 			},
 			HTML: fakeHTML,
 		},
@@ -78,8 +89,8 @@ func failData() map[string][]*reportContent {
 func passData() map[string][]*reportContent {
 	data := make(map[string][]*reportContent)
 	data["pass"] = []*reportContent{
-		{Name: "dicty_assay.obo"},
-		{Name: "dicty_flower.obo", HTML: fakeHTML},
+		{Name: dictyAssayObo},
+		{Name: dictyFlowerObo, HTML: fakeHTML},
 		{Name: "foobar.obo"},
 	}
 
@@ -89,15 +100,15 @@ func passData() map[string][]*reportContent {
 func failAndPassData() map[string][]*reportContent {
 	data := make(map[string][]*reportContent)
 	data["pass"] = []*reportContent{
-		{Name: "dicty_assay.obo", HTML: fakeHTML},
-		{Name: "dicty_flower.obo"},
+		{Name: dictyAssayObo, HTML: fakeHTML},
+		{Name: dictyFlowerObo},
 		{Name: "foobar.obo"},
 	}
 	data["fail"] = []*reportContent{
 		{
-			Name: "dicty_pheno.obo",
+			Name: dictyPhenoObo,
 			Violations: []string{
-				"best of the best",
+				bestOfTheBest,
 				"error in fun",
 				"exceptionally fun",
 			},
@@ -106,7 +117,7 @@ func failAndPassData() map[string][]*reportContent {
 			Name: "dicty_env.obo",
 			Violations: []string{
 				"no env",
-				"green is good",
+				greenIsGood,
 			},
 		},
 	}
@@ -116,6 +127,7 @@ func failAndPassData() map[string][]*reportContent {
 
 func TestMkdownOutput(t *testing.T) {
 	t.Parallel()
+
 	htmlStr := []string{
 		"Full report",
 		"bootstrap",
@@ -127,45 +139,55 @@ func TestMkdownOutput(t *testing.T) {
 	assert := require.New(t)
 	bout, err := mkdownOutput(failAndPassData())
 	assert.NoError(err, "should not produce any error from template execution")
+
 	subslice := []string{
-		"dicty_env",
-		"dicty_pheno",
-		"dicty_flower",
-		"best of the best",
-		"green is good",
+		dictyEnv,
+		dictyPheno,
+		dictyFlower,
+		bestOfTheBest,
+		greenIsGood,
 	}
 	for _, n := range subslice {
-		assert.True(strings.Contains(bout.String(), n))
+		assert.Contains(bout.String(), n)
 	}
+
 	for _, s := range htmlStr {
 		assert.Containsf(bout.String(), s, "should have the string %s", s)
 	}
+
 	bout, err = mkdownOutput(failData())
 	assert.NoError(err, "should not produce any error from template execution")
+
 	subslice = []string{
-		"dicty_env",
-		"dicty_pheno",
-		"best of the best",
-		"green is good",
+		dictyEnv,
+		dictyPheno,
+		bestOfTheBest,
+		greenIsGood,
 	}
 	for _, n := range subslice {
-		assert.True(strings.Contains(bout.String(), n))
+		assert.Contains(bout.String(), n)
 	}
-	assert.False(strings.Contains(bout.String(), "dicty_assay"))
+
+	assert.NotContains(bout.String(), dictyAssay)
+
 	for _, s := range htmlStr {
 		assert.Containsf(bout.String(), s, "should have the string %s", s)
 	}
+
 	bout, err = mkdownOutput(passData())
 	assert.NoError(err, "should not produce any error from template execution")
+
 	subslice = []string{
-		"dicty_assay",
-		"dicty_flower",
+		dictyAssay,
+		dictyFlower,
 	}
 	for _, n := range subslice {
-		assert.True(strings.Contains(bout.String(), n))
+		assert.Contains(bout.String(), n)
 	}
-	assert.False(strings.Contains(bout.String(), "dicty_pheno"))
-	assert.False(strings.Contains(bout.String(), "best of the best"))
+
+	assert.NotContains(bout.String(), dictyPheno)
+	assert.NotContains(bout.String(), bestOfTheBest)
+
 	for _, s := range htmlStr {
 		assert.Containsf(bout.String(), s, "should have the string %s", s)
 	}
@@ -179,7 +201,9 @@ func TestListCommittedFiles(t *testing.T) {
 		err,
 		"should not throw error from creating a temp file",
 	)
+
 	defer os.Remove(tmpf.Name())
+
 	content := []string{"/onto/dicty_assay.obo", "/pronto/dicty_flower.obo"}
 	for _, line := range content {
 		if _, err := fmt.Fprintf(tmpf, "%s\n", line); err != nil {
@@ -189,11 +213,12 @@ func TestListCommittedFiles(t *testing.T) {
 			)
 		}
 	}
+
 	files, err := listCommittedFiles(tmpf.Name())
 	assert.NoError(err, "should not throw error from getting the list")
 	assert.ElementsMatch(
 		files,
-		[]string{"dicty_assay", "dicty_flower"},
+		[]string{dictyAssay, dictyFlower},
 		"should match the contents of test file",
 	)
 }

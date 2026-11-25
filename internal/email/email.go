@@ -12,6 +12,8 @@ import (
 	"github.com/mailgun/mailgun-go/v5"
 )
 
+const sendTimeout = 10 * time.Second
+
 //go:embed order_update.tmpl
 var templateFS embed.FS
 
@@ -38,6 +40,7 @@ type MailgunClient struct {
 // NewEmailClient creates a new email client with Mailgun configuration.
 func NewEmailClient(domain, from, apiKey string) *MailgunClient {
 	mg := mailgun.NewMailgun(apiKey)
+
 	return &MailgunClient{
 		mg: mg,
 		config: MailgunConfig{
@@ -67,7 +70,7 @@ func (ec *MailgunClient) SendOrderUpdateEmail(
 	message.SetHTML(htmlBody)
 
 	// Send the message with a 10 second timeout
-	sendCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	sendCtx, cancel := context.WithTimeout(ctx, sendTimeout)
 	defer cancel()
 
 	_, err := ec.mg.Send(sendCtx, message)
@@ -90,6 +93,7 @@ func createEmailHTML(data OrderEmailData) (string, error) {
 	if err := tmpl.Execute(&buf, data); err != nil {
 		return "", fmt.Errorf("failed to execute template: %w", err)
 	}
+
 	return buf.String(), nil
 }
 
@@ -99,7 +103,6 @@ func (ec *MailgunClient) SendOrderUpdateFromTemplate(
 	data OrderEmailData,
 ) error {
 	html, err := createEmailHTML(data)
-
 	if err != nil {
 		return fmt.Errorf("failed to create email HTML: %w", err)
 	}

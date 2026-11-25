@@ -14,6 +14,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/dictyBase-docker/github-actions/internal/client"
 	"github.com/google/go-github/v62/github"
 	"github.com/sethvargo/go-githubactions"
 	"github.com/urfave/cli"
@@ -22,25 +23,41 @@ import (
 const (
 	owner = "dagger"
 	repo  = "dagger"
+
+	// chunkSize represents the chunk size (1KB) for copying the dagger binary.
+	chunkSize = 1024
+
+	// execFileMode represents the file mode for the dagger binary.
+	execFileMode = 0o755
+
+	exitFailure = 2
 )
 
 // SetupDaggerCheckSum sets up the Dagger checksum and outputs it to GitHub Actions.
 func SetupDaggerCheckSum(clt *cli.Context) error {
 	var dver string
+
 	if len(clt.String("version")) == 0 {
 		ver, err := fetchDaggerVersion()
 		if err != nil {
-			return cli.NewExitError(err.Error(), 2)
+			return cli.NewExitError(err.Error(), exitFailure)
 		}
+
 		dver = ver
 	} else {
 		dver = fmt.Sprintf("v%s", clt.String("version"))
 	}
-	gclient := github.NewClient(nil)
+
+	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
+	if err != nil {
+		return cli.NewExitError(err.Error(), exitFailure)
+	}
+
 	rel, err := fetchDaggerRelease(gclient, dver)
 	if err != nil {
-		return cli.NewExitError(err.Error(), 2)
+		return cli.NewExitError(err.Error(), exitFailure)
 	}
+
 	checksum, err := fetchDaggerCheckSum(
 		clt.String("checksum-file"),
 		clt.String("dagger-file"),
@@ -48,11 +65,13 @@ func SetupDaggerCheckSum(clt *cli.Context) error {
 		rel,
 	)
 	if err != nil {
-		return cli.NewExitError(err.Error(), 2)
+		return cli.NewExitError(err.Error(), exitFailure)
 	}
+
 	gha := githubactions.New()
 	gha.SetOutput("dagger_version", dver)
 	gha.SetOutput("dagger_bin_checksum", checksum)
+
 	return nil
 }
 
@@ -60,11 +79,17 @@ func SetupDaggerCheckSum(clt *cli.Context) error {
 func SetupDaggerBin(clt *cli.Context) error {
 	dver := clt.String("dagger-version")
 	binDir := clt.String("dagger-bin-dir")
-	gclient := github.NewClient(nil)
+
+	gclient, err := client.GetGithubClient(clt.GlobalString("token"))
+	if err != nil {
+		return cli.NewExitError(err.Error(), exitFailure)
+	}
+
 	rel, err := fetchDaggerRelease(gclient, dver)
 	if err != nil {
-		return cli.NewExitError(err.Error(), 2)
+		return cli.NewExitError(err.Error(), exitFailure)
 	}
+
 	err = fetchDaggerBinary(
 		clt.String("dagger-file"),
 		dver,
@@ -73,8 +98,9 @@ func SetupDaggerBin(clt *cli.Context) error {
 		rel,
 	)
 	if err != nil {
-		return cli.NewExitError(err.Error(), 2)
+		return cli.NewExitError(err.Error(), exitFailure)
 	}
+
 	return nil
 }
 
@@ -89,6 +115,7 @@ func fetchDaggerRelease(
 	if err != nil {
 		return nil, handleError("error in fetching release %s", err)
 	}
+
 	return rel, nil
 }
 
@@ -98,15 +125,18 @@ func fetchDaggerBinary(
 	rel *github.RepositoryRelease,
 ) error {
 	tarballName := fmt.Sprintf("dagger_%s_%s", ver, fileSuffix)
+
 	idx, err := findTarballIndex(rel, tarballName)
 	if err != nil {
 		return err
 	}
+
 	reader, err := downloadReleaseAsset(gclient, rel.Assets[idx].GetID())
 	if err != nil {
 		return err
 	}
 	defer reader.Close()
+
 	return extractTarball(reader, filepath.Join(binDir, "dagger"))
 }
 
@@ -123,6 +153,7 @@ func findTarballIndex(
 			errors.New("could not find dagger tarball file"),
 		)
 	}
+
 	return idx, nil
 }
 
@@ -139,6 +170,7 @@ func downloadReleaseAsset(
 	if err != nil {
 		return nil, handleError("error in downloading asset %s", err)
 	}
+
 	return reader, nil
 }
 
@@ -148,6 +180,7 @@ func extractTarball(reader io.ReadCloser, binFileName string) error {
 		return handleError("extractTarGz: NewReader failed: %w", err)
 	}
 	defer uncompressedStream.Close()
+
 	tarReader := tar.NewReader(uncompressedStream)
 	for {
 		header, err := tarReader.Next()
@@ -155,15 +188,18 @@ func extractTarball(reader io.ReadCloser, binFileName string) error {
 			if err == io.EOF {
 				break
 			}
+
 			return handleError("extractTarGz: Next() failed: %w", err)
 		}
+
 		if header.Name != "dagger" {
 			continue
 		}
+
 		writer, err := os.OpenFile(
 			binFileName,
 			os.O_CREATE|os.O_RDWR,
-			os.FileMode(0755),
+			os.FileMode(execFileMode),
 		)
 		if err != nil {
 			return handleError(
@@ -171,20 +207,24 @@ func extractTarball(reader io.ReadCloser, binFileName string) error {
 				err,
 			)
 		}
+
 		for {
-			_, err := io.CopyN(writer, tarReader, 1024)
+			_, err := io.CopyN(writer, tarReader, chunkSize)
 			if err != nil {
 				if err == io.EOF {
 					break
 				}
+
 				return handleError(
 					"error in writing dagger bin file in temp dir %s",
 					err,
 				)
 			}
 		}
+
 		defer writer.Close()
 	}
+
 	return nil
 }
 
@@ -194,6 +234,7 @@ func fetchDaggerCheckSum(
 	rel *github.RepositoryRelease,
 ) (string, error) {
 	var empty string
+
 	idx := slices.IndexFunc(rel.Assets, func(ast *github.ReleaseAsset) bool {
 		return ast.GetName() == checksumFileName
 	})
@@ -203,6 +244,7 @@ func fetchDaggerCheckSum(
 			errors.New("could not find checksum file"),
 		)
 	}
+
 	reader, _, err := gclient.Repositories.DownloadReleaseAsset(
 		context.Background(),
 		owner, repo,
@@ -212,7 +254,9 @@ func fetchDaggerCheckSum(
 	if err != nil {
 		return empty, handleError("error in downloading asset %s", err)
 	}
+
 	var line string
+
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		if strings.Contains(scanner.Text(), daggerFileName) {
@@ -220,6 +264,7 @@ func fetchDaggerCheckSum(
 			break
 		}
 	}
+
 	if err := scanner.Err(); err != nil {
 		return empty, handleError("error in reading checksum file %s", err)
 	}
@@ -229,11 +274,13 @@ func fetchDaggerCheckSum(
 
 func fetchDaggerVersion() (string, error) {
 	var empty string
+
 	resp, err := http.Get("https://dl.dagger.io/dagger/latest_version")
 	if err != nil {
 		return empty, handleError("error in fetching dagger version %s", err)
 	}
 	defer resp.Body.Close()
+
 	bcont, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return empty, handleError("error in reading response body", err)
@@ -253,6 +300,7 @@ func handleError(msg string, err error) error {
 
 func RemoveInvalidControlChars(strc string) string {
 	var builder strings.Builder
+
 	for _, rtc := range strc {
 		if rtc >= 32 && rtc != 127 {
 			_, _ = builder.WriteRune(rtc)
